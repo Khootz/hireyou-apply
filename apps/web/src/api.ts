@@ -4,9 +4,15 @@ import type { DocumentRecord, JobInput, JobPatch, JobRecord, MasterProfile, RunR
 // Override via localStorage.setItem('api_token', '...') if you change it.
 const TOKEN = localStorage.getItem('api_token') ?? 'dev-local-token-change-me'
 
+// When served from Vercel (or any non-local host), the API still runs on the
+// user's machine — browsers treat http://127.0.0.1 as a secure origin, so the
+// hosted page may call it directly. Override via localStorage 'api_base'.
+const isLocalPage = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+export const API_BASE = localStorage.getItem('api_base') ?? (isLocalPage ? '' : 'http://127.0.0.1:3100')
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData
-  const res = await fetch(path, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       // FormData sets its own multipart boundary; forcing JSON breaks it.
@@ -57,7 +63,7 @@ export const api = {
 // iframes/new tabs can't carry the Authorization header; PDF GETs accept the
 // token as a query parameter instead.
 export function pdfUrl(documentId: string): string {
-  return `/api/documents/${documentId}/pdf?token=${encodeURIComponent(TOKEN)}`
+  return `${API_BASE}/api/documents/${documentId}/pdf?token=${encodeURIComponent(TOKEN)}`
 }
 
 export interface EmailDraft {

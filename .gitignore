@@ -10,3 +10,5 @@ Thumbs.db
 apps/api/data/*.sqlite*
 apps/api/storage/
 tmp/
+
+.vercel
