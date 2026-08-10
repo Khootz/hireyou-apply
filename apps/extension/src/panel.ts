@@ -93,7 +93,13 @@ async function render(): Promise<void> {
   currentJob = await detectJob()
   if (!currentJob) {
     content().innerHTML = `<div class="card"><h2>No job detected</h2>
-      <p class="muted">Open a job posting on the <a href="https://career.hkust.edu.hk/web/job.php" target="_blank">HKUST career board</a> and this panel will pick it up.</p></div>`
+      <p class="muted">Open a job posting on the <a href="https://career.hkust.edu.hk/web/job.php" target="_blank">HKUST career board</a> and this panel will pick it up.</p></div>
+      <div class="card"><h2>On an application form?</h2>
+      <p class="muted" style="margin-bottom:8px">On JobsDB or CTgoodjobs, I can suggest answers for the form's fields. Grey hints only — you review and type everything yourself. Never auto-submits.</p>
+      <button class="primary" id="scan-form">Fill application</button>
+      <div id="scan-status" class="muted" style="margin-top:6px"></div>
+      <div id="scan-results" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div></div>`
+    document.querySelector('#scan-form')?.addEventListener('click', scanForm)
     return
   }
 
@@ -213,6 +219,66 @@ async function generate(type: 'resume' | 'cover_letter', btn: HTMLButtonElement)
     }, 1500)
   } catch (err) {
     btn.disabled = false
+    status.textContent = `⚠ ${(err as Error).message}`
+  }
+}
+
+interface FieldSuggestionLite {
+  selector: string
+  canonical: string
+  label: string
+  value: string | null
+  do_not_fill: boolean
+  note?: string
+}
+
+async function scanForm(): Promise<void> {
+  const status = $('#scan-status')
+  const results = $('#scan-results')
+  results.innerHTML = ''
+  status.textContent = 'Scanning the page…'
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+    if (tab?.id === undefined) throw new Error('no active tab')
+    let scan: { fields: unknown[] }
+    try {
+      scan = await chrome.tabs.sendMessage(tab.id, { type: 'scan-form' })
+    } catch {
+      status.textContent = 'This page is not supported for form scanning (JobsDB and CTgoodjobs are).'
+      return
+    }
+    if (!scan?.fields?.length) {
+      status.textContent = 'No form fields found on this page.'
+      return
+    }
+    status.textContent = `${scan.fields.length} fields found — asking for suggestions…`
+    const { suggestions } = await api<{ suggestions: FieldSuggestionLite[] }>(`/api/autofill`, {
+      method: 'POST',
+      body: JSON.stringify({ fields: scan.fields, job_id: null }),
+    })
+    const applied = (await chrome.tabs.sendMessage(tab.id, { type: 'apply-hints', suggestions })) as { applied: number }
+    const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
+    status.textContent = `${withValue.length} suggestions ready (${applied?.applied ?? 0} grey hints shown in the form). Copy below, then paste into the form:`
+    results.innerHTML = suggestions
+      .map((s) => {
+        if (s.do_not_fill) {
+          return `<div class="gen-row" style="border-color:#fde68a"><div><strong>${esc(s.label || s.canonical)}</strong>
+            <div class="muted">${esc(s.note ?? 'Not suggested.')}</div></div></div>`
+        }
+        if (!s.value) return ''
+        return `<div class="gen-row"><div style="min-width:0"><strong>${esc(s.label || s.canonical)}</strong>
+          <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(s.value)}</div></div>
+          <button class="secondary" data-copy="${esc(s.value)}">Copy</button></div>`
+      })
+      .join('')
+    results.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(btn.dataset.copy ?? '')
+        btn.textContent = '✓'
+        setTimeout(() => (btn.textContent = 'Copy'), 1200)
+      }),
+    )
+  } catch (err) {
     status.textContent = `⚠ ${(err as Error).message}`
   }
 }

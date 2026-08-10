@@ -18,15 +18,25 @@ module intended for future integration into HireYou 2.0.
 ## Commands
 
 ```bash
-npm install          # once
-npm test             # all tests (LLM calls replay from fixtures; no network)
-npm run typecheck
-npm run verify:m0    # milestone verifier
-npm run dev:api      # API on :3100
-npm run dev:web      # web on :5180 (proxies /api -> :3100)
+npm install            # once
+npm run dev            # API on :3100 + web on :5180, together
+npm test               # all tests (LLM calls replay from fixtures; no network)
+npm run verify:m8      # current milestone verifier (typecheck + ext build + tests)
+npm run build:extension
 ```
 
 Copy `.env.example` to `.env` and fill it in. `LIVE_LLM=1 npm test` additionally runs
 the live DeepSeek smoke tests (costs a fraction of a cent).
 
-Load the extension: `chrome://extensions` → Developer mode → Load unpacked → `apps/extension`.
+**Extension:** `npm run build:extension`, then `chrome://extensions` → Developer mode →
+Load unpacked → `apps/extension/dist`. Open the panel via the toolbar icon, set the
+API token in ⚙ settings (must match `API_AUTH_TOKEN` in `.env`).
+
+**Refresh LLM fixtures** (after changing prompts/profile):
+`npx tsx scripts/record-cv-parse.ts`, `scripts/record-generation.ts`, `scripts/record-autofill.ts`.
+
+**What works end to end:** profile editor with CV-PDF pre-fill → save HKUST postings
+from the extension → tailored resume + cover letter (provenance-gated) → PDF preview/
+download → application email with attachments (SAFE_MODE delivers to the test inbox) →
+form-field suggestions on JobsDB/CTgoodjobs (grey hints + copy buttons, EEO fields
+always blocked). See PROGRESS.md for per-milestone status.

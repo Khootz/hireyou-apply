@@ -21,7 +21,8 @@
     "verify:m5": "npm run typecheck && vitest run",
     "build:extension": "npm run build -w @app/extension",
     "verify:m6": "npm run typecheck && npm run build:extension && vitest run",
-    "verify:m7": "npm run typecheck && npm run build:extension && vitest run"
+    "verify:m7": "npm run typecheck && npm run build:extension && vitest run",
+    "verify:m8": "npm run typecheck && npm run build:extension && vitest run"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

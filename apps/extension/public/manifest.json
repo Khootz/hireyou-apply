@@ -19,6 +19,11 @@
       "matches": ["https://career.hkust.edu.hk/web/job_detail.php*"],
       "js": ["content-hkust.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.jobsdb.com/*", "https://*.ctgoodjobs.hk/*"],
+      "js": ["content-hints.js"],
+      "run_at": "document_idle"
     }
   ]
 }

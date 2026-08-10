@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./extractors/hkust": "./src/extractors/hkust.ts"
+    "./extractors/hkust": "./src/extractors/hkust.ts",
+    "./autofill": "./src/autofill.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

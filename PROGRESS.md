@@ -10,10 +10,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 | M3 Job tracker | **DONE** | 1 | `npm run verify:m3` |
 | M4 Generation engine | **DONE** (provenance gate caught a real hallucination live; alias fix) | 2 | `npm run verify:m4` |
 | M5 PDF rendering | **DONE** (system Chrome via puppeteer-core; preview = actual PDF) | 1 | `npm run verify:m5` |
-| M6 Extension + HKUST | not started | 0 | `npm run verify:m6` |
-| M7 Email apply | not started | 0 | `npm run verify:m7` |
-| M8 Form hints (best-effort) | not started | 0 | `npm run verify:m8` |
-| M9 Hardening | not started | 0 | — |
+| M6 Extension + HKUST | **DONE** (manual: load dist/ + live board check pending user) | 1 | `npm run verify:m6` |
+| M7 Email apply | **DONE except live send** (blocked: Gmail app password from user) | 2 | `npm run verify:m7` |
+| M8 Form hints (best-effort) | **DONE** (manual: live JobsDB/CTgoodjobs check pending user) | 1 | `npm run verify:m8` |
+| M9 Hardening | not started (optional) | 0 | — |
 
 ## Pre-build log
 
@@ -63,5 +63,23 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - puppeteer-core + system Chrome (channel:'chrome') — no bundled-Chromium download (Google-hosted, would need proxy anyway). HTML templates: serif/justified/hyphenated, ruled section headers, two-col entry rows, centered name block.
 - GET /api/documents/:id/pdf renders on demand, caches by (id, version) — content immutable per version. Query-token auth (?token=) for iframes/new tabs, GET-only.
 - Tests assert: %PDF magic, selectable text (name/section/org found via pdfjs), identical text + page count across two renders, 401 without token. Preview iframe shows the SAME rendered PDF — parity by construction.
+
+**2026-08-10 — M6, loop 1 → GREEN (48 passed)**
+- Full HKUST extractor: title/jp from <title>, company+deadline from table.large-view label/value column alignment, JD = cleaned .career-content text (≤4000), mailto apply email. All 3 fixtures extract cleanly; null on non-detail pages.
+- Real MV3 build (esbuild IIFE → dist/, load THAT unpacked): content-hkust.js (auto-detect on job_detail pages), sw.js (per-tab job registry in chrome.storage.session — MV3 workers die between events), panel.js (vanilla TS: settings gear for API URL/token, job card, ✓ SAVED banner via /api/jobs/match dedup lookup, status dropdown, Generate buttons with polling, View in HireYou link).
+- API: @fastify/cors (extension origin), GET /api/jobs/match.
+
+**2026-08-10 — M7, loops 1–2 → GREEN (53 passed) — live send pending app password**
+- SAFE_MODE contract: recipient override INSIDE sendApplicationEmail (resolveRecipient) — hostile `to:` payload test proves it can't be bypassed; EmailRecord audits to_intended vs to_actual. Defaults ON (anything but explicit "false").
+- Nodemailer over socks5://127.0.0.1:10808 (SMTP_PROXY; direct SMTP egress blocked on this machine). Transport is a test seam (fake transport captures sendMail; attachments verified as real rendered PDFs on disk).
+- Draft builder: subject "Application for {title}", body adapted from user's 2025 emails.py skeleton, attachments = latest resume + cover letter versions. Web: Apply-by-email card (editable to/subject/body, SAFE MODE banner, attachment chips, sent history, Mark-as-Applied prompt).
+- Loop 2 fix: @types/nodemailer lacks `proxy` option — cast. REMAINING: real Gmail send once user supplies app password for 199ktz@gmail.com (then: set SMTP_APP_PASSWORD in .env, run a send, check tzkhoo@connect.ust.hk inbox).
+
+**2026-08-10 — M8, loop 1 → GREEN (59 passed)**
+- packages/shared/autofill.ts: discovery (visible inputs/textarea/select, label chain label[for]→aria→wrapping→preceding-text→placeholder, maxlength/options capture) + tier-1 rules (~20 canonical fields, autocomplete map). SENSITIVE_DO_NOT_FILL beats every other signal incl. autocomplete; matches labels AND option lists.
+- API POST /api/autofill: tier-2 = ONE batched flash call for unknowns; answers routed: direct-copy (contact/paragraph links), derived (current_title/company from latest experience entry — never generated), generative (ONE batched strong call, maxlength enforced server-side), sensitive → null + refusal note, unknown → honest null.
+- Extension: content-hints.js on *.jobsdb.com / *.ctgoodjobs.hk — suggestions render as PLACEHOLDER text (grey hint, zero value injection, framework-input problem structurally avoided), blue outline, count toast; panel "Fill application" → scan → suggestions list with Copy buttons; sensitive fields shown with the refusal note.
+- Live recording quality: 11/11 fields classified correctly incl. all 3 EEO blocked; generative answers grounded in real profile facts.
+- Known limits (documented, accepted as best-effort): no shadow-DOM/iframe traversal, no radio-group option judgment, no submit detection on form path, JobsDB/CTgoodjobs real-page drift untested live.
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

@@ -1,0 +1,119 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { JSDOM } from 'jsdom'
+import type { FastifyInstance } from 'fastify'
+import { MasterProfileSchema, type JobRecord } from '@app/shared'
+import { classifyFieldDeterministic, discoverFields, FieldInfoSchema, type FieldSuggestion } from '@app/shared/autofill'
+import { openDb } from '../src/db'
+import { buildServer } from '../src/server'
+
+const AUTH = { authorization: 'Bearer test-token' }
+const FORM = fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/forms/apply-form.html'), 'utf8')
+
+const formFields = () => discoverFields(new JSDOM(FORM).window.document)
+
+let app: FastifyInstance
+
+beforeAll(() => {
+  process.env.API_AUTH_TOKEN = 'test-token'
+})
+
+beforeEach(() => {
+  app = buildServer({ sqlite: openDb(':memory:').sqlite })
+})
+
+describe('field discovery (fixture apply form)', () => {
+  it('finds visible fields and skips hidden/submit inputs', () => {
+    const fields = formFields()
+    expect(fields).toHaveLength(11)
+    expect(fields.every((f) => f.input_type !== 'hidden' && f.input_type !== 'submit')).toBe(true)
+  })
+
+  it('resolves labels through the label[for] chain and captures maxlength', () => {
+    const fields = formFields()
+    const why = fields.find((f) => f.name === 'why_role')!
+    expect(why.label).toBe('Why do you want this role?')
+    expect(why.maxlength).toBe(200)
+    const auth = fields.find((f) => f.name === 'work_auth')!
+    expect(auth.options).toContain('Require visa sponsorship')
+  })
+})
+
+describe('tier-1 deterministic classification', () => {
+  const mk = (over: Partial<Parameters<typeof FieldInfoSchema.parse>[0]>) =>
+    FieldInfoSchema.parse({ selector: '#x', tag: 'input', ...over })
+
+  it('classifies the classics without any model', () => {
+    expect(classifyFieldDeterministic(mk({ label: 'Email address' }))).toBe('email')
+    expect(classifyFieldDeterministic(mk({ label: 'Contact number' }))).toBe('phone')
+    expect(classifyFieldDeterministic(mk({ label: 'Full name' }))).toBe('full_name')
+    expect(classifyFieldDeterministic(mk({ label: 'LinkedIn profile' }))).toBe('linkedin_url')
+    expect(classifyFieldDeterministic(mk({ label: 'Cover letter' }))).toBe('cover_letter')
+    expect(classifyFieldDeterministic(mk({ autocomplete: 'email' }))).toBe('email')
+  })
+
+  it('sends every demographic field to SENSITIVE_DO_NOT_FILL, beating other signals', () => {
+    expect(classifyFieldDeterministic(mk({ label: 'Gender' }))).toBe('SENSITIVE_DO_NOT_FILL')
+    expect(classifyFieldDeterministic(mk({ label: 'Race / Ethnicity' }))).toBe('SENSITIVE_DO_NOT_FILL')
+    expect(classifyFieldDeterministic(mk({ label: 'Veteran status' }))).toBe('SENSITIVE_DO_NOT_FILL')
+    expect(classifyFieldDeterministic(mk({ label: 'Date of birth' }))).toBe('SENSITIVE_DO_NOT_FILL')
+    expect(classifyFieldDeterministic(mk({ label: 'Disability status', autocomplete: 'email' }))).toBe('SENSITIVE_DO_NOT_FILL')
+  })
+})
+
+describe('POST /api/autofill (LLM replayed from fixtures)', () => {
+  it('routes answers correctly: direct copy, derived, generative, sensitive, honest-unknown', async () => {
+    const profile = MasterProfileSchema.parse(
+      JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/generation/profile.json'), 'utf8')),
+    )
+    await app.inject({ method: 'PUT', url: '/api/profile', headers: AUTH, payload: profile })
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/jobs',
+      headers: AUTH,
+      payload: { title: 'Software Engineer', company: 'Acme HK', jd_text: 'Python, TypeScript, cloud.' },
+    })
+    const jobId = ((created.json() as { job: JobRecord }).job).id
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/autofill',
+      headers: AUTH,
+      payload: { fields: formFields(), job_id: jobId },
+    })
+    expect(res.statusCode).toBe(200)
+    const { suggestions } = res.json() as { suggestions: FieldSuggestion[] }
+    const by = (name: string) => suggestions.find((s) => s.selector === `#${name}`)!
+
+    // direct copy — straight from profile, zero LLM
+    expect(by('name').value).toBe('THIEN ZHI, KHOO')
+    expect(by('email').value).toBe('tzkhoo@connect.ust.hk')
+    expect(by('phone').value).toBe('+852 4492 4625')
+
+    // derived — latest experience entry, never generated
+    expect(by('role').value).toContain('Data Engineering Intern')
+
+    // sensitive — no value, explicit refusal note
+    for (const id of ['gender', 'ethnicity', 'dob']) {
+      expect(by(id).do_not_fill, id).toBe(true)
+      expect(by(id).value, id).toBeNull()
+    }
+
+    // generative respects maxlength
+    const why = by('why')
+    expect(why.value).toBeTruthy()
+    expect(why.value!.length).toBeLessThanOrEqual(200)
+    const extra = by('extra')
+    expect(extra.value!.length).toBeLessThanOrEqual(300)
+
+    // work authorization is a fact we don't hold → no suggestion, never a guess
+    expect(by('auth').value).toBeNull()
+    expect(by('auth').do_not_fill).toBe(false)
+  })
+
+  it('rejects an empty field list', async () => {
+    const res = await app.inject({ method: 'POST', url: '/api/autofill', headers: AUTH, payload: { fields: [] } })
+    expect(res.statusCode).toBe(400)
+  })
+})

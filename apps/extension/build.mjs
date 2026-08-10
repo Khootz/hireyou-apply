@@ -15,6 +15,7 @@ fs.mkdirSync(dist, { recursive: true })
 await build({
   entryPoints: [
     path.join(root, 'src/content-hkust.ts'),
+    path.join(root, 'src/content-hints.ts'),
     path.join(root, 'src/sw.ts'),
     path.join(root, 'src/panel.ts'),
   ],
