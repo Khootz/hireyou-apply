@@ -7,9 +7,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 | M0 Scaffold + harness | **DONE** (machine checks green; manual: load extension in Chrome pending user) | 3 | `npm run verify:m0` |
 | M1 Master profile | **DONE** (machine checks green; manual: editor walkthrough pending user) | 1 | `npm run verify:m1` |
 | M2 CV PDF pre-fill | **DONE** (real CV parses: contact exact, 6 typed sections; review dialog gates apply) | 2 | `npm run verify:m2` |
-| M3 Job tracker | not started | 0 | `npm run verify:m3` |
-| M4 Generation engine | not started | 0 | `npm run verify:m4` |
-| M5 PDF rendering | not started | 0 | `npm run verify:m5` |
+| M3 Job tracker | **DONE** | 1 | `npm run verify:m3` |
+| M4 Generation engine | **DONE** (provenance gate caught a real hallucination live; alias fix) | 2 | `npm run verify:m4` |
+| M5 PDF rendering | **DONE** (system Chrome via puppeteer-core; preview = actual PDF) | 1 | `npm run verify:m5` |
 | M6 Extension + HKUST | not started | 0 | `npm run verify:m6` |
 | M7 Email apply | not started | 0 | `npm run verify:m7` |
 | M8 Form hints (best-effort) | not started | 0 | `npm run verify:m8` |
@@ -47,5 +47,21 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Web: Upload-CV button + review dialog (checkbox per section + contact merge, replace-warning when sections exist).
 - Loop 2 fix: oversized-file expectation 400→413 (multipart limit fires before route handler — correct HTTP semantics).
 - Refresh fixture anytime with `npx tsx scripts/record-cv-parse.ts`.
+
+**2026-08-10 — M3, loop 1 → GREEN (34 passed)**
+- jobs table + CRUD API; dedup_key = (board, lowercased company, lowercased title) — URL-agnostic, unique index. applied_at stamped on first transition to applied only; notes edits don't touch status_updated_at.
+- Web: react-router-dom; Jobs list (Title/Company/Status/Materials/Date, +Add Job modal, relative dates), Amploy-style job detail (status pills, JD, autosaving notes, delete).
+
+**2026-08-10 — M4, loops 1–2 → GREEN (41 passed)**
+- Architecture: LLM returns a PLAN referencing profile facts by alias (s1/e2/b14 — models mangle UUIDs); server translates aliases → real fact_ids, rebuilds the document from the PROFILE (org/role/dates structurally uncopyable from model output), throws GenerationValidationError on any unresolvable reference.
+- Loop 1 live-recording caught a REAL hallucinated fact_id in SKILLS — gate works. Fix: alias ids + one business-retry with the violation fed back. Re-record clean: resume 6 sections/22 bullets, cover letter names "Jain Global" + "Quant Researcher Intern" in p1.
+- Async Runner (queued→running→succeeded/failed, drain() for tests), versioning (regenerate = v2, v1 kept), idempotent generate (active run returned), readiness gate 422 (profile/JD completeness enforced here, not at autosave).
+- Fixtures: tests/fixtures/generation/{profile.json (frozen fact_ids), jain-jd.txt}; llm/{tailor-resume, cover-letter, tailor-bogus(-retry)}. Re-record: `npx tsx scripts/record-generation.ts`.
+- Web: generation cards on job detail (generate → poll → version list), document viewer.
+
+**2026-08-10 — M5, loop 1 → GREEN (44 passed)**
+- puppeteer-core + system Chrome (channel:'chrome') — no bundled-Chromium download (Google-hosted, would need proxy anyway). HTML templates: serif/justified/hyphenated, ruled section headers, two-col entry rows, centered name block.
+- GET /api/documents/:id/pdf renders on demand, caches by (id, version) — content immutable per version. Query-token auth (?token=) for iframes/new tabs, GET-only.
+- Tests assert: %PDF magic, selectable text (name/section/org found via pdfjs), identical text + page count across two renders, 401 without token. Preview iframe shows the SAME rendered PDF — parity by construction.
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

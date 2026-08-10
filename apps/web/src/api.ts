@@ -53,3 +53,9 @@ export const api = {
     request<{ documents: Omit<DocumentRecord, 'content'>[] }>(`/api/jobs/${jobId}/documents`),
   getDocument: (id: string) => request<DocumentRecord>(`/api/documents/${id}`),
 }
+
+// iframes/new tabs can't carry the Authorization header; PDF GETs accept the
+// token as a query parameter instead.
+export function pdfUrl(documentId: string): string {
+  return `/api/documents/${documentId}/pdf?token=${encodeURIComponent(TOKEN)}`
+}

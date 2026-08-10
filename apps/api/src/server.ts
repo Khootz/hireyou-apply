@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
+import { registerDocumentRoutes } from './routes/documents'
 import { registerGenerationRoutes } from './routes/generation'
 import { registerJobRoutes } from './routes/jobs'
 import { registerProfileRoutes } from './routes/profile'
@@ -27,9 +28,12 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     if (!expected) {
       return reply.code(500).send({ error: 'API_AUTH_TOKEN not configured' })
     }
-    if (req.headers.authorization !== `Bearer ${expected}`) {
-      return reply.code(401).send({ error: 'unauthorized' })
-    }
+    // iframes/new tabs can't set headers, so PDF GETs may authenticate via
+    // ?token= (single-user local app; the token equals the bearer token).
+    const queryToken = (req.query as Record<string, unknown>)?.token
+    if (req.headers.authorization === `Bearer ${expected}`) return
+    if (typeof queryToken === 'string' && queryToken === expected && req.method === 'GET') return
+    return reply.code(401).send({ error: 'unauthorized' })
   })
 
   app.get('/health', async () => ({ status: 'ok', service: 'hireyou-apply-api' }))
@@ -37,6 +41,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   registerProfileRoutes(app, deps.sqlite)
   registerJobRoutes(app, deps.sqlite)
   registerGenerationRoutes(app, deps.sqlite, runner)
+  registerDocumentRoutes(app, deps.sqlite)
 
   return app
 }

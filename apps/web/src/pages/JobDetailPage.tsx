@@ -8,7 +8,7 @@ import {
   type JobStatus,
   type ResumeDocument,
 } from '@app/shared'
-import { api } from '../api'
+import { api, pdfUrl } from '../api'
 import { STATUS_LABEL, STATUS_STYLE, timeAgo } from '../lib'
 
 export function JobDetailPage() {
@@ -229,13 +229,27 @@ function DocumentViewer({ doc, onClose }: { doc: DocumentRecord; onClose: () => 
       >
         <div className="flex justify-between items-center">
           <span className="text-xs text-slate-400">
-            {doc.type === 'resume' ? 'Tailored resume' : 'Cover letter'} · v{doc.version} (PDF export arrives with M5)
+            {doc.type === 'resume' ? 'Tailored resume' : 'Cover letter'} · v{doc.version}
           </span>
-          <button className="text-slate-400 hover:text-slate-700" onClick={onClose}>
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              className="text-sm text-blue-700 hover:underline"
+              href={pdfUrl(doc.id)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              ⬇ Open PDF
+            </a>
+            <button className="text-slate-400 hover:text-slate-700" onClick={onClose}>
+              ✕
+            </button>
+          </div>
         </div>
-        {c.kind === 'resume' ? <ResumeView content={c} /> : <CoverLetterView content={c} />}
+        <iframe title="PDF preview" src={pdfUrl(doc.id)} className="w-full h-[65vh] rounded-lg border border-slate-200" />
+        <details>
+          <summary className="text-xs text-slate-400 cursor-pointer">Structured view</summary>
+          <div className="pt-3">{c.kind === 'resume' ? <ResumeView content={c} /> : <CoverLetterView content={c} />}</div>
+        </details>
       </div>
     </div>
   )
