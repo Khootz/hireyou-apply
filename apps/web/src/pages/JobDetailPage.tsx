@@ -8,7 +8,7 @@ import {
   type JobStatus,
   type ResumeDocument,
 } from '@app/shared'
-import { api, pdfUrl } from '../api'
+import { api, emailApi, pdfUrl, type EmailDraft, type EmailRecord } from '../api'
 import { STATUS_LABEL, STATUS_STYLE, timeAgo } from '../lib'
 
 export function JobDetailPage() {
@@ -126,6 +126,143 @@ export function JobDetailPage() {
         <GenerationCard jobId={job.id} type="resume" icon="📄" label="Resume" />
         <GenerationCard jobId={job.id} type="cover_letter" icon="✉️" label="Cover Letter" />
       </div>
+
+      <EmailCard job={job} onApplied={() => setStatus('applied')} />
+    </div>
+  )
+}
+
+function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }) {
+  const [draft, setDraft] = useState<EmailDraft | null>(null)
+  const [history, setHistory] = useState<EmailRecord[]>([])
+  const [to, setTo] = useState('')
+  const [subject, setSubject] = useState('')
+  const [body, setBody] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sentJustNow, setSentJustNow] = useState(false)
+  const [error, setError] = useState('')
+
+  const reload = useCallback(() => {
+    emailApi
+      .preview(job.id)
+      .then((d) => {
+        setDraft(d)
+        setTo(d.to_intended)
+        setSubject(d.subject)
+        setBody(d.body)
+      })
+      .catch(() => {})
+    emailApi
+      .history(job.id)
+      .then((r) => setHistory(r.emails))
+      .catch(() => {})
+  }, [job.id])
+
+  useEffect(() => {
+    reload()
+  }, [reload])
+
+  if (!draft) return null
+
+  const canSend = draft.attachments.length === 2 && (to.trim() || draft.to_intended)
+
+  const send = async () => {
+    setSending(true)
+    setError('')
+    try {
+      await emailApi.send(job.id, {
+        to: to.trim() || undefined,
+        subject,
+        body,
+        attachment_doc_ids: draft.attachments.map((a) => a.document_id),
+      })
+      setSentJustNow(true)
+      reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium text-slate-900">📮 Apply by email</div>
+        {draft.safe_mode && (
+          <span className="text-[11px] rounded-md bg-amber-100 text-amber-800 px-2 py-0.5">
+            SAFE MODE — delivers to {draft.to_actual}
+          </span>
+        )}
+      </div>
+
+      {draft.problems.length > 0 && (
+        <ul className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2 space-y-0.5">
+          {draft.problems.map((p) => (
+            <li key={p}>• {p}</li>
+          ))}
+        </ul>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-xs text-slate-500">To (employer)</span>
+          <input
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            value={to}
+            placeholder="hr@company.com"
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs text-slate-500">Subject</span>
+          <input
+            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </label>
+      </div>
+      <textarea
+        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm min-h-40 font-mono"
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+      />
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-slate-500">
+          {draft.attachments.length > 0
+            ? `📎 ${draft.attachments.map((a) => `${a.filename} (v${a.version})`).join(' · ')}`
+            : 'No attachments yet — generate the documents above first.'}
+        </div>
+        <button
+          className="rounded-lg bg-blue-700 text-white text-sm px-4 py-2 hover:bg-blue-800 disabled:opacity-50"
+          disabled={!canSend || sending}
+          onClick={send}
+        >
+          {sending ? 'Sending…' : 'Send application'}
+        </button>
+      </div>
+      {error && <div className="text-xs text-red-600 bg-red-50 rounded p-2">{error}</div>}
+      {sentJustNow && (
+        <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+          <span className="text-sm text-green-700">✓ Sent{draft.safe_mode ? ` (safe mode → ${draft.to_actual})` : ''}</span>
+          {job.status === 'saved' && (
+            <button className="text-sm text-blue-700 hover:underline" onClick={onApplied}>
+              Mark as Applied
+            </button>
+          )}
+        </div>
+      )}
+      {history.length > 0 && (
+        <div className="text-xs text-slate-400 border-t border-slate-100 pt-2 space-y-0.5">
+          {history.map((h) => (
+            <div key={h.id}>
+              {timeAgo(h.sent_at)} — sent to {h.to_actual}
+              {h.safe_mode && h.to_intended !== h.to_actual ? ` (intended: ${h.to_intended || '—'})` : ''}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

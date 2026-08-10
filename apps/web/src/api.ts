@@ -59,3 +59,32 @@ export const api = {
 export function pdfUrl(documentId: string): string {
   return `/api/documents/${documentId}/pdf?token=${encodeURIComponent(TOKEN)}`
 }
+
+export interface EmailDraft {
+  to_intended: string
+  to_actual: string
+  safe_mode: boolean
+  subject: string
+  body: string
+  attachments: { document_id: string; type: string; version: number; filename: string }[]
+  problems: string[]
+}
+
+export interface EmailRecord {
+  id: string
+  to_intended: string
+  to_actual: string
+  subject: string
+  safe_mode: boolean
+  sent_at: string
+}
+
+export const emailApi = {
+  preview: (jobId: string) => request<EmailDraft>(`/api/jobs/${jobId}/email/preview`),
+  send: (jobId: string, payload: { to?: string; subject: string; body: string; attachment_doc_ids: string[] }) =>
+    request<{ sent: boolean; record: EmailRecord }>(`/api/jobs/${jobId}/email/send`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  history: (jobId: string) => request<{ emails: EmailRecord[] }>(`/api/jobs/${jobId}/emails`),
+}

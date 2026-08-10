@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
 import { registerDocumentRoutes } from './routes/documents'
+import { registerEmailRoutes, type EmailRouteDeps } from './routes/email'
 import { registerGenerationRoutes } from './routes/generation'
 import { registerJobRoutes } from './routes/jobs'
 import { registerProfileRoutes } from './routes/profile'
@@ -10,6 +11,7 @@ import { Runner } from './services/runs'
 
 export interface ServerDeps {
   sqlite: Database.Database
+  email?: EmailRouteDeps
 }
 
 declare module 'fastify' {
@@ -46,6 +48,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   registerJobRoutes(app, deps.sqlite)
   registerGenerationRoutes(app, deps.sqlite, runner)
   registerDocumentRoutes(app, deps.sqlite)
+  registerEmailRoutes(app, deps.sqlite, deps.email)
 
   return app
 }

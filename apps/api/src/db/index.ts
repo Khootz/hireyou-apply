@@ -62,6 +62,20 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       finished_at TEXT
     );`,
   },
+  {
+    id: '005_email_records',
+    sql: `CREATE TABLE IF NOT EXISTS email_records (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      to_intended TEXT NOT NULL,
+      to_actual TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      attachment_doc_ids TEXT NOT NULL,
+      safe_mode INTEGER NOT NULL,
+      sent_at TEXT NOT NULL
+    );`,
+  },
 ]
 
 export interface Db {
