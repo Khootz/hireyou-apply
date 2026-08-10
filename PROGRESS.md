@@ -14,6 +14,7 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 | M7 Email apply | **DONE — live send verified** (real Gmail → test inbox, 2 PDFs, 2026-08-10) | 3 | `npm run verify:m7` |
 | M8 Form hints (best-effort) | **DONE** (manual: live JobsDB/CTgoodjobs check pending user) | 1 | `npm run verify:m8` |
 | M9 Hardening | not started (optional) | 0 | — |
+| M-UI Amploy UI parity | **DONE** (visual check pending user) | 1 | `npm run verify:m-ui` |
 
 ## Pre-build log
 
@@ -86,5 +87,11 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - `npx tsx scripts/live-send-test.ts` → real Gmail SMTP through socks5://127.0.0.1:10808, SAFE_MODE override active (intended APAC-Careers@jainglobal.com → actual tzkhoo@connect.ust.hk), 2 real PDF attachments. Sender: 1999ktz@gmail.com (app password in .env; NOTE: three 9s — 199ktz@ and 1999ktz3@ are wrong).
 - Also live: web UI deployed to https://hireyou-apply.vercel.app (static; calls the local API — browsers treat 127.0.0.1 as secure). One-click local boot: "Start HireYou Apply.bat". Vercel CLI on this machine needs `NODE_USE_ENV_PROXY=1`.
 - P0 IS COMPLETE: every stage of the HKUST flow has now run for real at least once.
+
+**2026-08-10 — M-UI, loop 1 → GREEN (62 passed) — from user's Amploy screenshots**
+- Nav: HireYou wordmark, icon tabs with active pill, avatar initials from profile, Install Extension page (load-unpacked steps; Web Store unlisted deferred). NO pro/billing UI per user.
+- Jobs page: "N jobs tracked", status filter pills with live counts, search (title/company), inline status dropdown + colored dot, real Materials chips (jobs list now returns `materials` via GROUP_CONCAT over documents), row × delete, title ↗ link.
+- My Resume: two-pane — left editor with ⠿ HTML5 drag-reorder (+▲▼ kept), right sticky LIVE PDF preview via GET /api/profile/pdf (master profile through the SAME renderer as exports; cached by updated_at; /meta returns page count; refreshes after each autosave). Empty-profile render tested.
+- Redeployed to Vercel. Also earlier same day: fixed dev boot (tsx watch hangs under concurrently on Windows → plain tsx; `dev:api:watch` kept for code work) and made the launcher self-healing (health-check, kill half-dead, wait-until-ready).
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

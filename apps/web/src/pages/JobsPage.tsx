@@ -206,15 +206,8 @@ export function JobsPage() {
 }
 
 function AddJobDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({
-    title: '',
-    company: '',
-    location: '',
-    source_url: '',
-    jd_text: '',
-    apply_email: '',
-    deadline: '',
-  })
+  const [tab, setTab] = useState<'extension' | 'manual'>('manual')
+  const [form, setForm] = useState({ title: '', company: '', source_url: '', jd_text: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -225,11 +218,7 @@ function AddJobDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
     setBusy(true)
     setError('')
     try {
-      await api.createJob({
-        ...form,
-        apply_email: form.apply_email || null,
-        source_board: 'manual',
-      })
+      await api.createJob({ ...form, source_board: 'manual' })
       onCreated()
     } catch (err) {
       setError((err as Error).message)
@@ -237,48 +226,88 @@ function AddJobDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
     }
   }
 
+  const tabClass = (active: boolean) =>
+    `flex-1 flex items-center justify-center gap-2 pb-3 text-sm font-medium border-b-2 -mb-px ${
+      active ? 'text-blue-700 border-blue-700' : 'text-slate-500 border-transparent hover:text-slate-700'
+    }`
+
   return (
     <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900">Add job</h2>
-        {error && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">{error}</div>}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input label="Job title *" value={form.title} onChange={set('title')} />
-          <Input label="Company *" value={form.company} onChange={set('company')} />
-          <Input label="Location" value={form.location} onChange={set('location')} />
-          <Input label="Job URL" value={form.source_url} onChange={set('source_url')} />
-          <Input label="Apply email" value={form.apply_email} onChange={set('apply_email')} placeholder="hr@company.com" />
-          <Input label="Deadline" value={form.deadline} onChange={set('deadline')} placeholder="2026-09-30" />
+      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4">
+          <h2 className="text-lg font-bold text-slate-900">Add Job</h2>
+          <button className="text-slate-400 hover:text-slate-700 text-xl leading-none" onClick={onClose}>
+            ×
+          </button>
         </div>
-        <label className="block">
-          <span className="text-xs text-slate-500">
-            Job description ({form.jd_text.length}/{JD_TEXT_MAX})
-          </span>
-          <textarea
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm min-h-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            maxLength={JD_TEXT_MAX}
-            value={form.jd_text}
-            onChange={set('jd_text')}
-          />
-        </label>
-        <div className="flex justify-end gap-2 pt-1">
-          <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50" onClick={onClose}>
+
+        <div className="flex border-b border-slate-200 px-6">
+          <button className={tabClass(tab === 'extension')} onClick={() => setTab('extension')}>
+            🌐 Browser Extension
+          </button>
+          <button className={tabClass(tab === 'manual')} onClick={() => setTab('manual')}>
+            ✏️ Manual Entry
+          </button>
+        </div>
+
+        {tab === 'extension' ? (
+          <div className="px-6 py-6 space-y-3 text-sm text-slate-600">
+            <p>
+              The fastest way to add jobs: open a posting on the{' '}
+              <a className="text-blue-700 hover:underline" href="https://career.hkust.edu.hk/web/job.php" target="_blank" rel="noreferrer">
+                HKUST career board
+              </a>{' '}
+              and the HireYou extension detects it automatically — title, company, description, deadline and apply
+              email, one click to save.
+            </p>
+            <Link to="/extension" className="inline-block text-blue-700 hover:underline font-medium">
+              Set up the extension →
+            </Link>
+          </div>
+        ) : (
+          <div className="px-6 py-5 space-y-4">
+            {error && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">{error}</div>}
+            <Field label="Job Title *" value={form.title} onChange={set('title')} placeholder="e.g. Senior Software Engineer" />
+            <Field label="Company *" value={form.company} onChange={set('company')} placeholder="e.g. Google" />
+            <Field label="URL" value={form.source_url} onChange={set('source_url')} placeholder="https://..." />
+            <label className="block">
+              <span className="text-sm font-medium text-slate-700">Job Description</span>
+              <textarea
+                className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm min-h-40 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
+                placeholder="Paste the full job description here…"
+                maxLength={JD_TEXT_MAX}
+                value={form.jd_text}
+                onChange={set('jd_text')}
+              />
+              {form.jd_text.length > 0 && (
+                <span className="block text-right text-xs text-slate-400">
+                  {form.jd_text.length}/{JD_TEXT_MAX}
+                </span>
+              )}
+            </label>
+          </div>
+        )}
+
+        <div className="flex justify-end items-center gap-4 px-6 pb-5 pt-1">
+          <button className="text-sm text-slate-600 hover:text-slate-900" onClick={onClose}>
             Cancel
           </button>
-          <button
-            className="rounded-lg bg-blue-700 text-white px-4 py-2 text-sm hover:bg-blue-800 disabled:opacity-50"
-            disabled={busy || !form.title.trim() || !form.company.trim()}
-            onClick={submit}
-          >
-            {busy ? 'Saving…' : 'Save job'}
-          </button>
+          {tab === 'manual' && (
+            <button
+              className="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-blue-700 disabled:bg-blue-300"
+              disabled={busy || !form.title.trim() || !form.company.trim()}
+              onClick={submit}
+            >
+              {busy ? 'Adding…' : 'Add Job'}
+            </button>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-function Input({
+function Field({
   label,
   value,
   onChange,
@@ -291,9 +320,9 @@ function Input({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
       <input
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
         value={value}
         placeholder={placeholder}
         onChange={onChange}
