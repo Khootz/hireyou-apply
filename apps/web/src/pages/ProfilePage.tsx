@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ExperienceEntry, FactBullet, MasterProfile, ProfileSection } from '@app/shared'
-import { api } from '../api'
+import { api, type CvParseResponse } from '../api'
 
 // The editor generates ids/fact_ids client-side on creation, so the server's
 // backfill never rewrites editor content and autosave responses can be ignored.
@@ -45,6 +45,10 @@ const TYPE_LABEL: Record<ProfileSection['type'], string> = {
 export function ProfilePage() {
   const [profile, setProfile] = useState<MasterProfile | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('loading')
+  const [parseResult, setParseResult] = useState<CvParseResponse | null>(null)
+  const [parsing, setParsing] = useState(false)
+  const [parseError, setParseError] = useState('')
+  const fileInput = useRef<HTMLInputElement>(null)
   const dirty = useRef(0)
 
   useEffect(() => {
@@ -97,12 +101,67 @@ export function ProfilePage() {
     return <div className="mx-auto max-w-3xl px-4 py-16 text-slate-500">{saveState === 'error' ? 'Could not reach the API. Is it running on :3100 with the matching token?' : 'Loading…'}</div>
   }
 
+  const onCvUpload = async (file: File) => {
+    setParsing(true)
+    setParseError('')
+    try {
+      setParseResult(await api.parseCv(file))
+    } catch (err) {
+      setParseError((err as Error).message)
+    } finally {
+      setParsing(false)
+      if (fileInput.current) fileInput.current.value = ''
+    }
+  }
+
+  const applyDraft = (contact: boolean, sectionIdx: Set<number>) => {
+    if (!parseResult) return
+    const draft = parseResult.draft
+    edit((p) => ({
+      contact: contact
+        ? {
+            full_name: draft.contact.full_name || p.contact.full_name,
+            email: draft.contact.email || p.contact.email,
+            phone: draft.contact.phone || p.contact.phone,
+            location: draft.contact.location || p.contact.location,
+          }
+        : p.contact,
+      sections: draft.sections.filter((_, i) => sectionIdx.has(i)),
+    }))
+    setParseResult(null)
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-900">My Resume</h1>
-        <SaveBadge state={saveState} />
+        <div className="flex items-center gap-3">
+          <SaveBadge state={saveState} />
+          <input
+            ref={fileInput}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && onCvUpload(e.target.files[0])}
+          />
+          <button
+            className="rounded-lg bg-blue-700 text-white text-sm px-3 py-2 hover:bg-blue-800 disabled:opacity-50"
+            disabled={parsing}
+            onClick={() => fileInput.current?.click()}
+          >
+            {parsing ? 'Parsing CV…' : 'Upload CV to pre-fill'}
+          </button>
+        </div>
       </div>
+      {parseError && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2">{parseError}</div>}
+      {parseResult && (
+        <CvReviewDialog
+          result={parseResult}
+          hasExistingSections={profile.sections.length > 0}
+          onCancel={() => setParseResult(null)}
+          onApply={applyDraft}
+        />
+      )}
 
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500">CONTACT</h2>
@@ -208,6 +267,89 @@ export function ProfilePage() {
             + {TYPE_LABEL[type]} section
           </button>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function CvReviewDialog({
+  result,
+  hasExistingSections,
+  onCancel,
+  onApply,
+}: {
+  result: CvParseResponse
+  hasExistingSections: boolean
+  onCancel: () => void
+  onApply: (contact: boolean, sectionIdx: Set<number>) => void
+}) {
+  const [useContact, setUseContact] = useState(true)
+  const [selected, setSelected] = useState<Set<number>>(new Set(result.draft.sections.map((_, i) => i)))
+
+  const toggle = (i: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+
+  const summarize = (s: ProfileSection): string => {
+    switch (s.type) {
+      case 'paragraph':
+        return s.content.text.slice(0, 80)
+      case 'experience':
+        return s.content.entries.map((e) => e.organisation || e.role).filter(Boolean).join(', ').slice(0, 80)
+      case 'bullets':
+        return `${s.content.items.length} items`
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">Review parsed CV</h2>
+        <p className="text-sm text-slate-500">
+          Pick what to bring into your profile. Nothing is applied until you confirm.
+          {hasExistingSections && (
+            <span className="block mt-1 text-amber-700">⚠ Applying replaces your current sections with the selected ones.</span>
+          )}
+        </p>
+        {result.warnings.length > 0 && (
+          <div className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2">{result.warnings.join('; ')}</div>
+        )}
+        <label className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
+          <input type="checkbox" checked={useContact} onChange={(e) => setUseContact(e.target.checked)} />
+          <span className="text-sm">
+            <span className="font-medium text-slate-900">Contact</span>
+            <span className="block text-slate-500">
+              {[result.draft.contact.full_name, result.draft.contact.email, result.draft.contact.phone]
+                .filter(Boolean)
+                .join(' · ') || '(none found)'}
+            </span>
+          </span>
+        </label>
+        {result.draft.sections.map((s, i) => (
+          <label key={i} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
+            <input type="checkbox" checked={selected.has(i)} onChange={() => toggle(i)} />
+            <span className="text-sm">
+              <span className="font-medium text-slate-900">{s.title || 'Untitled'}</span>
+              <span className="ml-2 text-[11px] rounded bg-slate-100 text-slate-500 px-1.5 py-0.5">{TYPE_LABEL[s.type]}</span>
+              <span className="block text-slate-500">{summarize(s)}</span>
+            </span>
+          </label>
+        ))}
+        <div className="flex justify-end gap-2 pt-2">
+          <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50" onClick={onCancel}>
+            Cancel
+          </button>
+          <button
+            className="rounded-lg bg-blue-700 text-white px-4 py-2 text-sm hover:bg-blue-800"
+            onClick={() => onApply(useContact, selected)}
+          >
+            Apply {selected.size} section{selected.size === 1 ? '' : 's'}
+          </button>
+        </div>
       </div>
     </div>
   )

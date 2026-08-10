@@ -6,7 +6,7 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 |---|---|---|---|
 | M0 Scaffold + harness | **DONE** (machine checks green; manual: load extension in Chrome pending user) | 3 | `npm run verify:m0` |
 | M1 Master profile | **DONE** (machine checks green; manual: editor walkthrough pending user) | 1 | `npm run verify:m1` |
-| M2 CV PDF pre-fill | not started | 0 | `npm run verify:m2` |
+| M2 CV PDF pre-fill | **DONE** (real CV parses: contact exact, 6 typed sections; review dialog gates apply) | 2 | `npm run verify:m2` |
 | M3 Job tracker | not started | 0 | `npm run verify:m3` |
 | M4 Generation engine | not started | 0 | `npm run verify:m4` |
 | M5 PDF rendering | not started | 0 | `npm run verify:m5` |
@@ -39,5 +39,13 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Web: Tailwind v4, My Resume editor (contact card, three section types, add/remove/rename, ▲▼ reorder, 800ms autosave with status badge). Editor generates ids client-side so autosave responses need no adoption.
 - Exit criteria all machine-verified: round-trip deep-equal, 400 on invalid, draft accepted, backfill, fact_id stability across edits, reorder persistence, auth required. Real-boot smoke: PUT/GET over HTTP with backfilled UUIDs confirmed; web `vite build` clean.
 - Manual checklist for user: run `npm run dev:api` + `npm run dev:web`, open http://localhost:5180, fill some profile, refresh — data persists.
+
+**2026-08-10 — M2, loops 1–2 → GREEN (28 tests: 27 passed, 1 skipped)**
+- cvExtract: pdfjs line-grouping + two-column detection (midline whitespace band). Real CV: 1 page, 224 runs, clean extraction.
+- cvParse: flash-tier structuring, verbatim-preservation prompt, returns DRAFT only (never persists). Live-recorded fixture `cv-parse.json` from user's real CV — quality excellent (contact exact; EDUCATION incl. DTU exchange, WORK EXPERIENCE 2 orgs × 4 bullets, AWARD HIGHLIGHTS 5 entries, LEADERSHIP, SKILLS).
+- Route POST /api/profile/parse-cv (multipart ≤2MB → 413 above limit, %PDF- magic check → 400, parse failure → 422).
+- Web: Upload-CV button + review dialog (checkbox per section + contact merge, replace-warning when sections exist).
+- Loop 2 fix: oversized-file expectation 400→413 (multipart limit fires before route handler — correct HTTP semantics).
+- Refresh fixture anytime with `npx tsx scripts/record-cv-parse.ts`.
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

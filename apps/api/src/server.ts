@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify'
+import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
 import { registerProfileRoutes } from './routes/profile'
 
@@ -8,6 +9,7 @@ export interface ServerDeps {
 
 export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: false })
+  app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 1 } })
 
   app.addHook('onRequest', async (req, reply) => {
     const expected = process.env.API_AUTH_TOKEN

@@ -5,10 +5,12 @@ import type { MasterProfile } from '@app/shared'
 const TOKEN = localStorage.getItem('api_token') ?? 'dev-local-token-change-me'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData
   const res = await fetch(path, {
     ...init,
     headers: {
-      'content-type': 'application/json',
+      // FormData sets its own multipart boundary; forcing JSON breaks it.
+      ...(isFormData ? {} : { 'content-type': 'application/json' }),
       authorization: `Bearer ${TOKEN}`,
       ...(init?.headers ?? {}),
     },
@@ -19,8 +21,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>
 }
 
+export interface CvParseResponse {
+  draft: MasterProfile
+  pages: number
+  warnings: string[]
+}
+
 export const api = {
   getProfile: () => request<MasterProfile>('/api/profile'),
   saveProfile: (profile: MasterProfile) =>
     request<MasterProfile>('/api/profile', { method: 'PUT', body: JSON.stringify(profile) }),
+  parseCv: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<CvParseResponse>('/api/profile/parse-cv', { method: 'POST', body: form })
+  },
 }
