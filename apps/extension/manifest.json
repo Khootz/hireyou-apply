@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "HireYou Apply",
+  "version": "0.1.0",
+  "description": "Job application copilot: save jobs, tailor your resume and cover letter, get application help.",
+  "action": {
+    "default_title": "HireYou Apply"
+  },
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "permissions": ["sidePanel", "storage"]
+}

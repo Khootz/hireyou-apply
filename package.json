@@ -1,0 +1,25 @@
+{
+  "name": "hireyou-apply",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "tsx watch apps/api/src/index.ts",
+    "dev:web": "npm run dev -w @app/web",
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify:m0": "npm run typecheck && vitest run"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.7",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

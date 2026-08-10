@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.local
+coverage/
+.DS_Store
+Thumbs.db
+apps/api/data/*.sqlite*
+apps/api/storage/
+tmp/

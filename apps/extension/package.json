@@ -1,0 +1,6 @@
+{
+  "name": "@app/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MV3 extension. M0: static shell loaded unpacked from this directory. Real build pipeline arrives in M6."
+}

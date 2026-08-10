@@ -1,0 +1,2889 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<head>
+    <noscript>
+        <meta http-equiv="refresh" content="0;URL='https://career.hkust.edu.hk/web/js_disabled.html'" />
+        To use HKUST Career Center , please enable JavaScript in your browser settings, and then refresh this page.
+        <style>
+        body{display:none;}
+        </style>
+    </noscript>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.6,user-scalable=no">
+
+    <link rel="icon" href="images/HKUST.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="images/HKUST.ico" type="image/x-icon">
+
+    <title>Career Center | The HKUST</title>
+    <link href="https://fonts.googleapis.com/css?family=Lora|Marcellus+SC|Open+Sans:400,400i,700,700i" rel="stylesheet">
+    <link rel='stylesheet' type='text/css' media="all" href="css/job_post.css?t=1786364309" rel='stylesheet' type='text/css'>
+    <link rel='stylesheet' type='text/css' media="all" href="css/career_main.css?t=1786364309" rel='stylesheet' type='text/css'>
+    <link rel='stylesheet' type='text/css' media="all" href="css/contents.css?t=1786364309" rel='stylesheet' type='text/css'>
+    <link rel='stylesheet' type='text/css' media="all" href="css/section.css?t=1786364309" rel='stylesheet' type='text/css'>
+    <link rel='stylesheet' type='text/css' media="all" href="js/pikaday/css/pikaday.css?t=1786364309" rel='stylesheet' type='text/css'>
+    <link rel="styleSheet" type="text/css" media="screen" href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/css/select2.min.css">
+
+    <link rel="stylesheet" type="text/css" href="css/chatbot.css?t=1786364309">
+    <![if !IE]>
+    <script type="text/javascript" src="./js/jquery/jquery-2.1.3.min.js"></script>
+    <![endif]>
+    <![if gte IE 9]>
+    <script type="text/javascript" src="./js/jquery/jquery-1.9.1.js"></script>
+    <script type="text/javascript" type="text/javascript" src="./js/jquery/jquery-migrate-1.2.1.min.js"></script>
+    <![endif]>
+    <![if lt IE 9]>
+    <script type="text/javascript" src="./js/jquery/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="./js/jquery/jquery-migrate-1.2.1.min.js"></script>
+    <![endif]>
+    <link rel='stylesheet' type='text/css' media="all" href="js/magnific-popup/magnific-popup.css" rel='stylesheet' type='text/css'>
+    <script type="text/javascript" src="./js/validator.min.js"></script>
+    <script type="text/javascript" src="./js/moment.js"></script>
+    <script type="text/javascript" src="./js/jslb_ajax.js"></script>
+    <script type="text/javascript" src="./js/pikaday/pikaday.js"></script>
+    <script type="text/javascript" src="./js/tablesorter/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="./js/jquery.blockUI.min.js"></script>
+    <script type="text/javascript" src="./js/magnific-popup/jquery.magnific-popup.min.js"></script>
+    <script type="text/javascript" src="./js/tablesorter/addons/pager/jquery.tablesorter.pager.js"></script>
+    <script type="text/javascript" src="./js/function.js"></script>
+    <script type="text/javascript" src="./js/jquery-ui/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="./js/ckeditor/ckeditor.js?t=1786364309"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.10/js/select2.min.js"></script>
+    <script src="js/chatbot.js?t=1786364309"></script>
+
+<link rel='stylesheet' type='text/css' media="all" href="header_css.css?t=1786364309" rel='stylesheet' type='text/css'>
+
+
+</head>
+<body style="margin:0px" class="job-board">
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-87138516-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<style>
+    .error-text{
+        color: red;
+        font-size: 16px;
+        padding-left: 5px;
+    }
+    .btn-default:visited,
+    .btn-default:focus,
+    .btn-default:active,
+    .btn-default:hover,
+    .btn-default:link{
+        background-color: #356B97;
+        color:#FFFFFF;
+        text-decoration: none;
+        padding: 2px 15px 2px 15px;
+        font-size: 14px;
+    }
+
+</style>
+
+
+<script>
+$(document).ready(function () {
+
+    $(".navbar1 ul li").hover(function () {
+        $(this).find('.secondlevel').show();
+    }, function () {
+        $(this).find('.secondlevel').hide();
+    });
+
+   
+    
+    
+    
+   	 var click_num = 1;		
+	$( ".drawer-toggle" ).click(function() {
+		
+		
+		$('#drawer').slideToggle('1000');	
+
+		if ($(".drawer-toggle").hasClass('transfer_180'))
+	    {
+	            $(".drawer-toggle").removeClass("transfer_180");
+	        	$(".drawer-toggle").addClass("transfer_0");
+	    }
+	    else
+	    {
+	        	
+	            $(".drawer-toggle").removeClass("transfer_0");
+	        	$(".drawer-toggle").addClass("transfer_180");	
+	           
+	    }    
+		
+		
+		
+		/*
+	    $('#drawer').slideToggle('fast', function() {
+	    	
+	    	
+	    
+	    	var h1 =  0;
+	        if ($('#drawer').is(':hidden'))
+	        {
+	            $(".drawer-toggle").removeClass("transfer_180");
+	        	$(".drawer-toggle").addClass("transfer_0");
+	        }
+	        else
+	        {
+	        	
+	            $(".drawer-toggle").removeClass("transfer_0");
+	        	$(".drawer-toggle").addClass("transfer_180");	
+	             h1 =  $('.drawer').height() + 35;	
+	        }
+	        
+	       
+		
+		
+	    });  */           
+	
+	  
+	});
+
+
+
+});
+
+
+
+
+</script>
+
+
+
+
+
+<!--div class="career-menu-top">
+    <table style="max-width: 1000px;width: 100%;height:100px;position:absolute; bottom:0;margin:auto;">
+        <tr>
+            <td class="career-menu-top-item" data-href="http://hkust.edu.hk" style="width: 180px;cursor:pointer"></td>
+            <td class="career-menu-top-item" data-href="./home.php" style="cursor:pointer"></td>
+            <td class="career-menu-top-item" style="width: 150px"></td>
+            <td class="career-menu-top-item" data-href="https://dst.hkust.edu.hk/" style="width: 150px;cursor:pointer"></td>
+        </tr>
+    </table>
+    
+</div-->
+
+<script type="text/javascript">
+        $(window).resize(function(){
+            if($(window).width() >= 960){
+                 $('.career-content-wrapper').css({'width':'100%'});
+            }
+        })
+        $(document).on('click','.career-menu-top-item',function(){
+            if($(".career-menu-top-item").index(this) == 1){
+                window.location.replace($(this).attr('data-href'));
+            }else if($(".career-menu-top-item").index(this) == 0 || $(".career-menu-top-item").index(this) == 3){
+                window.open($(this).attr('data-href'));
+            }
+        });
+        $(document).on('click','#toggle-menu',function(){
+            $('.career-content-wrapper').css({'width':$('.career-content-wrapper').width()});
+            if($(this).hasClass( "active" )){
+                $(this).removeClass('active');
+            }else{
+                $(this).addClass('active');
+            }
+            if($(this).hasClass( "active" )){
+                $('.career-menu-wrapper').addClass('active');
+                $('.career-content-wrapper').css({'width':$('.career-content-wrapper').width()});
+            }else{
+                $('.career-menu-wrapper').removeClass('active');
+                $('.career-content-wrapper').css({'width':'100%'});
+            }
+        });
+</script>
+	
+	
+<!--div class="career-menu-top-mobile">
+    <div class="career-menu-top-mobile-item"><a href="index.php"><img src="./images/ust_career_mobile.png" style="width:100%"/></a></div>
+</div-->
+
+
+
+<div class="drawer" id="drawer" style="display: none">
+
+
+
+	
+	
+		<div class="content-wrapper">
+                          <div class="content">
+                          
+                          <div class="center">
+                              <div class="more-about">More about HKUST</div>
+                              <div class="more-about2">
+                               <div class="row">
+                                  
+                                      <a class="page" href="https://hkust.edu.hk/news" target="_blank">University News</a>
+                                      <a class="page" href="https://hkust.edu.hk/academics/list" target="_blank">Academic Departments A-Z</a>
+                                      <a class="page" href="https://hkust.edu.hk/lifehkust" target="_blank">Life@HKUST</a>
+                                      <a class="page" href="http://library.ust.hk/" target="_blank">Library</a>
+                            
+                              </div>
+                              <div class="row">
+                        
+                                      <a class="page" href="https://hkust.edu.hk/map-directions" target="_blank">Map &amp; Directions</a>
+                                      <a class="page" href="https://www.ab.ust.hk/hro/PubDoc/careers/main.html?btn1=btn_nav_06&amp;main=welcome.html" target="_blank">Jobs@HKUST</a>
+                                      <a class="page" href="https://facultyprofiles.ust.hk/" target="_blank">Faculty Profiles</a>
+                                      <a class="page" href="https://hkust.edu.hk/about-hkust" target="_blank">About HKUST</a>
+                                
+                              </div>
+                             </div>
+                          </div>
+                          
+               		</div>
+ 		</div>
+	
+</div>
+
+<div class="header-data">
+	
+	<div class="header">
+	
+		<div class="site-header-content">
+			
+			
+			
+			<div style="float:left; width:100%">
+	    	
+	    		<!--div style="float:left; width:30%">
+	    		
+	    			&nbsp;
+	    			
+	    			
+				
+	    		
+	    		</div-->
+	    		
+	    		<!--div style="float:left; width:40%;text-align:center;">
+	    			&nbsp;
+	    		
+	    		</div-->
+				
+					    		
+	    		<div style="float:left; width:100%; margin-top:0px">
+	    			
+	    			<div class="right">
+	    			
+	    			<div class="right_sitename"><a href="https://dst.hkust.edu.hk/eng/index.php" target="_blank" style="color:white; text-decoration:none">Dean of Students’ Office</a></div>
+	    			
+	    			<div class="right1">
+	    			 <div class="drawer-toggle end-menu">
+                                  <img src="./header_img/btn_menu_arrow1.jpg" border=0>
+                                 </div>
+                               </div>  
+                                 
+                                
+				
+				
+				<div class="mobile_search">
+				<A href="job.php"><img src="./header_img/mobile_search_btn.jpg" border=0></a>
+				</div>
+			   
+				
+				
+                              
+                              </div>
+                              
+	    			
+			    	
+	    		
+	    		
+	    		</div>
+	    		</div>
+	    	
+	    	
+	    	
+			
+		</div>
+	</div>
+	
+	
+	
+	
+<div class="career-menu-top-top-wrapper" style="display:none">
+    <div class="career-top-top-container">
+        <div class="career-user-setting-menu">
+            <div class="career-user-setting-action-menu career-user-setting-menu-item">
+            <ul>
+                            <li><a href="./my_schedule.php">My Records</a></li>
+                <li><a href="./job_pref.php">My Job Preferences</a></li>
+                <li><a href="./job_cart.php">My Job Cart</a></li>
+                <li><a href="./cas_logout.php">Logout</a></li>
+
+                        </ul>
+            </div>
+<!--             <div class="career-user-setting-logout career-user-setting-menu-item"><a href="./cas_logout.php">Logout</a>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+
+<div class="career-menu-top-top-second-wrapper">
+    <div class="career-top-top-container career-user-item-wrapper">
+            <div class="career-user-welcome career-user-item">Welcome KHOO, Thien Zhi.        </div>
+        <div class="career-user-setting career-user-item">
+        </div>
+        <script type="text/javascript">
+        $(document).on('click','.career-user-setting',function(){
+            if($(this).hasClass('active')){
+                $(this).removeClass('active');
+                $('.career-menu-top-top-wrapper').stop().hide();
+            }else{
+                $(this).addClass('active');
+                $('.career-menu-top-top-wrapper').stop().show();
+            }
+        })
+        </script>
+    </div>
+</div>
+
+	<div class="pc-header-menu">
+		<div class="main-menu">
+		<div class="pc_left">
+			<div class="logo">
+			<A href="http://hkust.edu.hk" target=_blank><picture style="border: 0">
+                            <source type="image/svg+xml" srcset="./header_img/35a_ust_logo.svg">
+                            <source type="image/png" srcset="./header_img/35a_ust_logo.png">
+                            <img alt="" src="./header_img/35a_ust_logo.png?t=1786364309" style="height: 64px">
+                        </picture></a>
+			</div>
+			
+			<div class="site">
+			<A href="index.php"><img src="./header_img/site_name.png?t=1786364309" border=0></a>
+			</div>
+			
+			
+		</div>
+		
+		
+		<div class="pc_right">
+			
+			<div style="float: left;"><a href="./page.php?section=about_us" class=m_link>About Us</a></div>
+			<div style="float: left;padding-left: 50px;"><a href="./my_schedule.php" class=m_link>My Records</a></div>
+
+
+			<div class="search">
+			<A href="job.php"><img src="./header_img/search_btn.jpg" border=0 style="width:90%"></a>
+			</div>
+			
+			
+		</div>
+		
+		
+		
+		</div>
+	</div>	
+	
+	
+	<div class="mobile-header-menu">
+		<div class="main-menu">
+		
+		
+		<Table border=0 cellpadding=0 cellspacing=0 width=100%>
+		<tr>
+		<td align=left valign=top>
+			<Table border=0 cellpadding=0 cellspacing=0 >
+			<tr>
+			<Td>
+                <A href="http://hkust.edu.hk" target=_blank><picture style="border: 0">
+                            <source type="image/svg+xml" srcset="./header_img/35a_ust_logo.svg">
+                            <source type="image/png" srcset="./header_img/35a_ust_logo.png">
+                            <img alt="" src="./header_img/35a_ust_logo.png?t=1786364309" style="max-width:100%">
+                        </picture></a>
+
+            <!--A href="http://hkust.edu.hk" target=_blank><img src="./header_img/ust_logo.png?t=1786364309" border=0 style="max-width:100%"></a-->
+        </td>
+			<Td><A href="index.php"><img src="./header_img/site_name.png?t=1786364309" border=0 style="max-width:100%"></a></td>
+			</tr>
+			</table>
+		</td>	
+		<td width=10%></td>
+		<Td align=right><div id="toggle-menu"><img src="./header_img/btn_mobile_menu.jpg?t=1786364309" border=0 style="max-width:100%"></div></td>
+		
+		
+		</tr>
+		</table>
+		
+		
+		
+		
+		</div>
+	</div>	
+	
+</div>	
+
+
+
+
+
+<div class="career-main-wrapper">
+    <div class="career-menu-wrapper">
+        <div class="career-menu">
+            <ul>
+            <li class="career-menu-item">
+            <a href="./home.php"><img src="./images/career_home.png" height="18" width="18"/></a></li><li class="career-menu-item find_a_job">
+            <a href="./page.php?section=find_a_job">Jobs &amp; Internships</a></li>
+			
+			
+			<li class="career-menu-item events">
+            <a href="./page.php?section=events">Events &amp; Courses</a></li><li class="career-menu-item meet_advisors">
+            <a href="./page.php?section=meet_advisors">Meet Advisors</a></li><li class="career-menu-item further_studies">
+			
+			 <a href="./page.php?sid=78" title="Further Studies" >Further Studies</a></li><li class="career-menu-item resource">
+			 
+            
+            <a href="./page.php?section=resource">Resources</a></li><li class="career-menu-item for_employer">
+            <a href="./page.php?section=for_employer">For Employers</a></li>
+                                    <li class="career-menu-item mobile-only"><a href="./job_cart.php">My Job Cart</a></li>
+                        <li class="career-menu-item mobile-only"><a href="./cas_logout.php">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+    <!--div class="career-menu-divider-mobile">
+        <div id="toggle-menu" class="toggle-menu only-mobile"><span></span></div>
+        <div class="sao-link" style="float: right; margin-top: -50px;"><a href="http://hkust.edu.hk"><img src="./images/ust_career_mobile2.png"/></a></div>
+    </div-->
+
+
+<div class="career-content-wrapper">
+    <div class="career-top-container">
+        <div class="career-title">Job Board</div>
+	<div class="float-right"><div class="button"><a href="job_cart.php"><button class="btn-default" type="button">My Job Cart</button></a></div></div><div class="float-right">&nbsp;</div><div class="float-right"><div class="button"><a href="job_pref.php"><button class="btn-default" type="button">My Job Preferences</button></a></div></div>
+	<br class="clear-fix">
+    </div>
+<div class="content-container" id="fixed-search-panel"></div>
+<div class="content-container">
+	<div class="career-content">
+		<div id="search-panel-placeholder"></div>
+				<div class="search-panel" id="search-panel">
+					<form id="job_search_form">
+					<div id="radius-panel">
+						<table border=0 cellpadding=0 cellspacing=0 style="width:100%">
+							<tr>
+								<td class="find-a-job-wrapper" style="width:120px;border:0;padding-left:0;margin:0">
+									<div id="find-a-job">Find a Job</div>
+								</td>
+								<td class="find-a-job-text-wrapper" style="">
+									<input type="text" style="" name="keywords" id="keywords" value=""/>
+								</td>
+								<td class="find-a-job-submit-wrapper" style="">
+									<input type="submit" id="btn-search" value="" />
+								</td>
+								<td class="find-a-job-more-wrapper" style="vertical-align: middle;">
+									<a href="javascript:void(0)" id="showSearchPanel" class="flip"><span> filter option</span></a>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div class="search-option">
+						<div style="width:100%">
+							<div style="width:90%;margin:auto;margin-top:20px">
+							    <div class="search-panel-dropdown">
+								<div>
+									<select multiple="multiple" data-placeholder="All Business Natures" name="BN[]">
+										<option data-action="clear_all">Clear All Business Natures</option>
+										<option value="1">Accounting</option>
+										<option value="2">Advertising / Marketing / Market Research / Public Relations</option>
+										<option value="3">Aviation / Transport / Logistics</option>
+										<option value="5">Banking/Finance - Commercial Banks</option>
+										<option value="40">Banking/Finance - Investment Banks</option>
+										<option value="7">Banking/Finance - Other Financial &amp; Investment Institutions or Financial Services</option>
+										<option value="6">Banking/Finance - Private Equities / Hedge Funds / Asset Management</option>
+										<option value="8">Beauty / Health Care / Fitness</option>
+										<option value="9">Biotechnology / Chemicals / Laboratory / Testing Services</option>
+										<option value="10">Catering / Food &amp; Beverage</option>
+										<option value="11">Charity / NGO / Quasi-government / Professional Bodies</option>
+										<option value="54">Civil Service / Government</option>
+										<option value="4">Construction / Construction Engineering Consultancy / Architecture / Surveying</option>
+										<option value="14">Education / Research / Training</option>
+										<option value="15">Engineering / Technical Services</option>
+										<option value="16">Environmental Science</option>
+										<option value="17">Fast Moving Consumer Goods</option>
+										<option value="18">General Business Services / Other Consulting Services</option>
+										<option value="52">HKUST</option>
+										<option value="20">Hospitality / Hotels / Tourism / Entertainment</option>
+										<option value="19">HR / Recruitment Services</option>
+										<option value="21">Information Technology / FinTech</option>
+										<option value="22">Insurance</option>
+										<option value="23">Internet / Digital / e-Commerce</option>
+										<option value="53">Internship Program Organizers</option>
+										<option value="24">Legal Services</option>
+										<option value="26">Management Consulting</option>
+										<option value="25">Manufacturing</option>
+										<option value="27">Media / Publishing</option>
+										<option value="28">Medical Services / Pharmaceutical</option>
+										<option value="29">Motor Vehicles</option>
+										<option value="30">Multi-nature Conglomerates</option>
+										<option value="35">Others</option>
+										<option value="31">Property Management / Real Estate Development</option>
+										<option value="32">Retail / Wholesale / Trading / Import &amp; Export</option>
+										<option value="33">Telecommunication</option>
+										<option value="34">Utilities / Energy / Power</option>
+</select></div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+									<select multiple="multiple" data-placeholder="All Job Natures" name="JN[]">
+										<option data-action="clear_all">Clear All Job Natures</option>
+										<option value="1">Accounting/ Auditing/ Tax</option>
+										<option value="2">Administration - Non-private Sector</option>
+										<option value="3">Administration - Private Sector</option>
+										<option value="4">Architecture/ Interior Design</option>
+										<option value="5">Banking and Finance Executive</option>
+										<option value="33">Civil Service/Government</option>
+										<option value="6">Community/ Social Worker</option>
+										<option value="7">Creative/ Design/ Artist</option>
+										<option value="8">Customer Services - Retail/ Hotel/ Tourism and Others</option>
+										<option value="9">Disciplinary Forces</option>
+										<option value="11">Engineering - Biological/ Chemical/ Electronic/ Industrial/ Mechanical and others</option>
+										<option value="10">Engineering - Construction/ Building Services</option>
+										<option value="12">Human Resources/ Training/ Recruitment</option>
+										<option value="13">IT/ Programming</option>
+										<option value="14">Journalist/ Editor/ Translation/ Copy Writing/ Communications</option>
+										<option value="15">Legal/ Compliance</option>
+										<option value="16">Library Officer/ Library Assistant</option>
+										<option value="17">Logistics/ Supply Chain</option>
+										<option value="18">Management Consultant/ Business Analyst</option>
+										<option value="19">Management Trainee/Graduate Trainee</option>
+										<option value="20">Marketing/ Market Research</option>
+										<option value="21">Medical Practitioners/ Therapist/ Pharmacist</option>
+										<option value="22">Merchandising/ Buying</option>
+										<option value="23">Miscellaneous</option>
+										<option value="31">Others</option>
+										<option value="24">PR/ Event Management</option>
+										<option value="25">Quality Control</option>
+										<option value="26">Research &amp; Development</option>
+										<option value="27">Research Assistant/ Technicians</option>
+										<option value="28">Sales/ Account Servicing/ Business Development</option>
+										<option value="29">Surveying</option>
+										<option value="30">Teaching</option>
+</select></div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+									<select multiple="multiple" data-placeholder="All Employment Types" name="EMT[]">
+										<option data-action="clear_all">Clear All Employment Types</option>
+										<!-- option value="" title="All Employment Type" selected>All Employment Type</option -->
+										<option title="ASEAN Internship" value="6">ASEAN Internship</option><option title="Co-op" value="13">Co-op</option><option title="Government Summer Job (PSSSIP)" value="8">Government Summer Job (PSSSIP)</option><option title="Graduate Job" value="3">Graduate Job</option><option title="Internship (above minimum wage)" value="14">Internship (above minimum wage)</option><option title="Internship (below minimum wage)" value="15">Internship (below minimum wage)</option><option title="On-Campus Internship" value="9">On-Campus Internship</option><option title="STEM Internship" value="11">STEM Internship</option><option title="Unpaid Work" value="16">Unpaid Work</option><option title="Volunteer Work" value="17">Volunteer Work</option><option title="UPOP Internship" value="12">UPOP Internship</option><option title="Others" value="5">Others</option></select></div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+									<select multiple="multiple" data-placeholder="All Working Locations" name="WL[]">
+										<option data-action="clear_all">Clear All Working Locations</option>
+												<!-- option value="" title="All Work Location" selected>All Work Location</option -->
+												<option title="Belt and Road Countries" value="24">Belt and Road Countries</option><option title="Brunei Darussalam" value="5">Brunei Darussalam</option><option title="Cambodia" value="6">Cambodia</option><option title="Chinese Mainland" value="4">Chinese Mainland</option><option title="Europe" value="16">Europe</option><option title="Hong Kong" value="1">Hong Kong</option><option title="Indonesia" value="7">Indonesia</option><option title="Japan" value="14">Japan</option><option title="Korea" value="20">Korea</option><option title="Laos" value="8">Laos</option><option title="Macau" value="2">Macau</option><option title="Malaysia" value="9">Malaysia</option><option title="Myanmar" value="18">Myanmar</option><option title="Others" value="19">Others</option><option title="Philippines" value="12">Philippines</option><option title="Singapore" value="3">Singapore</option><option title="Switzerland" value="21">Switzerland</option><option title="Taiwan, China" value="23">Taiwan, China</option><option title="Thailand" value="11">Thailand</option><option title="USA" value="17">USA</option><option title="Various Locations" value="15">Various Locations</option><option title="Vietnam" value="13">Vietnam</option><option title="Virtual" value="22">Virtual</option>											</select></div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+									<select multiple="multiple" data-placeholder="All Levels of Qualification" name="awards[]">
+										<option data-action="clear_all">Clear All Levels of Qualification</option>
+												<!-- option value="" title="All Level of Qualification" selected>All Level of Qualification</option -->
+												<option title="Undergraduate" value="bachelor">Undergraduate</option>
+												<option title="Taught Postgraduate" value="master">Taught Postgraduate</option>
+												<option title="Research Postgraduate" value="phd">Research Postgraduate</option>
+											</select>
+								</div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+								    <select multiple data-placeholder="All Employment Modes" name="EM[]">
+									<option data-action="clear_all">Clear All Employment Modes</option>
+									<option value="PT">Part Time</option>
+									<option value="FT">Full Time</option>
+								    </select>
+								</div>
+							    </div>
+							    <div class="search-panel-dropdown">
+								<div>
+								    <select multiple data-placeholder="All Languages" name="L[]">
+									<option data-action="clear_all">Clear All Languages</option>
+									<option value="wen">English (Writing)</option>
+									<option value="sen">English (Speaking)</option>
+									<option value="zh">Chinese (Writing)</option>
+									<option value="zh-hk">Cantonese (Speaking)</option>
+									<option value="zh-cn">Putonghua (Speaking)</option>
+									<option value="other">Others</option>
+								    </select>
+								</div>
+							    </div>
+								
+							    <div class="search-panel-dropdown double-width">
+								<div>
+								    <label><input type="checkbox" id="TEC" name="TEC" value="1"> <font style="color:#6e6e70">Talent-Wise Employment Charter<img class="sen-logo" src="images/sen_logo2.png"></font><img class="sen-logo" src="images/spacer.gif"></label>
+								</div>
+								
+								
+								<div>
+								    <label><input type="checkbox" id="AJOB" name="AJOB" value="1"> <font style="color:#6e6e70">Active Job</font></label>
+								</div>
+								<div>
+								    <label><input type="checkbox" id="NCHI" name="NCHI" value="1"> <font style="color:#6e6e70">Non-Chinese speaking students would be considered</font></label>
+								</div>
+							    </div>
+
+								<div style="text-align:right">
+									<button type="submit" class="btn-default"><font>Search</font></button>
+									<a href="/web/job.php?clear=1"><button class="btn-default" style="cursor:pointer" type="button"><font>Clear All</font></button></a>
+								</div>
+								<br class="clearfix">
+							</div>
+							<!-- div style="height:40px;">
+							</div>
+								<ul class="browse-by-tab-list">
+									<li class="browse-by-tab" style="background-color:#F1F8FE" onclick="tabchange(this,'browse-by-bn')">
+										Browse By Business Nature
+									</li>
+									<li class="browse-by-tab" onclick="tabchange(this,'browse-by-jn')">
+										Browse By Job Nature
+									</li>
+								</ul>
+								<div id="browse-by" style="background-color:#F1F8FE;width:98%;margin:auto">
+									<div id="browse-by-bn" style="width:100%;margin:auto;padding: 10px 0px;">
+										<div class="business_nature_item"><a class="c-link" title="Accounting" href="./job.php?BN=1">Accounting</a></div><div class="business_nature_item"><a class="c-link" title="Advertising / Marketing / Market Research / Public Relations" href="./job.php?BN=2">Advertising / Marketing / Market Research / Public Relations</a></div><div class="business_nature_item"><a class="c-link" title="Aviation / Transport / Logistics" href="./job.php?BN=3">Aviation / Transport / Logistics</a></div><div class="business_nature_item"><a class="c-link" title="Banking/Finance - Commercial Banks" href="./job.php?BN=5">Banking/Finance - Commercial Banks</a></div><div class="business_nature_item"><a class="c-link" title="Banking/Finance - Investment Banks" href="./job.php?BN=40">Banking/Finance - Investment Banks</a></div><div class="business_nature_item"><a class="c-link" title="Banking/Finance - Other Financial &amp; Investment Institutions or Financial Services" href="./job.php?BN=7">Banking/Finance - Other Financial &amp; Investment Institutions or Financial Services</a></div><div class="business_nature_item"><a class="c-link" title="Banking/Finance - Private Equities / Hedge Funds / Asset Management" href="./job.php?BN=6">Banking/Finance - Private Equities / Hedge Funds / Asset Management</a></div><div class="business_nature_item"><a class="c-link" title="Beauty / Health Care / Fitness" href="./job.php?BN=8">Beauty / Health Care / Fitness</a></div><div class="business_nature_item"><a class="c-link" title="Biotechnology / Chemicals / Laboratory / Testing Services" href="./job.php?BN=9">Biotechnology / Chemicals / Laboratory / Testing Services</a></div><div class="business_nature_item"><a class="c-link" title="Catering / Food &amp; Beverage" href="./job.php?BN=10">Catering / Food &amp; Beverage</a></div><div class="business_nature_item"><a class="c-link" title="Charity / NGO / Quasi-government / Professional Bodies" href="./job.php?BN=11">Charity / NGO / Quasi-government / Professional Bodies</a></div><div class="business_nature_item"><a class="c-link" title="Civil Service / Government" href="./job.php?BN=54">Civil Service / Government</a></div><div class="business_nature_item"><a class="c-link" title="Construction / Construction Engineering Consultancy / Architecture / Surveying" href="./job.php?BN=4">Construction / Construction Engineering Consultancy / Architecture / Surveying</a></div><div class="business_nature_item"><a class="c-link" title="Education / Research / Training" href="./job.php?BN=14">Education / Research / Training</a></div><div class="business_nature_item"><a class="c-link" title="Engineering / Technical Services" href="./job.php?BN=15">Engineering / Technical Services</a></div><div class="business_nature_item"><a class="c-link" title="Environmental Science" href="./job.php?BN=16">Environmental Science</a></div><div class="business_nature_item"><a class="c-link" title="Fast Moving Consumer Goods" href="./job.php?BN=17">Fast Moving Consumer Goods</a></div><div class="business_nature_item"><a class="c-link" title="General Business Services / Other Consulting Services" href="./job.php?BN=18">General Business Services / Other Consulting Services</a></div><div class="business_nature_item"><a class="c-link" title="HKUST" href="./job.php?BN=52">HKUST</a></div><div class="business_nature_item"><a class="c-link" title="Hospitality / Hotels / Tourism / Entertainment" href="./job.php?BN=20">Hospitality / Hotels / Tourism / Entertainment</a></div><div class="business_nature_item"><a class="c-link" title="HR / Recruitment Services" href="./job.php?BN=19">HR / Recruitment Services</a></div><div class="business_nature_item"><a class="c-link" title="Information Technology / FinTech" href="./job.php?BN=21">Information Technology / FinTech</a></div><div class="business_nature_item"><a class="c-link" title="Insurance" href="./job.php?BN=22">Insurance</a></div><div class="business_nature_item"><a class="c-link" title="Internet / Digital / e-Commerce" href="./job.php?BN=23">Internet / Digital / e-Commerce</a></div><div class="business_nature_item"><a class="c-link" title="Internship Program Organizers" href="./job.php?BN=53">Internship Program Organizers</a></div><div class="business_nature_item"><a class="c-link" title="Legal Services" href="./job.php?BN=24">Legal Services</a></div><div class="business_nature_item"><a class="c-link" title="Management Consulting" href="./job.php?BN=26">Management Consulting</a></div><div class="business_nature_item"><a class="c-link" title="Manufacturing" href="./job.php?BN=25">Manufacturing</a></div><div class="business_nature_item"><a class="c-link" title="Media / Publishing" href="./job.php?BN=27">Media / Publishing</a></div><div class="business_nature_item"><a class="c-link" title="Medical Services / Pharmaceutical" href="./job.php?BN=28">Medical Services / Pharmaceutical</a></div><div class="business_nature_item"><a class="c-link" title="Motor Vehicles" href="./job.php?BN=29">Motor Vehicles</a></div><div class="business_nature_item"><a class="c-link" title="Multi-nature Conglomerates" href="./job.php?BN=30">Multi-nature Conglomerates</a></div><div class="business_nature_item"><a class="c-link" title="Others" href="./job.php?BN=35">Others</a></div><div class="business_nature_item"><a class="c-link" title="Property Management / Real Estate Development" href="./job.php?BN=31">Property Management / Real Estate Development</a></div><div class="business_nature_item"><a class="c-link" title="Retail / Wholesale / Trading / Import &amp; Export" href="./job.php?BN=32">Retail / Wholesale / Trading / Import &amp; Export</a></div><div class="business_nature_item"><a class="c-link" title="Telecommunication" href="./job.php?BN=33">Telecommunication</a></div><div class="business_nature_item"><a class="c-link" title="Utilities / Energy / Power" href="./job.php?BN=34">Utilities / Energy / Power</a></div>									</div>
+									<div id="browse-by-jn" style="width:100%;margin:auto;padding: 10px 0px;">
+<div class="job_nature_item"><a class="c-link" title="1" href="./job.php?JN=1">Accounting/ Auditing/ Tax</a></div><div class="job_nature_item"><a class="c-link" title="2" href="./job.php?JN=2">Administration - Non-private Sector</a></div><div class="job_nature_item"><a class="c-link" title="3" href="./job.php?JN=3">Administration - Private Sector</a></div><div class="job_nature_item"><a class="c-link" title="4" href="./job.php?JN=4">Architecture/ Interior Design</a></div><div class="job_nature_item"><a class="c-link" title="5" href="./job.php?JN=5">Banking and Finance Executive</a></div><div class="job_nature_item"><a class="c-link" title="33" href="./job.php?JN=33">Civil Service/Government</a></div><div class="job_nature_item"><a class="c-link" title="6" href="./job.php?JN=6">Community/ Social Worker</a></div><div class="job_nature_item"><a class="c-link" title="7" href="./job.php?JN=7">Creative/ Design/ Artist</a></div><div class="job_nature_item"><a class="c-link" title="8" href="./job.php?JN=8">Customer Services - Retail/ Hotel/ Tourism and Others</a></div><div class="job_nature_item"><a class="c-link" title="9" href="./job.php?JN=9">Disciplinary Forces</a></div><div class="job_nature_item"><a class="c-link" title="11" href="./job.php?JN=11">Engineering - Biological/ Chemical/ Electronic/ Industrial/ Mechanical and others</a></div><div class="job_nature_item"><a class="c-link" title="10" href="./job.php?JN=10">Engineering - Construction/ Building Services</a></div><div class="job_nature_item"><a class="c-link" title="12" href="./job.php?JN=12">Human Resources/ Training/ Recruitment</a></div><div class="job_nature_item"><a class="c-link" title="13" href="./job.php?JN=13">IT/ Programming</a></div><div class="job_nature_item"><a class="c-link" title="14" href="./job.php?JN=14">Journalist/ Editor/ Translation/ Copy Writing/ Communications</a></div><div class="job_nature_item"><a class="c-link" title="15" href="./job.php?JN=15">Legal/ Compliance</a></div><div class="job_nature_item"><a class="c-link" title="16" href="./job.php?JN=16">Library Officer/ Library Assistant</a></div><div class="job_nature_item"><a class="c-link" title="17" href="./job.php?JN=17">Logistics/ Supply Chain</a></div><div class="job_nature_item"><a class="c-link" title="18" href="./job.php?JN=18">Management Consultant/ Business Analyst</a></div><div class="job_nature_item"><a class="c-link" title="19" href="./job.php?JN=19">Management Trainee/Graduate Trainee</a></div><div class="job_nature_item"><a class="c-link" title="20" href="./job.php?JN=20">Marketing/ Market Research</a></div><div class="job_nature_item"><a class="c-link" title="21" href="./job.php?JN=21">Medical Practitioners/ Therapist/ Pharmacist</a></div><div class="job_nature_item"><a class="c-link" title="22" href="./job.php?JN=22">Merchandising/ Buying</a></div><div class="job_nature_item"><a class="c-link" title="23" href="./job.php?JN=23">Miscellaneous</a></div><div class="job_nature_item"><a class="c-link" title="31" href="./job.php?JN=31">Others</a></div><div class="job_nature_item"><a class="c-link" title="24" href="./job.php?JN=24">PR/ Event Management</a></div><div class="job_nature_item"><a class="c-link" title="25" href="./job.php?JN=25">Quality Control</a></div><div class="job_nature_item"><a class="c-link" title="26" href="./job.php?JN=26">Research &amp; Development</a></div><div class="job_nature_item"><a class="c-link" title="27" href="./job.php?JN=27">Research Assistant/ Technicians</a></div><div class="job_nature_item"><a class="c-link" title="28" href="./job.php?JN=28">Sales/ Account Servicing/ Business Development</a></div><div class="job_nature_item"><a class="c-link" title="29" href="./job.php?JN=29">Surveying</a></div><div class="job_nature_item"><a class="c-link" title="30" href="./job.php?JN=30">Teaching</a></div>									</div>
+								</div -->
+							<div style="height:10px;">
+							</div>
+						</div>
+					</div>
+					</form>
+				</div>
+	<table border=0 cellpadding=0 cellspacing=0 width=100%>
+		<tr>
+		<td height="50">
+		</td>
+	</tr>
+		<tr>
+			<td>
+				<ul class="emp-type-color-tag-list">
+					<li>
+			<table border=0 cellpadding=0 cellspacing=0>
+				<tr>
+					<td>
+						<div style="background-color:#3FD6F6; width:15px;height:15px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					</td>
+					<td>
+						<div><font style="padding:10px;font-size:14px; color:#6E6E70; white-space:nowrap">
+						Graduate Job</font></div>
+					</td>
+				</tr>
+			</table>
+			</li>
+					<li>
+			<table border=0 cellpadding=0 cellspacing=0>
+				<tr>
+					<td>
+						<div style="background-color:#FF7C00; width:15px;height:15px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					</td>
+					<td>
+						<div><font style="padding:10px;font-size:14px; color:#6E6E70; white-space:nowrap">
+						Internship (above minimum wage)</font></div>
+					</td>
+				</tr>
+			</table>
+			</li>
+					<li>
+			<table border=0 cellpadding=0 cellspacing=0>
+				<tr>
+					<td>
+						<div style="background-color:#227CC3; width:15px;height:15px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					</td>
+					<td>
+						<div><font style="padding:10px;font-size:14px; color:#6E6E70; white-space:nowrap">
+						On-Campus Internship</font></div>
+					</td>
+				</tr>
+			</table>
+			</li>
+					<li>
+			<table border=0 cellpadding=0 cellspacing=0>
+				<tr>
+					<td>
+						<div style="background-color:#EC9292; width:15px;height:15px;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					</td>
+					<td>
+						<div><font style="padding:10px;font-size:14px; color:#6E6E70; white-space:nowrap">
+						Others</font></div>
+					</td>
+				</tr>
+			</table>
+			</li>
+					</ul>
+		</td>
+	</tr>
+	<tr>
+		<td height="30">
+		</td>
+	</tr>
+	</table>
+	<table id="job-list" class="job-list" border=0 cellpadding=0 cellspacing=1 style="width:100%;table-layout: fixed;">
+		<thead>
+			 <tr>
+			 				<th style="display:none"></th>
+			    <th style="width:36%;padding-left:50px" data-sort="?&sort=cname&order=asc" class="large-view sort  detail-header">
+	        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+	        		<br/>
+	        	</th>
+	        	<th style="width:36%" data-sort="?&sort=position&order=asc" class="large-view sort  detail-header">
+	        		<font class="font2" style="font-size:16px;">Job Title</font>
+	        		<br/>
+	        		<font class="font2" style="font-size:16px;">Job Nature</font>
+	        	</th>
+	        	<th style="width:12%" data-sort="?&sort=post_date&order=asc" class="large-view sort  detail-header">
+	        		<font class="font2" style="font-size:16px;">Posting Date</font>
+	        	</th>
+	        	<th style="width:15%" data-sort="?&sort=deadline&order=asc" class="large-view sort  detail-header">
+	        		<font class="font2" style="font-size:16px;">Application Deadline</font>
+	        	</th>
+	        </tr>
+		</thead>
+		<tbody>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86585">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#FF7C00;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Jain Global				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86585"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Quant Researcher Intern			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Banking and Finance Executive			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-09-30		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86585">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#FF7C00;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Jain Global			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86585"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Quant Researcher Intern		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Banking and Finance Executive		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-09-30		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86643">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#227CC3;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			HKUST - Career Center				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86643"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Student Helper (Fall Term)			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Miscellaneous			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-09-05		        		<br/>
+		        		<input type="button" class="btn-form" style="cursor:pointer;" value="Online Application" onclick="location.href='./application_form.php?jp=86643'">		        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86643">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#227CC3;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			HKUST - Career Center			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86643"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Student Helper (Fall Term)		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Miscellaneous		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-09-05		        		<br/>
+
+		        		<input type="button" class="btn-form" style="cursor:pointer;" value="Online Application" onclick="location.href='./application_form.php?jp=86643'">		        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86613">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86613"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Analyst - Financial Services Industry (Banking & Capital Markets | Fintech, DLT, AI/GenAI) - Consult			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-04		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86613">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86613"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Analyst - Financial Services Industry (Banking & Capital Markets | Fintech, DLT, AI/GenAI) - Consult		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-04		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86614">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86614"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Analyst - Organization Transformation - Consulting - HK			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-04		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86614">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86614"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Analyst - Organization Transformation - Consulting - HK		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-04		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86615">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86615"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Analyst - Delivery Engineering (IES) - Consulting - HK			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-04		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86615">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86615"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Analyst - Delivery Engineering (IES) - Consulting - HK		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-04		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86616">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86616"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Analyst - Enterprise Technology & Performance - Consulting - HK			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-04		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86616">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86616"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Analyst - Enterprise Technology & Performance - Consulting - HK		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-04		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86629">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#FF7C00;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86629"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Project Intern - Financial Crime & Compliance - Deloitte Forensic - Consulting - HK			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-04		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86629">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#FF7C00;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86629"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Project Intern - Financial Crime & Compliance - Deloitte Forensic - Consulting - HK		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-04		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86639">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Fosun Asset Management Limited (复星资产管理公司)				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86639"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Alternative Investment Analyst			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Management Trainee/Graduate Trainee			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-05		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86639">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Fosun Asset Management Limited (复星资产管理公司)			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86639"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Alternative Investment Analyst		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Management Trainee/Graduate Trainee		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-05		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86612">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Recruit Express (Hong Kong) Limited (瑞捷人事咨訊有限公司)				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86612"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Trainee Recruitment Consultant (Entry-Level)			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Human Resources/ Training/ Recruitment			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-31		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86612">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Recruit Express (Hong Kong) Limited (瑞捷人事咨訊有限公司)			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86612"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Trainee Recruitment Consultant (Entry-Level)		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Human Resources/ Training/ Recruitment		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-31		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86634">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#227CC3;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Media Technology and Publishing Center				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86634"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			CMZ Assistant			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Others			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-09-16		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86634">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#227CC3;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Media Technology and Publishing Center			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86634"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			CMZ Assistant		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Others		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-09-16		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86628">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			XY Capital LIMITED				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86628"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Automation & Software Engineer			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Engineering - Biological/ Chemical/ Electronic/ Industrial/ Mechanical and others			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-21		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86628">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			XY Capital LIMITED			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86628"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Automation & Software Engineer		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Engineering - Biological/ Chemical/ Electronic/ Industrial/ Mechanical and others		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-21		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86579">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Deloitte Touche Tohmatsu				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86579"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Associate - Climate and Sustainability - Audit & Assurance - HK			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Accounting/ Auditing/ Tax			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-10			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-11-02		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86579">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Deloitte Touche Tohmatsu			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86579"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Associate - Climate and Sustainability - Audit & Assurance - HK		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Accounting/ Auditing/ Tax		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-10		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-11-02		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86638">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Tin Yat Trading Company (天一貿易公司)<img class="sen-logo" src="images/sen_logo2.png">				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86638"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Corporate Talent Development Consultant			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Sales/ Account Servicing/ Business Development			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-09-30		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86638">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Tin Yat Trading Company (天一貿易公司)<img class="sen-logo" src="images/sen_logo2.png">			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86638"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Corporate Talent Development Consultant		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Sales/ Account Servicing/ Business Development		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-09-30		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86637">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Global Sharp International Limited (Multiable Company) (世卓國際有限公司 (萬達寶公司))				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86637"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			System Analyst Trainee (AI-Assisted Engineering Focus)			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			IT/ Programming			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-18		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86637">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Global Sharp International Limited (Multiable Company) (世卓國際有限公司 (萬達寶公司))			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86637"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			System Analyst Trainee (AI-Assisted Engineering Focus)		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			IT/ Programming		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-18		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86636">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Global Sharp International Limited (Multiable Company) (世卓國際有限公司 (萬達寶公司))				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86636"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Graduate Trainee – AI & ERP Implementation			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Management Consultant/ Business Analyst			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-24		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86636">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Global Sharp International Limited (Multiable Company) (世卓國際有限公司 (萬達寶公司))			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86636"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Graduate Trainee – AI & ERP Implementation		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Management Consultant/ Business Analyst		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-24		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86632">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Far East Management Limited (Wall Street English)<img class="sen-logo" src="images/sen_logo2.png">				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86632"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			English Learning Coach			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Administration - Private Sector			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-31		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86632">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Far East Management Limited (Wall Street English)<img class="sen-logo" src="images/sen_logo2.png">			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86632"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			English Learning Coach		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Administration - Private Sector		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-31		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86630">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Regal Transportation Services (Asia) Limited (力高運輸服務(亞洲)有限公司)				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86630"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Project Manager – Electric vehicle (EV) development and type approval			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Others			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-31		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86630">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Regal Transportation Services (Asia) Limited (力高運輸服務(亞洲)有限公司)			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86630"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Project Manager – Electric vehicle (EV) development and type approval		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Others		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-31		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86627">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			Regal Transportation Services (Asia) Limited (力高運輸服務(亞洲)有限公司)				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86627"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Project Manager – Autonomous driving			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Logistics/ Supply Chain			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-31		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86627">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			Regal Transportation Services (Asia) Limited (力高運輸服務(亞洲)有限公司)			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86627"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Project Manager – Autonomous driving		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Logistics/ Supply Chain		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-31		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86626">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#EC9292;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			HKUST - Library				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86626"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			Student Helper (Access Services)			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Miscellaneous			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-08-31		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86626">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#EC9292;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			HKUST - Library			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86626"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			Student Helper (Access Services)		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Miscellaneous		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-31		        		<br/>
+
+		        				        	</td>
+		        </tr>
+							<tr class="job-item">
+					<td class="small-middle-view">
+					<table border="0" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF">
+						<tr>
+							<th class="mobile-detail-header">
+				        		<font class="font2" style="font-size:16px;">Company / Organization</font>
+				        		<br/>
+				        	</th>
+							<td class="mobile-detail-detail">
+				        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86624">
+				        		<table border="0" cellpadding="0" cellspacing="0">
+				        			<tr style="vertical-align: top;">
+				        				<td rowspan="2">
+				        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+				        				</td>
+				        				<td>
+				        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+				        								        			AI Guided Limited (領航智能有限公司)				        					</font>
+				        				</td>
+				        			</tr>
+				        			<tr>
+				        				<td>
+
+							        	</td>
+				        			</tr>
+				        		</table>
+			        		</a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+		        		<th class="mobile-detail-header">
+			        		<font class="font2" style="font-size:16px;">Job Title</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:16px;">Job Nature</font>
+			        	</th>
+			        	<td class="mobile-detail-detail">
+			        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86624"><font class="font2" style="color: #976E14;font-size: 15px;">
+			        			AI System Engineer			        		</font>
+			        		<br/>
+			        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+			        			Research & Development			        		</font></a>
+			        	</td>
+		        	</tr>
+		        	<tr>
+			        	<th class="mobile-detail-header">
+		        			<font class="font2" style="font-size:16px;">Posting Date</font></th>
+			        	<td style="color:#336C99;" class="mobile-detail-detail">
+			        		2026-08-07			        	</td>
+			        </tr>
+			        <tr>
+			        	<th class="mobile-detail-header"><font class="font2" style="font-size:16px;">Application Deadline</font></th>
+		        		<td style="color:#336C99;" class="mobile-detail-detail">2026-09-30		        		<br/>
+		        				        		</td>
+					</tr>
+					</table>
+
+					</td>
+			        <td style="width:36%;padding-left:10px" class="detail-text large-view">
+			        	<a class="job-post" target="_blank" href="./job_detail.php?jp=86624">
+			        		<table>
+			        			<tr style="vertical-align: top;">
+			        				<td rowspan="2">
+			        					<div style="margin-top:5px;margin-right:20px;width:15px;height:15px;background-color:#3FD6F6;">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+			        				</td>
+			        				<td>
+			        					<font class="font2" style="color: #976E14;font-size: 15px;">
+
+			        								        			AI Guided Limited (領航智能有限公司)			        					</font>
+			        				</td>
+			        			</tr>
+			        			<tr>
+			        				<td>
+
+						        	</td>
+			        			</tr>
+			        		</table>
+		        		</a>
+		        	</td>
+		        	<td style="width:36%" class="detail-text large-view">
+		        		<a class="job-post" target="_blank" href="./job_detail.php?jp=86624"><font class="font2" style="color: #976E14;font-size: 15px;">
+		        			AI System Engineer		        		</font>
+		        		<br/>
+		        		<font class="font2" style="font-size:15px; font-style: italic; color:#326C9A;">
+		        			Research & Development		        		</font></a>
+		        	</td>
+		        	<td style="width:12%; color:#336C99;" class="detail-text large-view">
+		        		2026-08-07		        	</td>
+		        	<td style="width:15%; color:#336C99;" class="detail-text large-view">
+		        		2026-09-30		        		<br/>
+
+		        				        	</td>
+		        </tr>
+					</tbody>
+	</table>
+<ul class="pagination"><li class="active"><a href="?page=1&">1</a></li><li><a href="?page=2&">2</a></li><li><a href="?page=3&">3</a></li><li><a href="?page=4&">4</a></li><li><a href="?page=5&">5</a></li><li><a href="?page=6&">6</a></li><li><a href="?page=7&">7</a></li><li><a href="?page=8&">8</a></li><li><a href="?page=9&">9</a></li><li class="disabled"><span>...</span></li><li class="last"><a href="?page=3041&">3041</a></li><li class="next"><a href="?page=2&">Next &raquo;</a></li></ul><script type="text/javascript">
+$('.career-menu-item.find_a_job').addClass('active');
+$(window).load(function(){
+    $('#browse-by-bn').show();
+    $('#browse-by-jn').hide();
+    // $("#job-list").tablesorter();
+ //    $('#search-option').stop().hide()
+	// $('#search-panel').toggleClass('hide');
+    initSelect2();
+    $(window).on("scroll", function (e) {
+	var st = $(window).scrollTop(),
+	    ot = $("#search-panel").offset().top,
+	    pot = $("#search-panel-placeholder").offset().top,
+	    fixed = $("#fixed-search-panel > #search-panel").length ? true : false;
+	if (!(isNaN(ot) || isNaN(st) || isNaN(pot))) {
+	    // when search-panel is statically positioned, compare its offset to scroll position
+	    // otherwise, compare the offset of the placeholder to scroll position
+	    if ((fixed ? pot : ot) < st) {
+		$("#search-panel-placeholder").height($("#search-panel").height());
+		$("#fixed-search-panel").append($("#search-panel"));
+	    } else {
+		$("#search-panel-placeholder").height(0).after($("#search-panel"));
+	    }
+	}
+    });
+    $("#job_search_form").on("submit", function () {
+        var emptyForm = true;
+        for (var id in {"keywords": 1, "BN[]": 1, "JN[]": 1, "EMT[]": 1, "WL[]": 1, "awards[]": 1, "EM[]": 1, "TEC": 1, "AJOB": 1}) {
+            if ($("[name = \"" + id + "\"]").val()) {
+                emptyForm = false;
+                break;
+            }
+        }
+        if ($("#TEC:checked").val() != null) {
+            emptyForm = false;
+        }
+		 if ($("#AJOB:checked").val() != null) {
+            emptyForm = false;
+        }
+        if ($("#NCHI:checked").val() != null) {
+            emptyForm = false;
+        }
+        if (emptyForm) {
+            $(this).append($("<input/>").attr({"type": "hidden", "name": "clear", "value": 1}));
+        }
+    });
+});
+
+$(document).on('click','#showSearchPanel',function(){
+	$("#showSearchPanel").toggleClass("flip");
+	if($('.search-option').is(':visible')){
+		$('.search-option').stop().slideUp({"complete":function () {
+		    $('.search-panel').addClass('hide');
+		}});
+	}else{
+		$('.search-option').stop().slideDown();
+		$('.search-panel').removeClass('hide');
+		if ($(".select2").length == 0) {
+		    initSelect2();
+		}
+	}
+});
+
+$(document).on('click','.sort',function(){
+	window.location.replace($(this).attr('data-sort'));
+})
+
+function tabchange(self,name){
+	$('#browse-by-bn').hide();
+	$('#browse-by-jn').hide();
+
+	$('.browse-by-tab').css("background-color", "#D0E6F8");
+	self.style.background = "#F1F8FE";
+	$('#'+name).show();
+}
+
+function initSelect2() {
+    $("select[multiple]").select2({
+	"closeOnSelect": false,
+	"dropdownAutoWidth": true,
+	"templateResult": function (state) {
+	    if ($(state.element).data("action") == "clear_all") {
+		return $("<div/>").addClass("clear-all").text(state.text);
+	    }
+	    return state.text;
+	},
+	"width": "100%"
+    }).on("change", function (evt) {
+	var that = $(this);
+	that.select2("data").forEach(function (e) {
+	    if ($(e.element).data("action") == "clear_all") {
+		that.val(null).trigger("change.select2").select2("close");
+		return false;
+	    }
+	});
+	// ref: https://stackoverflow.com/questions/38652325/select2-jquery-plugin-show-number-of-selected-items-in-the-result-instead-of-tag#answer-38654106
+	var uldiv = that.siblings('span.select2').find('ul')
+	var count = that.select2('data').length
+	uldiv.removeClass("single").children(".gray").remove();
+	if (count == 1) {
+	    uldiv.addClass("single");
+	} else if (count > 1) {
+	    uldiv.append($("<span/>").addClass("gray").text("+ " + (count - 1) + " more"));
+	}
+    }).trigger("change");
+}
+
+</script>
+</div>
+<div style="margin-top:80px;">
+	<center>
+        <input type="button" class="btn-form" style="padding:5px 5% 5px 5%;margin-top:10px" value="Other Online Job Vacancy Portals" onclick="window.open('./other_online_job_vacancy_portals.php')"/>
+       
+        <input type="button" class="btn-form" style="padding:5px 5% 5px 5%;margin-top:10px" value="Job Application Tips" onclick="window.open('./job_application_tips.php')"/>
+    </center>
+</div>
+<div>&nbsp;<br>&nbsp;</div>
+</div>
+
+ <!--div class="footer-wrapper">
+	<div class="footer-container">
+		<ul class="career-footer-link-wrapper">
+			<li class="career-footer-link"><a href="./page.php?section=about_us">About Us</a></li>
+			<li class="career-footer-link"><a href="./page.php?section=contact_us">Contact Us</a></li>
+			<li class="career-footer-link"><a href="./sitemap.php">Sitemap</a></li>
+		</ul>
+		<div class="hkust-career-copyright">© 2026 The Hong Kong University of Science and Technology.     All Rights Reserved
+		</div>
+	</div>
+</div-->
+<div style="clear:both">
+</div>
+
+
+
+
+
+
+		<div class="footer-data-pc">
+			<div class="footer">
+			
+				<div class="main-menu">
+				<div class="left">
+					<div class="logo">
+					<A href="http://hkust.edu.hk" target=_blank><img src="./header_img/ust_logo2.png" border=0></a>
+					</div>
+					
+					<div class="site">
+						<div class="privacy">
+						<table border=0 cellpadding=0 cellspacing=0>
+						<tr>
+						<Td valign=middle align=left><A href="https://hkust.edu.hk/privacy-policy/" class=flink target=_blank>Privacy<a/></td>
+						<Td width=20></td>
+						<Td valign=middle align=left><a href="./page.php?section=contact_us" class=flink>Contact Us</a></td>
+						<Td width=20></td>
+						<Td valign=middle align=left><a href="./sitemap.php" class=flink>Sitemap</a></td>
+						</tr>
+						</table>
+						</div>
+						<div class="copyright">Copyright &copy; The Hong Kong University of Science and Technology. All rights reserved.</div>
+					</div>
+					
+					
+				</div>
+				
+				
+				
+				
+					
+					
+				<div class="right">
+				
+					<div class="search">
+					<table border=0 cellpadding=0 cellspacing=0 width=100%>
+					<tr>
+					<Td valign=middle align=left class="follow">Follow HKUST on</td>
+					<Td width=10></td>
+					<Td valign=top align=left><a href="http://facebook.com/HKUST" target=_blank><img src="./header_img/btn_face.png" border=0></a></td>
+					<Td width=8></td>
+					<Td valign=top align=left><a href="https://www.instagram.com/hkust/" target=_blank><img src="./header_img/btn_in.png" border=0></a></td>
+					<Td width=8></td>
+					<Td valign=top align=left><a href="https://www.linkedin.com/school/11966" target=_blank><img src="./header_img/btn_link.png" border=0></a></td>
+					<Td width=8></td>
+					<Td valign=top align=left><a href="http://www.youtube.com/user/HKUST" target=_blank><img src="./header_img/btn_tube.png" border=0></a></td>
+					</tr>
+					</table>
+					
+					</div>
+				</div>
+				
+				
+				</div>
+			</div>
+			
+			
+		</div>	
+		
+		
+		
+		
+	
+		<div class="footer-data-mobile">
+			<div class="footer">
+			
+				<div class="main-menu">
+				
+				
+				
+				<div class="site">
+						<div class="privacy">
+						<table border=0 cellpadding=0 cellspacing=0 align=center>
+						<tr>
+						<Td valign=middle align=left><A href="https://hkust.edu.hk/privacy-policy/" class=flink target=_blank>Privacy<a/></td>
+						<Td width=50></td>
+						<Td valign=middle align=left><a href="./page.php?section=contact_us" class=flink>Contact Us</a></td>
+						<Td width=50></td>
+						<Td valign=middle align=left><a href="./sitemap.php" class=flink>Sitemap</a></td>
+						</tr>
+						</table>
+						</div>
+						
+				</div>
+					
+					
+				<div class="search">
+					<table border=0 cellpadding=0 cellspacing=0 align=center>
+					<tr>
+					<Td valign=middle align=left class="follow">Follow HKUST on</td>
+					</tr>
+					</table>
+					
+			      </div>
+			      <div class="search">
+					<table border=0 cellpadding=0 cellspacing=0 align=center>
+					<tr>
+					<Td valign=top align=left><a href="http://facebook.com/HKUST" target=_blank><img src="./header_img/btn_face.png" border=0></a></td>
+					<Td width=10></td>
+					<Td valign=top align=left><a href="https://www.instagram.com/hkust/" target=_blank><img src="./header_img/btn_in.png" border=0></a></td>
+					<Td width=10></td>
+					<Td valign=top align=left><a href="https://www.linkedin.com/school/11966" target=_blank><img src="./header_img/btn_link.png" border=0></a></td>
+					<Td width=10></td>
+					<Td valign=top align=left><a href="http://www.youtube.com/user/HKUST" target=_blank><img src="./header_img/btn_tube.png" border=0></a></td>
+					</tr>
+					</table>
+					
+			      </div>
+					
+					
+			      <div class="hkust-mlogo">
+					<A href="http://hkust.edu.hk" target=_blank><img src="./header_img/ust_logo2.png" border=0 style="width:110px"></a>
+			      </div>
+						
+					
+			      <div class="copyright">Copyright &copy; The Hong Kong University of Science and Technology. <BR>All rights reserved.</div>
+
+	
+				
+				
+				
+				
+				
+				</div>
+			</div>
+			
+			
+		</div>	
+		
+		
+		
+		
+<script src="./js/safari-lib.js"></script>
+</body>
+</html>
