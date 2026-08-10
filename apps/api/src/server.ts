@@ -1,6 +1,12 @@
 import Fastify, { type FastifyInstance } from 'fastify'
+import type Database from 'better-sqlite3'
+import { registerProfileRoutes } from './routes/profile'
 
-export function buildServer(): FastifyInstance {
+export interface ServerDeps {
+  sqlite: Database.Database
+}
+
+export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: false })
 
   app.addHook('onRequest', async (req, reply) => {
@@ -14,6 +20,8 @@ export function buildServer(): FastifyInstance {
   })
 
   app.get('/health', async () => ({ status: 'ok', service: 'hireyou-apply-api' }))
+
+  registerProfileRoutes(app, deps.sqlite)
 
   return app
 }

@@ -6,21 +6,25 @@ import { z } from 'zod'
 
 export const JD_TEXT_MAX = 4000
 
+// Draft-friendly by design: a student's autosave must never be rejected for
+// incompleteness. Completeness is enforced at generation time (M4), not here.
+// Empty id/fact_id means "not yet assigned" — the API backfills them on save.
+
 export const ContactSchema = z.object({
-  full_name: z.string().min(1),
-  email: z.string().email(),
+  full_name: z.string().default(''),
+  email: z.union([z.string().email(), z.literal('')]).default(''),
   phone: z.string().default(''),
   location: z.string().default(''),
 })
 
 export const FactBulletSchema = z.object({
-  fact_id: z.string().min(1),
-  text: z.string().min(1),
+  fact_id: z.string().default(''),
+  text: z.string().default(''),
 })
 
 export const ExperienceEntrySchema = z.object({
-  fact_id: z.string().min(1),
-  organisation: z.string().min(1),
+  fact_id: z.string().default(''),
+  organisation: z.string().default(''),
   role: z.string().default(''),
   start_date: z.string().default(''),
   end_date: z.string().default(''),
@@ -30,9 +34,9 @@ export const ExperienceEntrySchema = z.object({
 })
 
 const sectionBase = {
-  id: z.string().min(1),
-  order: z.number().int().nonnegative(),
-  title: z.string().min(1),
+  id: z.string().default(''),
+  order: z.number().int().nonnegative().default(0),
+  title: z.string().default(''),
 }
 
 export const ProfileSectionSchema = z.discriminatedUnion('type', [
@@ -51,6 +55,13 @@ export type FactBullet = z.infer<typeof FactBulletSchema>
 export type ExperienceEntry = z.infer<typeof ExperienceEntrySchema>
 export type ProfileSection = z.infer<typeof ProfileSectionSchema>
 export type MasterProfile = z.infer<typeof MasterProfileSchema>
+
+export function emptyProfile(): MasterProfile {
+  return {
+    contact: { full_name: '', email: '', phone: '', location: '' },
+    sections: [],
+  }
+}
 
 // ---------- Jobs ----------
 

@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
-import { buildServer } from '../src/server'
+import { openDb } from '../src/db'
+import { buildServer as buildServerRaw } from '../src/server'
+
+const buildServer = () => buildServerRaw({ sqlite: openDb(':memory:').sqlite })
 
 beforeAll(() => {
   process.env.API_AUTH_TOKEN = 'test-token'

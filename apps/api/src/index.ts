@@ -2,8 +2,8 @@ import 'dotenv/config'
 import { buildServer } from './server'
 import { openDb } from './db'
 
-openDb()
-const app = buildServer()
+const { sqlite } = openDb()
+const app = buildServer({ sqlite })
 const port = Number(process.env.API_PORT ?? 3100)
 
 app.listen({ port, host: '127.0.0.1' }).then((addr) => {

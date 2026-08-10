@@ -10,6 +10,15 @@ const MIGRATIONS: { id: string; sql: string }[] = [
     id: '001_app_meta',
     sql: `CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);`,
   },
+  {
+    id: '002_master_profile',
+    sql: `CREATE TABLE IF NOT EXISTS master_profile (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      contact_json TEXT NOT NULL,
+      sections_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );`,
+  },
 ]
 
 export interface Db {

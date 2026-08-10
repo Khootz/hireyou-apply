@@ -5,7 +5,7 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 | Milestone | Status | Loops used | Verifier |
 |---|---|---|---|
 | M0 Scaffold + harness | **DONE** (machine checks green; manual: load extension in Chrome pending user) | 3 | `npm run verify:m0` |
-| M1 Master profile | not started | 0 | `npm run verify:m1` |
+| M1 Master profile | **DONE** (machine checks green; manual: editor walkthrough pending user) | 1 | `npm run verify:m1` |
 | M2 CV PDF pre-fill | not started | 0 | `npm run verify:m2` |
 | M3 Job tracker | not started | 0 | `npm run verify:m3` |
 | M4 Generation engine | not started | 0 | `npm run verify:m4` |
@@ -32,5 +32,12 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Learned (matters for later milestones): all outbound HTTP must be proxy-aware (M2 parse, M4 generation fine — they go through the LLM client; M7 SMTP needs SOCKS tunnel); jsdom is the fixture parser of record, do not use happy-dom on HKUST HTML.
 - Manual checklist remaining for user: `chrome://extensions` → Load unpacked → `apps/extension` → icon click opens the M0 side panel.
 - Blocker for M7 (not M1–M6): Gmail app password for 199ktz@gmail.com (regular password rejected, verified).
+
+**2026-08-10 — M1, loop 1 → GREEN (verify:m1 exit 0; 23 passed, 1 skipped)**
+- Schema made draft-friendly (empty contact/text allowed; completeness enforced at M4 generation instead). Empty id/fact_id = "assign me" → server backfills UUIDs once, never regenerates existing ones.
+- master_profile table (single row, JSON columns), GET/PUT /api/profile, normalization rewrites `order` = array index.
+- Web: Tailwind v4, My Resume editor (contact card, three section types, add/remove/rename, ▲▼ reorder, 800ms autosave with status badge). Editor generates ids client-side so autosave responses need no adoption.
+- Exit criteria all machine-verified: round-trip deep-equal, 400 on invalid, draft accepted, backfill, fact_id stability across edits, reorder persistence, auth required. Real-boot smoke: PUT/GET over HTTP with backfilled UUIDs confirmed; web `vite build` clean.
+- Manual checklist for user: run `npm run dev:api` + `npm run dev:web`, open http://localhost:5180, fill some profile, refresh — data persists.
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
