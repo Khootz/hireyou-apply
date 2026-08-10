@@ -1,0 +1,5 @@
+{
+  "recorded_at": "2026-08-10T00:00:00.000Z",
+  "note": "hand-written adversarial fixture: references a section alias that does not exist",
+  "content": "{\"sections\":[{\"source_section_id\":\"s999\",\"include\":true,\"items\":[{\"source_fact_id\":\"b999\",\"text\":\"Invented achievement that traces to nothing\"}]}]}"
+}

@@ -1,4 +1,4 @@
-import type { JobInput, JobPatch, JobRecord, MasterProfile } from '@app/shared'
+import type { DocumentRecord, JobInput, JobPatch, JobRecord, MasterProfile, RunRecord } from '@app/shared'
 
 // Single-user dev auth: the token must match API_AUTH_TOKEN in .env.
 // Override via localStorage.setItem('api_token', '...') if you change it.
@@ -43,4 +43,13 @@ export const api = {
   patchJob: (id: string, patch: JobPatch) =>
     request<JobRecord>(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteJob: (id: string) => request<{ deleted: boolean }>(`/api/jobs/${id}`, { method: 'DELETE' }),
+  generate: (jobId: string, type: 'resume' | 'cover_letter') =>
+    request<{ run: RunRecord; deduped: boolean }>(`/api/jobs/${jobId}/generate`, {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    }),
+  getRun: (id: string) => request<RunRecord>(`/api/runs/${id}`),
+  listDocuments: (jobId: string) =>
+    request<{ documents: Omit<DocumentRecord, 'content'>[] }>(`/api/jobs/${jobId}/documents`),
+  getDocument: (id: string) => request<DocumentRecord>(`/api/documents/${id}`),
 }

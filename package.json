@@ -16,7 +16,8 @@
     "verify:m0": "npm run typecheck && vitest run",
     "verify:m1": "npm run typecheck && vitest run",
     "verify:m2": "npm run typecheck && vitest run",
-    "verify:m3": "npm run typecheck && vitest run"
+    "verify:m3": "npm run typecheck && vitest run",
+    "verify:m4": "npm run typecheck && vitest run"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

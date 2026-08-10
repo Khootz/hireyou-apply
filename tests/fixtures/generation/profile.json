@@ -1,0 +1,267 @@
+{
+  "contact": {
+    "full_name": "THIEN ZHI, KHOO",
+    "email": "tzkhoo@connect.ust.hk",
+    "phone": "+852 4492 4625",
+    "location": ""
+  },
+  "sections": [
+    {
+      "id": "5d456fee-c657-45a9-ba81-2f94a9c74b6c",
+      "order": 0,
+      "title": "Contact",
+      "type": "paragraph",
+      "content": {
+        "text": "LinkedIn/thienzhi www.thienzhi.com"
+      }
+    },
+    {
+      "id": "88a62017-74c4-458c-bc7e-69fe0fa325bb",
+      "order": 1,
+      "title": "EDUCATION",
+      "type": "experience",
+      "content": {
+        "entries": [
+          {
+            "fact_id": "2d50dd24-ef66-45e3-bba0-cad50cd5c035",
+            "organisation": "The Hong Kong University of Science and Technology",
+            "role": "BEng in Computer Engineering and minor in Business (Year 4)",
+            "start_date": "Sep 2022",
+            "end_date": "Jun 2026",
+            "is_current": false,
+            "location": "Hong Kong SAR",
+            "bullets": [
+              {
+                "fact_id": "956ee6c7-6f02-4d58-8e4b-f9b75bd58c68",
+                "text": "Relevant Coursework: Business Corporate Consulting / Mobile App Development / Artificial Intelligence / Data Mining / Data Visualization / Network Embedded System / Operating Systems /"
+              }
+            ]
+          },
+          {
+            "fact_id": "15554ed3-bbc8-4c2f-8799-6a63296139a6",
+            "organisation": "Technical University of Denmark",
+            "role": "Computer Science Exchange Student | DTU Skylab Startup | DTU Technical Consulting",
+            "start_date": "Sep 2024",
+            "end_date": "Jan 2025",
+            "is_current": false,
+            "location": "Copenhagen, Denmark",
+            "bullets": [
+              {
+                "fact_id": "e083e9ae-6a3d-4890-8d24-2f0b539cbc21",
+                "text": "Relevant Coursework: Machine Learning / Image Analysis / Database Management / Network Embedded System /"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "61b641f5-6977-41ce-8517-56ada4f5d55d",
+      "order": 2,
+      "title": "WORK EXPERIENCE",
+      "type": "experience",
+      "content": {
+        "entries": [
+          {
+            "fact_id": "6c68acf5-8b25-4dc6-a4f7-adb2ec179f9d",
+            "organisation": "Wonder / Bindo Labs",
+            "role": "Data Engineering Intern",
+            "start_date": "Jun 2025",
+            "end_date": "Aug 2025",
+            "is_current": false,
+            "location": "Hong Kong SAR",
+            "bullets": [
+              {
+                "fact_id": "e1b8251b-8402-4e16-9d48-f1d0e7a18360",
+                "text": "Project Manager: Led a 6-member team by initiating AI and tech transformation projects across the company"
+              },
+              {
+                "fact_id": "5bb85816-1340-4fd3-a14d-ee88c2ad9a5b",
+                "text": "Sales Automation: Generated HKD200,000 extra ARR, securing 11 key clients from 2000+ leads using self-developed end-to-end lead generation software that fully automated client prospecting, research, outreach and engagement."
+              },
+              {
+                "fact_id": "80622164-ed50-4548-a4be-55db4f7ce55b",
+                "text": "RAG AI Chatbot: 1000+ monthly enquiries resolved via custom chatbot built for company web, email and Whatsapp"
+              },
+              {
+                "fact_id": "628bc2a0-2009-48fd-875c-717e40c42ec7",
+                "text": "CRM System: 30% efficiency boost for 50+ staff using self-developed internal CRM designed for advanced analytics"
+              }
+            ]
+          },
+          {
+            "fact_id": "6883b4e8-d214-4bd2-a4bc-6140f7df9195",
+            "organisation": "Qualifly Education Limited",
+            "role": "Business Development Intern",
+            "start_date": "Jun 2024",
+            "end_date": "Aug 2024",
+            "is_current": false,
+            "location": "Hong Kong SAR",
+            "bullets": [
+              {
+                "fact_id": "1a6dcca2-535c-4b6a-9e5c-e9649d703b33",
+                "text": "Pitch Deck: Top 8 Hult Prize placement secured by leading the design and structure of company’s pitching storyline"
+              },
+              {
+                "fact_id": "f3d68cae-fc0f-4561-80c8-fced0d313f2b",
+                "text": "Market Research: 2-year Southeast Asia market entry strategy developed via competitor analysis and benchmarking"
+              },
+              {
+                "fact_id": "447f201a-790d-4c3a-9fda-021dce24cc6f",
+                "text": "Marketing Campaign: 15% engagement growth across 3 platforms (IG, FB, LinkedIn) through social media content"
+              },
+              {
+                "fact_id": "fba4e8ce-b44e-4fb2-8879-9602e68148cf",
+                "text": "Website Revamp: 25% more monthly visitors achieved by redesigning content, structure and visuals to enhance UIUX"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "9420eb9d-c480-462a-956f-f1fc145c33bb",
+      "order": 3,
+      "title": "AWARD HIGHLIGHTS",
+      "type": "experience",
+      "content": {
+        "entries": [
+          {
+            "fact_id": "4aa81675-217d-423a-a9ba-6f28aee390a6",
+            "organisation": "IBM Consulting 2025",
+            "role": "",
+            "start_date": "Dec 2025",
+            "end_date": "Dec 2025",
+            "is_current": false,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "a33aa994-9435-494e-88ae-8e6f5045f67a",
+                "text": "Won 1st place by developing and pitching a revolutionary AI immersive entertainment platform to HK industry leaders"
+              }
+            ]
+          },
+          {
+            "fact_id": "88ed79c7-1f08-4deb-86f2-636ad116ff45",
+            "organisation": "KPMG Case Comp 2025",
+            "role": "",
+            "start_date": "Nov 2025",
+            "end_date": "Nov 2025",
+            "is_current": false,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "0d2c215b-bf6f-4b0d-9f62-4ad532b35785",
+                "text": "Won 1st place and Best Speaker Award among 11000+ participates across all of China by innovating retail strategies"
+              }
+            ]
+          },
+          {
+            "fact_id": "3cbe2f6a-d6c4-4fa1-a5c3-04a535103e66",
+            "organisation": "Bank of China (HK) Challenge",
+            "role": "",
+            "start_date": "Aug 2024",
+            "end_date": "Aug 2025",
+            "is_current": false,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "e86b5970-e53a-4e65-a070-278fdd5ef970",
+                "text": "BOCHK 2025: 1st place among 900+ participants and awarded HKD120,000 for AI Agents + Wealth Management"
+              },
+              {
+                "fact_id": "a232b53e-ee09-4a71-8ffd-0168a2781bb0",
+                "text": "BOCHK 2024: 2nd place among 1000+ participants and awarded HKD100,000 for AI-powered Credit Cards + ESG"
+              },
+              {
+                "fact_id": "2bf23e47-b2ad-4d12-9b1d-7d71ae7832bc",
+                "text": "Key role in structuring pitch deck, lead developer of product MVP and deployed as a live product ( www.bochk.site )"
+              }
+            ]
+          },
+          {
+            "fact_id": "6d519ff7-810f-4b3d-bdb2-b19b0035ae70",
+            "organisation": "Oliver Wyman Impact 2025",
+            "role": "",
+            "start_date": "Jun 2025",
+            "end_date": "Jun 2025",
+            "is_current": false,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "983559f8-605b-408e-9083-ae02a176318d",
+                "text": "Won 2nd place among 1200+ participants by proposing strategic market entry in Hong Kong’s E-Commerce landscape"
+              }
+            ]
+          },
+          {
+            "fact_id": "a2046723-3762-440a-a962-4a517986bc08",
+            "organisation": "BNP Paribas 2025",
+            "role": "",
+            "start_date": "Apr 2025",
+            "end_date": "Apr 2025",
+            "is_current": false,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "de08f343-d6c7-421b-b868-2cf15b4bc004",
+                "text": "Won 1st place by developing Gen Z clients acquisition plan while leading the project and pitch design as team leader"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "99bd08d0-782d-4dcd-97e5-33baef242fba",
+      "order": 4,
+      "title": "LEADERSHIP & ACTIVITIES",
+      "type": "experience",
+      "content": {
+        "entries": [
+          {
+            "fact_id": "9572a0c0-da59-4a6d-8cfe-a19412ffd556",
+            "organisation": "",
+            "role": "Head Engineering Student Ambassador",
+            "start_date": "Sep 2023",
+            "end_date": "Present",
+            "is_current": true,
+            "location": "",
+            "bullets": [
+              {
+                "fact_id": "a5dfd6e1-bb68-4ee4-8299-4c9161f5e1ff",
+                "text": "Selected out of 3600+ UG Engineering students to be chief student representative for the School of Engineering"
+              },
+              {
+                "fact_id": "1c9c704b-13ad-45a8-b80a-7b2f0e4b83c0",
+                "text": "Conducted 8 outreach sessions with prospective students from diverse backgrounds and providing insight into programs"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "c388a6b9-38ab-4d61-8bd6-35fbb237d1a4",
+      "order": 5,
+      "title": "SKILLS & INTEREST",
+      "type": "bullets",
+      "content": {
+        "items": [
+          {
+            "fact_id": "893700c2-f0d3-47a1-a616-23d3af9b25cb",
+            "text": "Technical Skills: C++, Python, SQL, Android Studio, Vercel, MongoDB, Flask, Render, Google Cloud, AWS, Blender"
+          },
+          {
+            "fact_id": "e58bd223-bb2f-4423-a4f4-694e72833628",
+            "text": "Non-Technical Skills: Microsoft Office Suite, Bloomberg, Metabase, Figma, Canva, Capcut, E-Commerce Management"
+          },
+          {
+            "fact_id": "35b81842-ef81-4f13-a727-7d5602b46a7a",
+            "text": "Languages: Native in English; Native in Mandarin; Conversational in Cantonese; Conversational in Malay"
+          }
+        ]
+      }
+    }
+  ]
+}

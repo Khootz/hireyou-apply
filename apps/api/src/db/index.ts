@@ -39,6 +39,29 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       status_updated_at TEXT NOT NULL
     );`,
   },
+  {
+    id: '004_generation',
+    sql: `CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      content_json TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      created_at TEXT NOT NULL,
+      pdf_path TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_documents_job ON documents (job_id, type, version);
+    CREATE TABLE IF NOT EXISTS generation_runs (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      status TEXT NOT NULL,
+      error TEXT,
+      document_id TEXT,
+      created_at TEXT NOT NULL,
+      finished_at TEXT
+    );`,
+  },
 ]
 
 export interface Db {

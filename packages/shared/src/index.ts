@@ -99,6 +99,95 @@ export type JobRecord = z.infer<typeof JobRecordSchema>
 export const JOB_STATUSES: JobStatus[] = ['saved', 'applied', 'interviewing', 'offered', 'rejected']
 
 // ---------- Documents ----------
+// Generated document content. Every bullet carries source_fact_id — the
+// provenance link back to the master profile that the generation gate
+// enforces. Experience org/role/dates are copied server-side from the
+// profile, never taken from model output.
 
 export const DocumentTypeSchema = z.enum(['resume', 'cover_letter'])
 export type DocumentType = z.infer<typeof DocumentTypeSchema>
+
+export const TailoredBulletSchema = z.object({
+  source_fact_id: z.string().min(1),
+  text: z.string().min(1),
+})
+
+export const ResumeDocumentSchema = z.object({
+  kind: z.literal('resume'),
+  contact: ContactSchema,
+  sections: z.array(
+    z.discriminatedUnion('type', [
+      z.object({
+        type: z.literal('paragraph'),
+        title: z.string(),
+        source_section_id: z.string(),
+        text: z.string(),
+      }),
+      z.object({
+        type: z.literal('experience'),
+        title: z.string(),
+        source_section_id: z.string(),
+        entries: z.array(
+          z.object({
+            source_fact_id: z.string().min(1),
+            organisation: z.string(),
+            role: z.string(),
+            start_date: z.string(),
+            end_date: z.string(),
+            is_current: z.boolean(),
+            location: z.string(),
+            bullets: z.array(TailoredBulletSchema),
+          }),
+        ),
+      }),
+      z.object({
+        type: z.literal('bullets'),
+        title: z.string(),
+        source_section_id: z.string(),
+        items: z.array(TailoredBulletSchema),
+      }),
+    ]),
+  ),
+})
+
+export const CoverLetterDocumentSchema = z.object({
+  kind: z.literal('cover_letter'),
+  contact: ContactSchema,
+  company: z.string(),
+  role: z.string(),
+  date: z.string(),
+  salutation: z.string(),
+  paragraphs: z.array(z.string()).min(3).max(3),
+  signoff: z.string(),
+})
+
+export const DocumentContentSchema = z.discriminatedUnion('kind', [ResumeDocumentSchema, CoverLetterDocumentSchema])
+
+export type ResumeDocument = z.infer<typeof ResumeDocumentSchema>
+export type CoverLetterDocument = z.infer<typeof CoverLetterDocumentSchema>
+export type DocumentContent = z.infer<typeof DocumentContentSchema>
+
+export const RunKindSchema = z.enum(['tailor_resume', 'cover_letter'])
+export const RunStatusSchema = z.enum(['queued', 'running', 'succeeded', 'failed'])
+export type RunKind = z.infer<typeof RunKindSchema>
+export type RunStatus = z.infer<typeof RunStatusSchema>
+
+export interface RunRecord {
+  id: string
+  job_id: string
+  kind: RunKind
+  status: RunStatus
+  error: string | null
+  document_id: string | null
+  created_at: string
+  finished_at: string | null
+}
+
+export interface DocumentRecord {
+  id: string
+  job_id: string
+  type: DocumentType
+  version: number
+  created_at: string
+  content: DocumentContent
+}
