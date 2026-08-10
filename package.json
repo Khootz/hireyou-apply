@@ -23,7 +23,8 @@
     "verify:m6": "npm run typecheck && npm run build:extension && vitest run",
     "verify:m7": "npm run typecheck && npm run build:extension && vitest run",
     "verify:m8": "npm run typecheck && npm run build:extension && vitest run",
-    "dev:api:watch": "tsx watch apps/api/src/index.ts"
+    "dev:api:watch": "tsx watch apps/api/src/index.ts",
+    "verify:m-ui": "npm run typecheck && npm run build:extension && vitest run"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

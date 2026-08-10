@@ -78,8 +78,16 @@ export function createJob(sqlite: Database.Database, input: JobInput): { job: Jo
 }
 
 export function listJobs(sqlite: Database.Database): JobRecord[] {
-  const rows = sqlite.prepare(`SELECT * FROM jobs ORDER BY status_updated_at DESC, saved_at DESC`).all() as JobRow[]
-  return rows.map(toRecord)
+  const rows = sqlite
+    .prepare(
+      `SELECT jobs.*, (SELECT GROUP_CONCAT(DISTINCT type) FROM documents WHERE documents.job_id = jobs.id) AS mats
+       FROM jobs ORDER BY status_updated_at DESC, saved_at DESC`,
+    )
+    .all() as (JobRow & { mats: string | null })[]
+  return rows.map((row) => ({
+    ...toRecord(row),
+    materials: (row.mats ?? '').split(',').filter(Boolean) as JobRecord['materials'],
+  }))
 }
 
 export function getJob(sqlite: Database.Database, id: string): JobRecord | null {

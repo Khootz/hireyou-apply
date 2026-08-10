@@ -141,6 +141,15 @@ Field discovery (visible inputs/textarea/select + label resolution priority chai
 **M9 — Hardening (only if runway remains)**
 Prompt-injection delimiting for JD/DOM text, form-fingerprint cache, suggestion telemetry, provider-error honesty, key rotation reminder.
 
+**M-UI — Amploy UI parity (added 2026-08-10 from user screenshots)**
+Brand: "HireYou" text logo, NO pro/upgrade features.
+1. Nav: icon tabs (Jobs / My Resume / Install Extension), active-pill state, avatar initials from profile.
+2. Jobs page: "N jobs tracked" subtitle, status filter pills with live counts, search by title/company, table with title↗ link, inline status dropdown + colored dot, real Materials chips (Resume/Cover from documents), relative date, row × delete.
+3. My Resume: two-pane editor — left structured sections with DRAG-reorder (⠿ handle, HTML5 DnD) + ▲▼ fallback; right live PDF preview of the master profile (the actual rendered PDF, refreshed after each autosave) with page count.
+4. Install Extension page: load-unpacked instructions (Web Store unlisted publish deferred to integration).
+*API additions:* GET /api/profile/pdf (+ /meta page count) rendering the master profile through the SAME renderer as exports — preview parity by construction; jobs list gains `materials`.
+*Exit:* profile-pdf endpoint tests (auth, %PDF magic, name+section text present, meta pages ≥1); jobs list materials test; typecheck + web build; visual parity = user manual check; redeploy to Vercel.
+
 ---
 
 ## 7. Loop protocol (per Karpathy: verifier / state / stop)

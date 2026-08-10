@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ExperienceEntry, FactBullet, MasterProfile, ProfileSection } from '@app/shared'
-import { api, type CvParseResponse } from '../api'
+import { api, profilePdfMeta, profilePdfUrl, type CvParseResponse } from '../api'
 
 // The editor generates ids/fact_ids client-side on creation, so the server's
 // backfill never rewrites editor content and autosave responses can be ignored.
@@ -48,7 +48,10 @@ export function ProfilePage() {
   const [parseResult, setParseResult] = useState<CvParseResponse | null>(null)
   const [parsing, setParsing] = useState(false)
   const [parseError, setParseError] = useState('')
+  const [pdfVersion, setPdfVersion] = useState(1)
+  const [pages, setPages] = useState<number | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const dragIndex = useRef<number | null>(null)
   const dirty = useRef(0)
 
   useEffect(() => {
@@ -68,12 +71,19 @@ export function ProfilePage() {
       try {
         await api.saveProfile(profile)
         setSaveState('saved')
+        setPdfVersion((v) => v + 1) // refresh the live preview
       } catch {
         setSaveState('error')
       }
     }, 800)
     return () => clearTimeout(timer)
   }, [profile])
+
+  useEffect(() => {
+    profilePdfMeta()
+      .then((m) => setPages(m.pages))
+      .catch(() => setPages(null))
+  }, [pdfVersion])
 
   const edit = (updater: (p: MasterProfile) => MasterProfile) => {
     dirty.current += 1
@@ -89,6 +99,15 @@ export function ProfilePage() {
       const target = index + delta
       if (target < 0 || target >= next.length) return p
       ;[next[index], next[target]] = [next[target], next[index]]
+      return { ...p, sections: next }
+    })
+
+  const moveSectionTo = (from: number, to: number) =>
+    edit((p) => {
+      if (from === to || from < 0 || to < 0 || from >= p.sections.length || to >= p.sections.length) return p
+      const next = [...p.sections]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
       return { ...p, sections: next }
     })
 
@@ -132,7 +151,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-900">My Resume</h1>
         <div className="flex items-center gap-3">
@@ -163,6 +182,8 @@ export function ProfilePage() {
         />
       )}
 
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 items-start space-y-6 lg:space-y-0">
+      <div className="space-y-6">
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
         <h2 className="text-xs font-semibold tracking-widest text-slate-500">CONTACT</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -187,8 +208,26 @@ export function ProfilePage() {
       </section>
 
       {profile.sections.map((section, i) => (
-        <section key={section.id} className="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <section
+          key={section.id}
+          className="bg-white rounded-xl border border-slate-200 shadow-sm"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => {
+            if (dragIndex.current !== null) moveSectionTo(dragIndex.current, i)
+            dragIndex.current = null
+          }}
+        >
           <header className="flex items-center gap-2 px-5 pt-4">
+            <span
+              className="cursor-grab text-slate-300 hover:text-slate-500 select-none text-lg leading-none"
+              title="Drag to reorder"
+              draggable
+              onDragStart={() => {
+                dragIndex.current = i
+              }}
+            >
+              ⠿
+            </span>
             <div className="flex flex-col">
               <button
                 className="text-slate-400 hover:text-slate-700 disabled:opacity-25 leading-none"
@@ -267,6 +306,23 @@ export function ProfilePage() {
             + {TYPE_LABEL[type]} section
           </button>
         ))}
+      </div>
+      </div>
+
+      <div className="lg:sticky lg:top-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100">
+            <span className="text-xs font-semibold tracking-widest text-slate-500">PREVIEW</span>
+            <span className="text-xs text-slate-400">
+              {pages !== null ? `${pages} page${pages === 1 ? '' : 's'}` : ''}
+              <a className="ml-3 text-blue-700 hover:underline" href={profilePdfUrl(pdfVersion)} target="_blank" rel="noreferrer">
+                ⬇ PDF
+              </a>
+            </span>
+          </div>
+          <iframe title="Resume preview" src={profilePdfUrl(pdfVersion)} className="w-full h-[78vh] bg-slate-100" />
+        </div>
+      </div>
       </div>
     </div>
   )

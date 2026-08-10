@@ -66,6 +66,12 @@ export function pdfUrl(documentId: string): string {
   return `${API_BASE}/api/documents/${documentId}/pdf?token=${encodeURIComponent(TOKEN)}`
 }
 
+export function profilePdfUrl(version: number): string {
+  return `${API_BASE}/api/profile/pdf?token=${encodeURIComponent(TOKEN)}&v=${version}`
+}
+
+export const profilePdfMeta = () => request<{ pages: number }>(`/api/profile/pdf/meta`)
+
 export interface EmailDraft {
   to_intended: string
   to_actual: string

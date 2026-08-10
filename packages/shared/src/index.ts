@@ -88,6 +88,8 @@ export const JobRecordSchema = JobInputSchema.extend({
   saved_at: z.string(),
   applied_at: z.string().nullable(),
   status_updated_at: z.string(),
+  // present on list responses: which document types exist for this job
+  materials: z.array(z.enum(['resume', 'cover_letter'])).optional(),
 })
 
 export type JobStatus = z.infer<typeof JobStatusSchema>
