@@ -19,6 +19,26 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       updated_at TEXT NOT NULL
     );`,
   },
+  {
+    id: '003_jobs',
+    sql: `CREATE TABLE IF NOT EXISTS jobs (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      company TEXT NOT NULL,
+      location TEXT NOT NULL DEFAULT '',
+      source_url TEXT NOT NULL DEFAULT '',
+      source_board TEXT NOT NULL DEFAULT 'manual',
+      jd_text TEXT NOT NULL DEFAULT '',
+      apply_email TEXT,
+      deadline TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'saved',
+      notes TEXT NOT NULL DEFAULT '',
+      dedup_key TEXT NOT NULL UNIQUE,
+      saved_at TEXT NOT NULL,
+      applied_at TEXT,
+      status_updated_at TEXT NOT NULL
+    );`,
+  },
 ]
 
 export interface Db {

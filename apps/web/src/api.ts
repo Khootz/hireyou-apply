@@ -1,4 +1,4 @@
-import type { MasterProfile } from '@app/shared'
+import type { JobInput, JobPatch, JobRecord, MasterProfile } from '@app/shared'
 
 // Single-user dev auth: the token must match API_AUTH_TOKEN in .env.
 // Override via localStorage.setItem('api_token', '...') if you change it.
@@ -36,4 +36,11 @@ export const api = {
     form.append('file', file)
     return request<CvParseResponse>('/api/profile/parse-cv', { method: 'POST', body: form })
   },
+  listJobs: () => request<{ jobs: JobRecord[] }>('/api/jobs'),
+  createJob: (input: Partial<JobInput>) =>
+    request<{ job: JobRecord; deduped: boolean }>('/api/jobs', { method: 'POST', body: JSON.stringify(input) }),
+  getJob: (id: string) => request<JobRecord>(`/api/jobs/${id}`),
+  patchJob: (id: string, patch: JobPatch) =>
+    request<JobRecord>(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteJob: (id: string) => request<{ deleted: boolean }>(`/api/jobs/${id}`, { method: 'DELETE' }),
 }

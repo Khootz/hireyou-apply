@@ -81,9 +81,22 @@ export const JobInputSchema = z.object({
   notes: z.string().default(''),
 })
 
+export const JobPatchSchema = JobInputSchema.partial()
+
+export const JobRecordSchema = JobInputSchema.extend({
+  id: z.string(),
+  saved_at: z.string(),
+  applied_at: z.string().nullable(),
+  status_updated_at: z.string(),
+})
+
 export type JobStatus = z.infer<typeof JobStatusSchema>
 export type SourceBoard = z.infer<typeof SourceBoardSchema>
 export type JobInput = z.infer<typeof JobInputSchema>
+export type JobPatch = z.infer<typeof JobPatchSchema>
+export type JobRecord = z.infer<typeof JobRecordSchema>
+
+export const JOB_STATUSES: JobStatus[] = ['saved', 'applied', 'interviewing', 'offered', 'rejected']
 
 // ---------- Documents ----------
 

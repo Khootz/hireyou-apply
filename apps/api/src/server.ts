@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
+import { registerJobRoutes } from './routes/jobs'
 import { registerProfileRoutes } from './routes/profile'
 
 export interface ServerDeps {
@@ -24,6 +25,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   app.get('/health', async () => ({ status: 'ok', service: 'hireyou-apply-api' }))
 
   registerProfileRoutes(app, deps.sqlite)
+  registerJobRoutes(app, deps.sqlite)
 
   return app
 }
