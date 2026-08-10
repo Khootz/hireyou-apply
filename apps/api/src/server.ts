@@ -25,12 +25,22 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: false })
   // The extension calls from a chrome-extension:// origin; single-user local
   // API, auth is the bearer token, so reflect any origin.
-  app.register(cors, { origin: true })
+  app.register(cors, { origin: true, methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'] })
+  // Chrome's Private Network Access: a public page (the Vercel-hosted UI)
+  // calling 127.0.0.1 needs this header on the preflight response.
+  app.addHook('onSend', async (req, reply) => {
+    if (req.headers['access-control-request-private-network'] === 'true') {
+      reply.header('access-control-allow-private-network', 'true')
+    }
+  })
   app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 1 } })
   const runner = new Runner(deps.sqlite)
   app.decorate('runner', runner)
 
   app.addHook('onRequest', async (req, reply) => {
+    // CORS preflights carry no Authorization header by design — they must
+    // reach the cors plugin, not die here.
+    if (req.method === 'OPTIONS') return
     const expected = process.env.API_AUTH_TOKEN
     if (!expected) {
       return reply.code(500).send({ error: 'API_AUTH_TOKEN not configured' })
