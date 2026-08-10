@@ -1,6 +1,18 @@
 {
   "name": "@app/extension",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "MV3 extension. M0: static shell loaded unpacked from this directory. Real build pipeline arrives in M6."
+  "type": "module",
+  "description": "MV3 extension. Load dist/ unpacked after `npm run build -w @app/extension`.",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@app/shared": "*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "esbuild": "^0.28.2"
+  }
 }

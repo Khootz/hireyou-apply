@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "HireYou Apply",
+  "version": "0.2.0",
+  "description": "Job application copilot: save jobs from the HKUST career board, tailor your resume and cover letter.",
+  "action": {
+    "default_title": "HireYou Apply"
+  },
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "permissions": ["sidePanel", "storage", "tabs"],
+  "host_permissions": ["https://career.hkust.edu.hk/*", "http://127.0.0.1:3100/*", "http://localhost:3100/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://career.hkust.edu.hk/web/job_detail.php*"],
+      "js": ["content-hkust.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

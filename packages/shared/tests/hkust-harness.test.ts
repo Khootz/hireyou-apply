@@ -8,7 +8,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { JSDOM } from 'jsdom'
 import { describe, expect, it } from 'vitest'
-import { extractApplyEmail, extractJpFromUrl, parseDetailTitle } from '@app/shared/extractors/hkust'
+import { extractApplyEmail, extractHkustJobDetail, extractJpFromUrl, parseDetailTitle } from '@app/shared/extractors/hkust'
 
 const FIXTURES = path.resolve(process.cwd(), 'tests/fixtures/hkust')
 
@@ -40,5 +40,36 @@ describe('HKUST fixture harness', () => {
     const doc = loadDoc('list-page-1.html')
     const rows = doc.querySelectorAll('tr.job-item')
     expect(rows.length).toBeGreaterThanOrEqual(10)
+  })
+
+  it('extracts the full job from the Jain Global detail page', () => {
+    const doc = loadDoc('detail-86585.html')
+    const job = extractHkustJobDetail(doc, 'https://career.hkust.edu.hk/web/job_detail.php?jp=86585')
+    expect(job).not.toBeNull()
+    expect(job!.jp).toBe('86585')
+    expect(job!.title).toContain('Quant Researcher Intern')
+    expect(job!.company).toBe('Jain Global')
+    expect(job!.deadline).toBe('2026-09-30')
+    expect(job!.apply_email).toBe('APAC-Careers@jainglobal.com')
+    expect(job!.jd_text.length).toBeGreaterThan(500)
+    expect(job!.jd_text.length).toBeLessThanOrEqual(4000)
+    expect(job!.jd_text).toContain('Jain Global')
+  })
+
+  it('extracts every captured detail fixture without empty core fields', () => {
+    for (const jp of ['86585', '86643', '86638']) {
+      const doc = loadDoc(`detail-${jp}.html`)
+      const job = extractHkustJobDetail(doc, `https://career.hkust.edu.hk/web/job_detail.php?jp=${jp}`)
+      expect(job, `jp=${jp}`).not.toBeNull()
+      expect(job!.jp, `jp=${jp}`).toBe(jp)
+      expect(job!.title.length, `title jp=${jp}`).toBeGreaterThan(3)
+      expect(job!.company.length, `company jp=${jp}`).toBeGreaterThan(1)
+      expect(job!.jd_text.length, `jd jp=${jp}`).toBeGreaterThan(200)
+    }
+  })
+
+  it('returns null on a non-detail page', () => {
+    const doc = loadDoc('list-page-1.html')
+    expect(extractHkustJobDetail(doc, 'https://career.hkust.edu.hk/web/job.php')).toBeNull()
   })
 })

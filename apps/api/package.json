@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@app/shared": "*",
+    "@fastify/cors": "^11.3.0",
     "@fastify/multipart": "^10.1.0",
     "better-sqlite3": "^12.4.1",
     "dotenv": "^16.4.7",

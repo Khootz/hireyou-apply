@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HireYou Apply</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f8fafc; color: #0f172a; font-size: 13px; }
+    header { background: #1d4ed8; color: #fff; padding: 12px 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    header button { background: none; border: none; color: #bfdbfe; cursor: pointer; font-size: 14px; }
+    main { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
+    .muted { color: #64748b; font-size: 12px; }
+    .banner { background: #dcfce7; color: #166534; border-radius: 8px; padding: 8px 10px; font-weight: 600; font-size: 12px; }
+    .banner.warn { background: #fef9c3; color: #854d0e; }
+    .banner.err { background: #fee2e2; color: #991b1b; font-weight: 400; }
+    h2 { font-size: 15px; margin-bottom: 2px; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    button.primary { background: #1d4ed8; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; width: 100%; }
+    button.primary:disabled { opacity: 0.5; cursor: default; }
+    button.secondary { background: #fff; color: #1d4ed8; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+    select, input { border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 8px; font-size: 13px; width: 100%; }
+    label { font-size: 11px; color: #64748b; display: block; margin-bottom: 2px; }
+    a { color: #1d4ed8; text-decoration: none; }
+    .gen-row { display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; }
+    .hidden { display: none; }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <header>
+    <span>HireYou Apply — job copilot</span>
+    <button id="settings-toggle" title="Settings">⚙</button>
+  </header>
+  <main>
+    <div id="settings" class="card hidden">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div><label>API URL</label><input id="set-api-url" placeholder="http://127.0.0.1:3100" /></div>
+        <div><label>API token (matches API_AUTH_TOKEN in .env)</label><input id="set-token" type="password" /></div>
+        <div><label>Web app URL</label><input id="set-web-url" placeholder="http://localhost:5180" /></div>
+        <button class="primary" id="save-settings">Save settings</button>
+        <div id="settings-status" class="muted"></div>
+      </div>
+    </div>
+    <div id="content"></div>
+  </main>
+  <script src="panel.js"></script>
+</body>
+</html>

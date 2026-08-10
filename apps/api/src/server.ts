@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify'
+import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
 import { registerDocumentRoutes } from './routes/documents'
@@ -19,6 +20,9 @@ declare module 'fastify' {
 
 export function buildServer(deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: false })
+  // The extension calls from a chrome-extension:// origin; single-user local
+  // API, auth is the bearer token, so reflect any origin.
+  app.register(cors, { origin: true })
   app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024, files: 1 } })
   const runner = new Runner(deps.sqlite)
   app.decorate('runner', runner)
