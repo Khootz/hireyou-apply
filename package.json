@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "tsx watch apps/api/src/index.ts",
+    "dev:api": "tsx apps/api/src/index.ts",
     "dev:web": "npm run dev -w @app/web",
     "test": "vitest run",
     "typecheck": "npm run typecheck --workspaces --if-present",
@@ -22,7 +22,8 @@
     "build:extension": "npm run build -w @app/extension",
     "verify:m6": "npm run typecheck && npm run build:extension && vitest run",
     "verify:m7": "npm run typecheck && npm run build:extension && vitest run",
-    "verify:m8": "npm run typecheck && npm run build:extension && vitest run"
+    "verify:m8": "npm run typecheck && npm run build:extension && vitest run",
+    "dev:api:watch": "tsx watch apps/api/src/index.ts"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",
