@@ -257,6 +257,41 @@ interface FillOutcomeLite {
   value?: string
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// Demo pacing: a cache-hit (or fully rule-based) scan answers in tens of
+// milliseconds, which looks fake on stage. When the server was that fast,
+// replay the wait a real classification pass takes — staged messages over an
+// eased ~3.5s progress bar. Purely presentational: slow (real) responses get
+// no extra delay.
+async function demoPace(startedAt: number, status: HTMLElement, fieldCount: number): Promise<void> {
+  const elapsed = Date.now() - startedAt
+  if (elapsed > 1200) return
+  const total = 3500 - elapsed
+  const stages: [number, string][] = [
+    [0, `Scanning ${fieldCount} field${fieldCount === 1 ? '' : 's'}…`],
+    [0.3, 'Classifying against known question types…'],
+    [0.65, 'Matching your profile and saved answers…'],
+    [0.9, 'Preparing suggestions…'],
+  ]
+  status.innerHTML = `<div id="pace-label" class="muted"></div>
+    <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin-top:6px">
+      <div id="pace-fill" style="height:100%;width:0%;background:#2563eb;transition:width 120ms linear"></div>
+    </div>`
+  const label = status.querySelector<HTMLElement>('#pace-label')!
+  const fill = status.querySelector<HTMLElement>('#pace-fill')!
+  const t0 = Date.now()
+  for (;;) {
+    const t = Math.min(1, (Date.now() - t0) / total)
+    const eased = 1 - Math.pow(1 - t, 2.2)
+    fill.style.width = `${Math.round(eased * 100)}%`
+    label.textContent = stages.filter((s) => s[0] <= t).pop()![1]
+    if (t >= 1) break
+    await sleep(110)
+  }
+  status.innerHTML = ''
+}
+
 // Usage telemetry (M9): report which suggestions actually got used so the
 // classifier can be judged on real forms later. Values never leave the page —
 // only the canonical field name and what happened. Fire-and-forget: telemetry
@@ -312,6 +347,7 @@ async function scanForm(): Promise<void> {
         ? `${scan.fields.length} fields found — asking about the ${fields.length} most fillable…`
         : `${fields.length} fields found — asking for suggestions…`
     const jobId = document.querySelector<HTMLSelectElement>('#scan-job')?.value || null
+    const requestStarted = Date.now()
     const { suggestions, form_fingerprint } = await api<{
       suggestions: FieldSuggestionLite[]
       form_fingerprint: string
@@ -319,6 +355,7 @@ async function scanForm(): Promise<void> {
       method: 'POST',
       body: JSON.stringify({ fields, job_id: jobId }),
     })
+    await demoPace(requestStarted, status, fields.length)
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
     if (withValue.length === 0) {
       status.textContent = 'No confident suggestions for this form — fill it manually.'
