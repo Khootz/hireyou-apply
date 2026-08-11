@@ -133,4 +133,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - resolveLabel: chrome-only wrapping labels rejected (full-string junk match — Lever labels containing "Please select" survive, caught by the eval), sibling walk deepened 3→6 levels, 400-char cap for PwC's long compliance questions.
 - Phone local part drops separators. Captured widget structure = jsdom regression test. Still manual on PwC: DOB + graduation-date calendar pickers (readonly picker widgets, not selects), consents, gender, criminal declarations.
 
+**2026-08-11 — resume loop: baseline re-verified + manual-check doc synced to the capture loop**
+- `npm run verify:m9` re-run clean on resume: **129 passed, 1 skipped** — matches last entry, no drift.
+- docs/autofill-manual-check.md was three loops stale: 14→**39** saved answers, ~30→**55** deterministic rules, 84→129 tests, MokaHR added to the proven-ATS list. Test 3 rewritten: dropdowns now described as click-open menu driving (not type-to-filter), and **graduation date moved from "expect to fill" to "stays manual (known limit)"** — the live form renders it as a readonly calendar picker whose open-state DOM was never captured; doc now tells the user how to capture it open if they want it driven.
+- NEXT (all user-gated): (1) live PwC re-run with the new select driver — every miss becomes a fixture; (2) optional: capture a MokaHR calendar picker in its OPEN state → then a picker-driving loop is unblocked; (3) PLAN §10.3 key rotation (DeepSeek, old OpenRouter, Gmail) — still pending.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

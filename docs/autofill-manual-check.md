@@ -5,17 +5,17 @@
 > company's own application flow. Nothing site-specific was ever needed: **Scan this page works on
 > any http(s) page**, and the fill engine is machine-verified against real captured forms from
 > three corporate ATS families: **Greenhouse** (Anthropic's form), **Lever** (Palantir's form),
-> and **OKX**'s careers site (`npm run verify:m9`, 84 tests green).
+> and **OKX**'s careers site, plus **MokaHR** (PwC's form) (`npm run verify:m9`, 129 tests green).
 
 ## How it works (so you know what you're checking)
 
 1. **Scan** — the content script walks every visible input/textarea/select on the page and
    resolves each field's label (label-for → aria → wrapping → nearby text → placeholder).
-2. **Classify** — ~30 deterministic rules name the classics (name, email, phone, LinkedIn,
+2. **Classify** — 55 deterministic rules name the classics (name, email, phone, LinkedIn,
    university, notice period…) with zero LLM; one batched cheap-model call handles the leftovers;
    results are cached per form shape. Demographic/EEO fields classify to a hard do-not-fill bucket.
 3. **Answer** — contact fields copy from your profile; derived facts (current title/company,
-   university, degree) come from your latest profile entries, never generated; your 14 saved
+   university, degree) come from your latest profile entries, never generated; your 39 saved
    answers cover the questions no resume answers; free-text essays are only drafted when the job's
    JD is attached, grounded in profile facts.
 4. **Fill + verify** — values are written the way React apps expect, then read back from the DOM;
@@ -64,18 +64,26 @@ or say "pick manually", EEO rows amber.
 
 ## Test 3 — PwC on MokaHR (Chinese campus-recruitment ATS)
 
-Built from the transcribed question list of the live form (MokaHR is unreachable from this
-machine — your browser session is the only way in). With the 39 answers filled, expect to fill:
+Built from the transcribed question list **plus your full-page DOM capture** of the live form
+(MokaHR is unreachable from this machine — your browser session is the only way in). The capture
+revealed MokaHR "selects" are ARIA-free text inputs inside a widget shell — the filler now
+**clicks them open and drives the menu like a human** instead of typing into them, and verifies
+via the widget's display value. With the 39 answers filled, expect to fill:
 programme/other-opportunities/visa selects, Chinese + English name variants, preferred English
 name, mobile (**local number only** — the +852 goes into the code select now), citizenship +
-status, current country, graduation date, school country, major (+ major type), academic ranking,
+status, current country, school country, major (+ major type), academic ranking,
 department, employee type, responsibilities (from your latest profile role), the three language
 proficiencies, English exam, skill, professional qualification, the b–e legal declarations,
 related-to-employee, previously-employed, and referral channel.
 
 Stays manual **by design**: Gender, Date of Birth, the criminal-proceeding and conviction
-questions, and the accuracy-confirmation checkbox. Repeating "Add" sections (second education
-period, awards): click Add first, then **re-scan** — new fields only exist after they render.
+questions, and the accuracy-confirmation checkbox. Stays manual as a **known limit**: the
+**graduation-date (and any other) calendar pickers** — they're readonly picker widgets, not
+selects; their open-state DOM was never captured, so the filler leaves them alone. If you want
+them driven, capture the page again with a picker **open** (F12 →
+`copy(document.documentElement.outerHTML)`) and paste it in. Repeating "Add" sections (second
+education period, awards): click Add first, then **re-scan** — new fields only exist after they
+render.
 
 ## Test 4 — IBM, Deloitte, any corporate portal (~15 min, the frontier)
 
