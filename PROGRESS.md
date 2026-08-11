@@ -127,4 +127,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Date-part selects: year/month split widgets extract the right part from "2026-06-30"/"Jun 2026" answers — the generic substring fallback matched the "2" in "2026-06-30" to month 2 (found by test, fixed: date-part match is exclusive when options look like date parts). verifyFill accepts date-part selections.
 - Hard-blocked by design (stated to user): Gender, DOB, criminal/conviction declarations, consent checkboxes.
 
+**2026-08-11 — PwC full-page capture → two root causes fixed (129 passed)**
+- User pasted the complete rendered MokaHR DOM (site unreachable from this machine). Scan HAD found all 89 fields — but selects are ARIA-free text inputs in sd-Select-container shells: the filler typed into them (menu filtered, nothing committed), AND their labels resolved to "Required items are not filled in" so they couldn't classify.
+- isCombobox: select-shell ancestry detection; driver: click-open, options from the widget's own Dropdown node (offscreen-parked when closed → on-screen filter), type-to-filter with clear-and-retry against the full list, click match, verify via display-value span, body-mousedown to close.
+- resolveLabel: chrome-only wrapping labels rejected (full-string junk match — Lever labels containing "Please select" survive, caught by the eval), sibling walk deepened 3→6 levels, 400-char cap for PwC's long compliance questions.
+- Phone local part drops separators. Captured widget structure = jsdom regression test. Still manual on PwC: DOB + graduation-date calendar pickers (readonly picker widgets, not selects), consents, gender, criminal declarations.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
