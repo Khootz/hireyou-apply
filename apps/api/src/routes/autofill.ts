@@ -2,12 +2,12 @@ import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
 import type Database from 'better-sqlite3'
 import { z } from 'zod'
-import { FieldInfoSchema } from '@app/shared/autofill'
+import { FieldInfoSchema, MAX_AUTOFILL_FIELDS } from '@app/shared/autofill'
 import { formFingerprint, suggestForFields } from '../services/autofill'
 import { getJob } from '../services/jobs'
 
 const BodySchema = z.object({
-  fields: z.array(FieldInfoSchema).min(1).max(100),
+  fields: z.array(FieldInfoSchema).min(1).max(MAX_AUTOFILL_FIELDS),
   job_id: z.string().nullable().default(null),
 })
 

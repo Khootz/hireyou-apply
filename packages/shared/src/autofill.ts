@@ -133,6 +133,20 @@ function stableSelector(el: Element, index: number): string {
 
 const EXCLUDED_INPUT_TYPES = new Set(['hidden', 'submit', 'button', 'reset', 'image', 'file', 'password', 'search'])
 
+// A busy listing page (CTgoodjobs: filter sidebars with 100+ checkboxes) can
+// out-shout the actual apply form and blow the API's batch cap — the exact
+// failure seen live on 2026-08-11 ("Array must contain at most 100"). Text
+// entry controls are what autofill can actually fill — checkboxes/radios are
+// only ever reported, never ticked — so past the cap, fillable controls keep
+// their place and the tick-box noise falls off the end.
+export const MAX_AUTOFILL_FIELDS = 100
+
+export function prioritizeFields(fields: FieldInfo[], cap = MAX_AUTOFILL_FIELDS): FieldInfo[] {
+  if (fields.length <= cap) return fields
+  const isTickBox = (f: FieldInfo) => f.input_type === 'checkbox' || f.input_type === 'radio'
+  return [...fields.filter((f) => !isTickBox(f)), ...fields.filter(isTickBox)].slice(0, cap)
+}
+
 export function discoverFields(doc: Document): FieldInfo[] {
   const fields: FieldInfo[] = []
   const elements = Array.from(doc.querySelectorAll('input, textarea, select'))

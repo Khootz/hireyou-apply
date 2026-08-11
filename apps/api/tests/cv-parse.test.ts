@@ -35,7 +35,9 @@ function multipartPayload(content: Buffer, filename = 'cv.pdf', contentType = 'a
 }
 
 describe('CV text extraction (real CV fixture)', () => {
-  it('recovers the text layer in reading order', async () => {
+  // pdfjs takes ~1s alone but 7s+ when the full suite runs in parallel on a
+  // loaded machine — the default 5s timeout flakes, the assertion never does
+  it('recovers the text layer in reading order', { timeout: 30_000 }, async () => {
     const result = await extractPdfText(new Uint8Array(fs.readFileSync(CV_PATH)))
     expect(result.pages).toBe(1)
     expect(result.warnings).toEqual([])

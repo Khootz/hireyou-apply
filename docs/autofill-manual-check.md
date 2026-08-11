@@ -1,4 +1,10 @@
-# Manual check — autofill on JobsDB / CTgoodjobs
+# Manual check — autofill on CTgoodjobs (+ Greenhouse showcase)
+
+> **2026-08-11:** JobsDB dropped from this checklist per user decision — it's an easy-apply
+> platform and doesn't showcase the autofill. CTgoodjobs is the primary live test. The first
+> CTgoodjobs attempt surfaced a real bug (page had >100 form controls — filter checkboxes — and
+> the API rejected the batch); fixed by prioritizing fillable controls client-side. **Rebuild +
+> reload the extension before retrying.**
 
 The fill pipeline is already machine-verified end-to-end (discover → classify → suggest → fill →
 read-back-verify) against **real captured application forms** (Greenhouse/Anthropic and OKX fixtures,
@@ -25,27 +31,36 @@ iframes, bot defenses, and their particular dropdown widgets. This is that walkt
    willing to relocate). Every answer you fill here autofills on any form that asks the matching
    question — aim for 14/14.
 
-## Test A — JobsDB (~10 min)
+## Test A — CTgoodjobs (~10 min, primary)
 
-1. Log into `hk.jobsdb.com` and pick any job with a **Quick apply** badge.
-2. Click Quick apply → the application form loads (URL like `hk.jobsdb.com/apply/...`).
-3. Open the HireYou side panel → **Scan this page**.
-4. Expect: `N fields found — asking for suggestions…` → a suggestions list + **⚡ Autofill N fields**.
-5. Click Autofill and watch: fields scroll into view one at a time with a green flash.
-6. Checklist:
+1. Log into `ctgoodjobs.hk`, open a job, click **Apply Now**. Their apply flow may hop to
+   `jobs.ctgoodjobs.hk` or open a new tab — work on whichever page actually shows form fields.
+2. Open the HireYou side panel → **Scan this page**.
+3. Expect: `N fields found — asking for suggestions…` (on a busy page: `N fields found — asking
+   about the 100 most fillable…`) → a suggestions list + **⚡ Autofill N fields**.
+   The `API 400 … at most 100 element(s)` error from the first attempt is fixed — if you still
+   see it, the extension wasn't rebuilt/reloaded.
+4. Click Autofill and watch: fields scroll into view one at a time with a green flash.
+5. Checklist:
    - [ ] Name / email / phone filled and **stay** filled (not reverted a second later)
    - [ ] Dropdowns either select the right option or honestly say "pick it manually"
    - [ ] Any demographic/EEO question shows the amber "never suggested" row, field untouched
    - [ ] Employer questions (expected salary, notice period, languages, start date…) fill from
          your saved answers
    - [ ] Nothing submitted — the Submit button is still yours
-7. **Do not press Submit** unless you genuinely want to apply to that job.
+6. **Do not press Submit** unless you genuinely want to apply to that job.
 
-## Test B — CTgoodjobs (~10 min)
+## Test B — Greenhouse (~5 min, best showcase)
 
-Same steps: log into `ctgoodjobs.hk`, open a job, click **Apply Now**. Their apply flow may hop to
-`jobs.ctgoodjobs.hk` or open a new tab — run **Scan this page** on whichever page actually shows
-the form fields.
+Any company that hires through Greenhouse has a public application form — **no login wall**, and
+it's the exact form family the machine eval runs on (React, react-select dropdowns, EEO section):
+
+1. Open any `job-boards.greenhouse.io` / `boards.greenhouse.io` posting (most tech companies'
+   careers pages link there) and click **Apply**.
+2. Side panel → **Scan this page** → **⚡ Autofill**.
+3. Same checklist as above. This is the flow to demo: contact fields fill, comboboxes get driven
+   like a human (type → menu filters → click option), EEO dropdowns stay untouched with the amber
+   note.
 
 ## Honest failures to expect (report, don't panic)
 

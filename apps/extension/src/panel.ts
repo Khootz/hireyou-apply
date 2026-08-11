@@ -1,4 +1,5 @@
 import type { HkustJob } from '@app/shared/extractors/hkust'
+import { prioritizeFields, type FieldInfo } from '@app/shared/autofill'
 
 // Side panel UI. Vanilla TS: the panel is a thin API client — all
 // intelligence is server-side (mirrors Amploy's 88 KiB philosophy).
@@ -275,7 +276,7 @@ async function scanForm(): Promise<void> {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
     if (tab?.id === undefined) throw new Error('no active tab')
     const tabId = tab.id
-    let scan: { fields: unknown[] }
+    let scan: { fields: FieldInfo[] }
     try {
       await ensureContentScript(tabId)
       scan = await chrome.tabs.sendMessage(tabId, { type: 'scan-form' })
@@ -287,13 +288,19 @@ async function scanForm(): Promise<void> {
       status.textContent = 'No form fields found on this page.'
       return
     }
-    status.textContent = `${scan.fields.length} fields found — asking for suggestions…`
+    // Busy pages (filter sidebars full of checkboxes) can exceed the API's
+    // batch cap — keep the fillable controls, let the tick-box noise drop.
+    const fields = prioritizeFields(scan.fields)
+    status.textContent =
+      fields.length < scan.fields.length
+        ? `${scan.fields.length} fields found — asking about the ${fields.length} most fillable…`
+        : `${fields.length} fields found — asking for suggestions…`
     const { suggestions, form_fingerprint } = await api<{
       suggestions: FieldSuggestionLite[]
       form_fingerprint: string
     }>(`/api/autofill`, {
       method: 'POST',
-      body: JSON.stringify({ fields: scan.fields, job_id: null }),
+      body: JSON.stringify({ fields, job_id: null }),
     })
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
     if (withValue.length === 0) {

@@ -103,4 +103,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Also this loop (user ask): **answers page 9 → 14 questions** — expected_start_date, current_salary, willing_to_relocate, languages, highest_education_level added as canonicals + deterministic rules (current_salary ordered before salary_expectation; highest_education_level before degree/institution rules).
 - Manual checklist for user: `docs/autofill-manual-check.md` — live JobsDB/CTgoodjobs walkthrough (probe 2026-08-11: jobsdb refuses non-browser clients even via proxy, ctgoodjobs bot-blocks CLI — extension-in-Chrome is the only viable path, fixtures must come from the user's session).
 
+**2026-08-11 — CTgoodjobs live regression → GREEN (80 passed, 1 skipped)**
+- User's first live CTgoodjobs scan failed: `400 fields: Array must contain at most 100 element(s)` — their pages carry 100+ filter checkboxes that out-shout the apply form. Fix: `prioritizeFields` in shared (fillable text/select/textarea controls keep their place, checkbox/radio noise falls off past the cap, `MAX_AUTOFILL_FIELDS` shared between panel and route schema); panel says "asking about the N most fillable" when trimming. Regression test = synthetic 120-checkbox sidebar + real form: raw scan 400s, prioritized batch 200s with all 5 fillable fields kept in document order.
+- JobsDB dropped from the manual checklist per user (easy-apply, doesn't showcase); guide now leads with CTgoodjobs + public Greenhouse forms (no login, same form family as the machine eval) as the demo path.
+- Flake hardening: global vitest hookTimeout 30s / testTimeout 15s (Chrome shutdown + pdfjs exceeded 10s/5s defaults under parallel load — 3 different suites flaked on a loaded machine, all pass in isolation).
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

@@ -4,7 +4,14 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { JSDOM } from 'jsdom'
 import type { FastifyInstance } from 'fastify'
 import { MasterProfileSchema, type JobRecord } from '@app/shared'
-import { classifyFieldDeterministic, discoverFields, FieldInfoSchema, type FieldSuggestion } from '@app/shared/autofill'
+import {
+  classifyFieldDeterministic,
+  discoverFields,
+  FieldInfoSchema,
+  MAX_AUTOFILL_FIELDS,
+  prioritizeFields,
+  type FieldSuggestion,
+} from '@app/shared/autofill'
 import { openDb } from '../src/db'
 import { buildServer } from '../src/server'
 
@@ -115,5 +122,55 @@ describe('POST /api/autofill (LLM replayed from fixtures)', () => {
   it('rejects an empty field list', async () => {
     const res = await app.inject({ method: 'POST', url: '/api/autofill', headers: AUTH, payload: { fields: [] } })
     expect(res.statusCode).toBe(400)
+  })
+})
+
+describe('noisy listing pages (CTgoodjobs regression, 2026-08-11)', () => {
+  // A filter sidebar of 120 checkboxes plus a real apply form: discovery finds
+  // everything, but the batch sent to the API must keep every fillable control
+  // and stay under the cap — the live page 400ed ("at most 100 elements").
+  const NOISY_PAGE = `<html><body>
+    <aside>${Array.from({ length: 120 }, (_, i) => `<label><input type="checkbox" name="filter_${i}"> Industry ${i}</label>`).join('')}</aside>
+    <main>
+      <label for="apply-name">Full name</label><input id="apply-name" type="text">
+      <label for="apply-email">Email address</label><input id="apply-email" type="email">
+      <label for="apply-phone">Contact number</label><input id="apply-phone" type="tel">
+      <label for="apply-notice">Notice period</label><input id="apply-notice" type="text">
+      <label for="apply-salary">Expected salary</label><input id="apply-salary" type="text">
+    </main>
+  </body></html>`
+
+  it('prioritization keeps every fillable field and respects the cap', () => {
+    const discovered = discoverFields(new JSDOM(NOISY_PAGE).window.document)
+    expect(discovered.length).toBeGreaterThan(MAX_AUTOFILL_FIELDS)
+
+    const sent = prioritizeFields(discovered)
+    expect(sent.length).toBe(MAX_AUTOFILL_FIELDS)
+    // every text-entry control survives, in document order, ahead of the noise
+    const textSelectors = sent.filter((f) => f.input_type !== 'checkbox').map((f) => f.selector)
+    expect(textSelectors).toEqual(['#apply-name', '#apply-email', '#apply-phone', '#apply-notice', '#apply-salary'])
+    expect(sent.slice(0, 5).every((f) => f.input_type !== 'checkbox')).toBe(true)
+  })
+
+  it('the prioritized batch passes the API cap that the raw scan blew', async () => {
+    const discovered = discoverFields(new JSDOM(NOISY_PAGE).window.document)
+
+    const raw = await app.inject({
+      method: 'POST',
+      url: '/api/autofill',
+      headers: AUTH,
+      payload: { fields: discovered, job_id: null },
+    })
+    expect(raw.statusCode).toBe(400) // the exact live failure
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/autofill',
+      headers: AUTH,
+      payload: { fields: prioritizeFields(discovered), job_id: null },
+    })
+    expect(res.statusCode).toBe(200)
+    const { suggestions } = res.json() as { suggestions: FieldSuggestion[] }
+    expect(suggestions).toHaveLength(MAX_AUTOFILL_FIELDS)
   })
 })

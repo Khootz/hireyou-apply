@@ -22,9 +22,10 @@ beforeAll(() => {
   process.env.PDF_STORAGE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'hireyou-mail-'))
 })
 
+// Chrome shutdown can exceed the 10s default hook timeout under parallel load
 afterAll(async () => {
   await closePdfBrowser()
-})
+}, 30_000)
 
 beforeEach(() => {
   sentMail = []
