@@ -330,6 +330,39 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
     expect(checkboxes.every((f) => classifyFieldDeterministic(f) === 'UNKNOWN')).toBe(true)
   })
 
+  it('period year/month selects classify via synthesized range labels and fill from profile dates', async () => {
+    const all = discover()
+    const byLabel = (frag: string) => all.filter((f) => f.label.toLowerCase().includes(frag.toLowerCase()))
+    const eduParts = byLabel('education period —')
+    expect(eduParts.map((f) => classifyFieldDeterministic(f)).sort()).toEqual([
+      'education_period_end',
+      'education_period_end',
+      'education_period_start',
+      'education_period_start',
+    ])
+    const workParts = byLabel('start and end date —')
+    expect(workParts.map((f) => classifyFieldDeterministic(f)).sort()).toEqual([
+      'work_period_end',
+      'work_period_end',
+      'work_period_start',
+      'work_period_start',
+    ])
+
+    saveProfile(
+      sqlite,
+      MasterProfileSchema.parse(
+        JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/generation/profile.json'), 'utf8')),
+      ),
+    )
+    const suggestions = await suggestForFields(sqlite, [...eduParts, ...workParts], null)
+    const eduStart = suggestions.find((s) => s.canonical === 'education_period_start')!
+    const eduEnd = suggestions.find((s) => s.canonical === 'education_period_end')!
+    // full dates go out; year/month selects extract their part at fill time
+    expect(eduStart.value).toBe('Sep 2022')
+    expect(eduEnd.value).toBe('Jun 2026')
+    expect(suggestions.every((s) => s.value)).toBe(true)
+  })
+
   it('readonly calendar pickers (DOB, graduation date) are not treated as fillable fields', () => {
     const all = discover()
     expect(all.some((f) => f.label.includes('Date of Birth'))).toBe(false)

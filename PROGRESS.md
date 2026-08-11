@@ -170,4 +170,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Manifest 0.3.0 → **0.3.1** (every extension change bumps now — the panel badge is the user's reload proof). Driver logic is browser-side and not jsdom-testable (jsdom widgets don't render selections); typecheck + build + full suite green.
 - NEXT: user reloads v0.3.1, re-runs fresh scan + autofill on PwC; School/Country-of-School garbage values need manual clearing (left by the pre-fix guess-Enter).
 
+**2026-08-12 — Period date-ranges fill from the profile ("fill the 26 too"), v0.3.2 → GREEN (144 passed, 1 skipped)**
+- The biggest fillable slice of the "26 no-answer" fields: MokaHR's Education-period and Work Start/End year+month selects. Individually they all labeled "Year"/"Month" — resolveLabel now synthesizes range labels ("Education period — start year") from the `month-range-select` wrapper's question + position vs the "till" separator; 4 new derived canonicals (education/work_period_start/end) fill from the profile entry dates (education: Sep 2022 / Jun 2026; work: latest experience entry — SAME source as the Company/Title fields beside them). Values ship as full dates; year/month selects extract their part at drive time (existing datePartTarget).
+- Deliberately NOT filled, documented in-rule: internship "Period" and "Award time" ranges (profile can't distinguish internship from latest job — wrong date beats nothing), consents/checkboxes, referral code, award fields. dateish() guard: "Present"-style end dates yield nothing rather than a guaranteed mismatch.
+- verify flake note: one parallel-load failure in the first run (documented flake class), full rerun 18/18 green. ALSO: background `verify | tail -5` hides vitest's exit code — pipeline exit is tail's. Don't pipe the verifier.
+- v0.3.1→**0.3.2** (shared is bundled into the content script — every shared change is an extension change). User's systematic accuracy loop documented in chat: autofill once → panel outcome list is the checklist → harvested dropdowns on the Answers page fix the mismatches → refill.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

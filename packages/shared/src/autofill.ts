@@ -37,6 +37,12 @@ export const CANONICAL_FIELDS = [
   'major',
   'academic_ranking',
   'graduation_date',
+  // date-range widgets (MokaHR education/work period year+month selects) —
+  // derived from the profile's entry dates, never asked on the answers page
+  'education_period_start',
+  'education_period_end',
+  'work_period_start',
+  'work_period_end',
   'highest_education_level',
   'work_authorization',
   'visa_sponsorship_required',
@@ -123,6 +129,20 @@ const ONLY_JUNK = /^(required items are not filled in|please select|no result)$/
 const JUNK_LABEL = /required items are not filled in|^please select$|^no result$/i
 
 function resolveLabel(el: Element): string {
+  // Date-range widgets (MokaHR "Education period", "Start and End Date"):
+  // four bare Year/Month selects around a "till" separator. Individually
+  // they'd all label as "Year"/"Month" — synthesize the real question plus
+  // which slot this select is, so each can classify to a period canonical.
+  const range = el.closest('[class*="month-range-select"]')
+  const part = el.getAttribute('placeholder')?.trim().toLowerCase()
+  if (range && (part === 'year' || part === 'month')) {
+    const question = precedingText(range)
+    const till = range.querySelector('[class*="till-"]')
+    // 4 = DOCUMENT_POSITION_FOLLOWING (no global Node in the test runtime)
+    const side = till && till.compareDocumentPosition(el) & 4 ? 'end' : 'start'
+    return cleanLabel(`${question} — ${side} ${part}`)
+  }
+
   const doc = el.ownerDocument
   const id = el.getAttribute('id')
   if (id) {
@@ -154,14 +174,20 @@ function resolveLabel(el: Element): string {
     // validation message must not become the field's "label"
     if (text && !ONLY_JUNK.test(text)) return text
   }
-  // nearest preceding text within the same container — walk deep enough to
-  // escape widget shells (MokaHR nests input→label→dropdown→tooltip→ctrl
-  // before the question title appears as a preceding sibling). Value-render
-  // nodes are skipped: a combobox input's previous sibling is the widget's
-  // display-value span, and a committed selection must never become the
-  // question ("Macau SAR, China" is an answer, not a label).
-  // depth 8: MokaHR multi-selects wrap the input two levels deeper than
-  // single selects (tag-container span + div) before the same shell chain
+  const preceding = precedingText(el)
+  if (preceding) return preceding
+  return el.getAttribute('placeholder')?.trim() ?? ''
+}
+
+// nearest preceding text within the same container — walk deep enough to
+// escape widget shells (MokaHR nests input→label→dropdown→tooltip→ctrl
+// before the question title appears as a preceding sibling). Value-render
+// nodes are skipped: a combobox input's previous sibling is the widget's
+// display-value span, and a committed selection must never become the
+// question ("Macau SAR, China" is an answer, not a label).
+// depth 8: MokaHR multi-selects wrap the input two levels deeper than
+// single selects (tag-container span + div) before the same shell chain
+function precedingText(el: Element): string {
   const VALUE_RENDER = '[class*="display-value"], [class*="single-value"], [class*="selection-item"]'
   let node: Element | null = el
   for (let depth = 0; depth < 8 && node; depth++) {
@@ -175,7 +201,7 @@ function resolveLabel(el: Element): string {
     }
     node = node.parentElement
   }
-  return el.getAttribute('placeholder')?.trim() ?? ''
+  return ''
 }
 
 // id/name selectors survive a re-render; anonymous elements get tagged with a
@@ -365,6 +391,16 @@ const RULES: [CanonicalField, RegExp][] = [
   // before current_company: "notice period to your current employer" must not
   // classify as the employer-name field
   ['notice_period', /\bnotice\s*period\b/i],
+  // synthesized date-range labels ("Education period — start year",
+  // "Start and End Date — end month") — before expected_start_date, whose
+  // start-date phrasing could otherwise claim the work-period slots.
+  // Internship "Period" and "Award time" ranges deliberately have NO rule:
+  // the profile can't distinguish an internship from the latest job entry,
+  // and a wrong date beats nothing. They stay honest manual fields.
+  ['education_period_start', /\beducation\s*period\s*—\s*start\b/i],
+  ['education_period_end', /\beducation\s*period\s*—\s*end\b/i],
+  ['work_period_start', /\bstart\s+and\s+end\s+date\s*—\s*start\b/i],
+  ['work_period_end', /\bstart\s+and\s+end\s+date\s*—\s*end\b/i],
   ['expected_start_date', /\b(start\s*date|earliest\s+(possible\s+)?(start|commencement)|when\s+can\s+you\s+start|date\s+available|available\s+(from|to\s+start))\b/i],
   ['willing_to_relocate', /\brelocat/i],
   // per-language proficiency selects (HK forms) before the generic language rule

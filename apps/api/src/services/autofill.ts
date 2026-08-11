@@ -36,6 +36,13 @@ const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>>
   education_institution: (p) => educationEntry(p)?.organisation ?? '',
   degree: (p) => educationEntry(p)?.role ?? '',
   graduation_date: (p) => educationEntry(p)?.end_date ?? '',
+  // date-range widgets: year/month selects extract their part from the full
+  // date at fill time. "Present"-style non-dates yield nothing — the widget's
+  // Present checkbox is the user's to tick, never ours.
+  education_period_start: (p) => dateish(educationEntry(p)?.start_date),
+  education_period_end: (p) => dateish(educationEntry(p)?.end_date),
+  work_period_start: (p) => dateish(latestExperienceEntry(p)?.start_date),
+  work_period_end: (p) => dateish(latestExperienceEntry(p)?.end_date),
   // split phone widgets: the code select gets "+852", the number the rest
   phone_country_code: (p) => /^\+\d{1,4}/.exec(p.contact.phone.trim())?.[0] ?? '',
   responsibilities: (p) =>
@@ -44,6 +51,12 @@ const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>>
       .filter(Boolean)
       .join(' ')
       .slice(0, 1000),
+}
+
+// a period value is only usable if it contains an actual year — "Present"
+// or free text would drive a year select into a guaranteed mismatch
+function dateish(s: string | undefined | null): string {
+  return s && /\b(19|20)\d{2}\b/.test(s) ? s : ''
 }
 
 // "THIEN ZHI, KHOO" is GIVEN, FAMILY (HK convention); without a comma the
