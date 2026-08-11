@@ -184,4 +184,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Held by design, told to user: **Gender + DOB stay unfilled** — gender auto-fill would fire on voluntary EEO forms everywhere (the product's core guarantee, locked in the M8 evals), and PwC's DOB + graduation-certificate fields are readonly calendar pickers the engine can't drive anyway (open-state capture still wanted). Two manual clicks on the real form.
 - Flake hardening: Lever full-page suite → describe-level 60s timeout (deep label walks + jsdom getComputedStyle under parallel load; passes ~17s isolated). Lesson recorded: never pipe the verifier through tail — it eats the exit code.
 
+**2026-08-12 — Quick loop: GPA pop-out sub-fields + user's live option wordings, v0.3.4 → GREEN (exit 0)**
+- PwC's Academic Ranking → "Cumulative GPA" choice reveals two sub-fields ("Cumulative GPA (e.g. 3.75", "Out of (e.g. 4)") — new canonicals `gpa`/`gpa_scale` + rules + answers questions (42 → **44**). Pop-out fields only exist after the ranking select commits → needs the second scan+autofill pass (documented Add-section behavior).
+- User's exact PwC wordings saved: programme_interest="Winter Intern", academic_ranking="Cumulative GPA (eg. 3.75 out of 4)", gpa="3.40", gpa_scale="3.1" (⚠ flagged to user: scale 3.1 < GPA 3.40 — likely meant 4.3), languages="None" (PwC's Other-languages select; note: also feeds generic "Languages you speak" fields on other forms).
+- Vercel redeployed, API restarted, cache cleared, verify exit 0.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

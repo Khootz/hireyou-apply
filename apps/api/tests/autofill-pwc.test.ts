@@ -91,6 +91,9 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
     ['Major', 'major'],
     ['What is your major type?', 'major_type'],
     ['Academic Ranking', 'academic_ranking'],
+    // sub-fields revealed by the "Cumulative GPA" ranking choice (user's live run)
+    ['Cumulative GPA (e.g. 3.75', 'gpa'],
+    ['Out of (e.g. 4)', 'gpa_scale'],
     // work experience
     ['Department', 'department'],
     ['Responsibilities', 'responsibilities'],
@@ -138,9 +141,9 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
   it('every answerable canonical is on the answers page exactly once', () => {
     const keys = ANSWER_QUESTIONS.map((q) => q.key)
     expect(new Set(keys).size).toBe(keys.length)
-    // 42 = 39 + location/degree/major_type: derived values are only a guess
-    // on fixed-choice forms — a saved answer must be able to override them
-    expect(keys.length).toBe(42)
+    // 44 = 39 + location/degree/major_type (derived-value overrides)
+    //         + gpa/gpa_scale (PwC's ranking pop-out sub-fields)
+    expect(keys.length).toBe(44)
   })
 })
 

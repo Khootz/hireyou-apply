@@ -36,6 +36,9 @@ export const CANONICAL_FIELDS = [
   'degree',
   'major',
   'academic_ranking',
+  // PwC's Academic Ranking → "Cumulative GPA" choice pops out two sub-fields
+  'gpa',
+  'gpa_scale',
   'graduation_date',
   // "What is your major type?" (PwC) — a different option set than Major
   // ("STEM Engineering" vs "Computer Engineering"); one answer can't serve both
@@ -437,6 +440,10 @@ const RULES: [CanonicalField, RegExp][] = [
   ['major', /\bmajor\b/i],
   ['degree', /\b(degree|qualification)\b/i],
   ['academic_ranking', /\b(academic|class)\s+rank|ranking\b/i],
+  // "Cumulative GPA (e.g. 3.75" and "Out of (e.g. 4)" — the sub-fields PwC
+  // reveals after picking the GPA option in Academic Ranking
+  ['gpa', /\b(cumulative\s+)?gpa\b|grade\s+point\s+average/i],
+  ['gpa_scale', /\bout\s+of\s*\(/i],
   // "Do you REQUIRE work authorisation or visa?" asks the sponsorship
   // question — the authorized-to-work rule below would invert the answer
   ['visa_sponsorship_required', /\brequire[sd]?\b[^?]{0,40}\b(authori[sz]ation|visa|sponsor)/i],
@@ -527,7 +534,9 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Education', key: 'major', question: 'Major / field of study', hint: 'e.g. Computer Engineering' },
   { group: 'Education', key: 'major_type', question: 'Major type / category (when a form asks separately)', hint: 'e.g. STEM Engineering' },
   { group: 'Education', key: 'degree', question: 'Degree category (as fixed-choice forms word it)', hint: 'e.g. Full-time Bachelor Degree — overrides the degree text from your profile' },
-  { group: 'Education', key: 'academic_ranking', question: 'Academic ranking', hint: 'e.g. Top 10% — or Not ranked' },
+  { group: 'Education', key: 'academic_ranking', question: 'Academic ranking', hint: 'e.g. Top 10%, or the form\'s "Cumulative GPA" choice' },
+  { group: 'Education', key: 'gpa', question: 'Cumulative GPA', hint: 'e.g. 3.40 — fills the GPA box that appears after picking the GPA ranking option' },
+  { group: 'Education', key: 'gpa_scale', question: 'GPA scale ("out of")', hint: 'e.g. 4.3' },
   // Experience
   { group: 'Experience', key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
   { group: 'Experience', key: 'department', question: 'Department (latest role)', hint: 'e.g. Engineering' },
