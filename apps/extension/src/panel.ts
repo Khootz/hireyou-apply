@@ -95,7 +95,7 @@ async function render(): Promise<void> {
   if (!currentJob) {
     content().innerHTML = `<div class="card"><h2>No job detected</h2>
       <p class="muted">Open a job posting on the <a href="https://career.hkust.edu.hk/web/job.php" target="_blank">HKUST career board</a> and this panel will pick it up.</p></div>
-      <div class="card"><h2>On an application form?</h2>
+      <div class="card"><h2>On an application form? <span class="muted" style="font-size:11px;font-weight:normal">v${chrome.runtime.getManifest().version}</span></h2>
       <p class="muted" style="margin-bottom:8px">I can scan any application page, suggest answers from your profile, and fill the form for you. You review every field — nothing is ever submitted automatically, and demographic questions are never touched.</p>
       <label style="display:block;margin-bottom:4px">Tailor essay answers to a saved job (optional)</label>
       <select id="scan-job" style="margin-bottom:8px;max-width:100%"><option value="">No job context — facts and saved answers only</option></select>
@@ -351,14 +351,16 @@ async function scanForm(): Promise<void> {
         : `${fields.length} fields found — asking for suggestions…`
     const jobId = document.querySelector<HTMLSelectElement>('#scan-job')?.value || null
     const fresh = document.querySelector<HTMLInputElement>('#scan-fresh')?.checked ?? false
+    const pageHost = hostOf(scan.url ?? tab.url ?? '')
     const requestStarted = Date.now()
-    const { suggestions, form_fingerprint } = await api<{
+    const { suggestions, form_fingerprint, vocab_captured } = await api<{
       suggestions: FieldSuggestionLite[]
       form_fingerprint: string
+      vocab_captured?: number
     }>(`/api/autofill`, {
       method: 'POST',
       // page_host lets harvested option vocabularies say where they came from
-      body: JSON.stringify({ fields, job_id: jobId, page_host: hostOf(scan.url ?? tab.url ?? ''), no_cache: fresh }),
+      body: JSON.stringify({ fields, job_id: jobId, page_host: pageHost, no_cache: fresh }),
     })
     await demoPace(requestStarted, status, fields.length)
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
@@ -369,7 +371,10 @@ async function scanForm(): Promise<void> {
     const unanswered = suggestions.filter((s) => !s.value && !s.do_not_fill).length
     status.textContent =
       `${withValue.length} suggestion${withValue.length === 1 ? '' : 's'} ready.` +
-      (unanswered > 0 ? ` ${unanswered} field${unanswered === 1 ? ' has' : 's have'} no saved answer — see the Answers page.` : '')
+      (unanswered > 0 ? ` ${unanswered} field${unanswered === 1 ? ' has' : 's have'} no saved answer — see the Answers page.` : '') +
+      ((vocab_captured ?? 0) > 0
+        ? ` 📋 ${vocab_captured} choice list${vocab_captured === 1 ? '' : 's'} captured for the Answers page.`
+        : '')
     results.innerHTML =
       `<button class="primary" id="do-autofill">⚡ Autofill ${withValue.length} field${withValue.length === 1 ? '' : 's'}</button>
        <div class="muted" style="font-size:12px">Fills the form for you — nothing is ever submitted automatically.</div>` +
@@ -395,26 +400,38 @@ async function scanForm(): Promise<void> {
     )
     document
       .querySelector('#do-autofill')
-      ?.addEventListener('click', () => void runAutofill(tabId, suggestions, form_fingerprint))
+      ?.addEventListener('click', () => void runAutofill(tabId, suggestions, form_fingerprint, pageHost))
   } catch (err) {
     status.textContent = `⚠ ${(err as Error).message}`
   }
 }
 
-async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[], fingerprint = ''): Promise<void> {
+async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[], fingerprint = '', pageHost = ''): Promise<void> {
   const status = $('#scan-status')
   const results = $('#scan-results')
   const btn = document.querySelector<HTMLButtonElement>('#do-autofill')
   if (btn) btn.disabled = true
   status.textContent = 'Filling the form…'
   try {
-    const { outcomes } = (await chrome.tabs.sendMessage(tabId, { type: 'autofill', suggestions })) as {
+    const { outcomes, menu_options } = (await chrome.tabs.sendMessage(tabId, { type: 'autofill', suggestions })) as {
       outcomes: FillOutcomeLite[]
+      menu_options?: { selector: string; options: string[] }[]
     }
     const filled = outcomes.filter((o) => o.status === 'filled')
     const attempted = outcomes.filter((o) => o.status !== 'skipped')
     status.textContent = `✓ Filled ${filled.length}/${attempted.length} fields — review everything, then submit yourself.`
     const canonicalOf = new Map(suggestions.map((s) => [s.selector, s.canonical]))
+    // Lazily-rendered menus only exist AFTER driving — ship what the fill
+    // pass saw to the answers-page vocabulary (fire-and-forget).
+    const entries = (menu_options ?? [])
+      .map((m) => ({ canonical_field: canonicalOf.get(m.selector) ?? 'UNKNOWN', options: m.options }))
+      .filter((e) => e.canonical_field !== 'UNKNOWN')
+    if (entries.length > 0) {
+      void api('/api/autofill/options', {
+        method: 'POST',
+        body: JSON.stringify({ page_host: pageHost, entries: entries.slice(0, 100) }),
+      }).catch(() => {})
+    }
     reportUsage(
       fingerprint,
       filled.map((o) => ({ canonical_field: canonicalOf.get(o.selector) ?? 'UNKNOWN', action: 'copied' as const })),

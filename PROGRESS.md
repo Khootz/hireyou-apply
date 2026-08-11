@@ -151,4 +151,11 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Also this session: user's answers-page confusion unwound — Vercel UI was a stale build (redeployed; bundle verified to carry the new code) and the launcher's health check keeps an OLD-code API alive (killed + restarted twice). Chrome-side extension reload still pending on the user — vocab store is empty until a new-code scan happens.
 - Deployment gotcha recorded: **after any API change, restart the API** — the .bat only restarts unhealthy servers, and "healthy but outdated" passes its check.
 
+**2026-08-12 — Stale-build proof + observability + fill-time harvest + faster fill → GREEN (137 passed, 1 skipped)**
+- User's "fresh scan" produced fingerprint `b46312b566e2` — **byte-identical to a 2026-08-11 scan**, proving the content script that ran is still the pre-harvest build (new discovery would carry combobox options → different fp). The extension reload in Chrome has not taken effect; nothing new can run until it does.
+- Made the build state VISIBLE: manifest bumped **0.2.0 → 0.3.0**, panel shows `vX.Y.Z` in the scan card (old build = no version shown). Scan status now reports "📋 N choice lists captured for the Answers page" (`vocab_captured` in the /api/autofill response) — 0 on a dropdown-heavy form is now a visible symptom, not a silent one.
+- **Fill-time vocabulary harvest** closes the lazy-render gap: menus that are empty at scan time get populated when the driver opens them — the content script reads every combobox menu AFTER the fill pass (shared `comboboxMenuOptions`) and the panel posts them to new `POST /api/autofill/options` (zod-gated, ≤100 entries, same recordAnswerVocab filters; probe-tested live). So even if scan-time harvest misses, ONE autofill run stocks the answers page.
+- **Fill speed ~2-3× on widget-heavy forms**: pacing cut (per-field 160→50ms, combobox scroll 250→100ms, clear-retry 200→120ms, settle 250→100ms); the waitFor polls already exit early, fixed sleeps were the drag.
+- Escalation path if extension reload keeps failing: user pastes full-page DOM → extract every menu with the same shared code in Node → insert into answer_option_vocab directly (offered to user).
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

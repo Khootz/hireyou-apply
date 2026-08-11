@@ -18,6 +18,19 @@ const BodySchema = z.object({
 // Suggestion telemetry (M9): which canonical fields actually get used. The
 // extension posts fire-and-forget; values are never sent — only the canonical
 // name and what happened to the suggestion.
+const OptionsBodySchema = z.object({
+  page_host: z.string().max(200).default(''),
+  entries: z
+    .array(
+      z.object({
+        canonical_field: z.string().min(1).max(64),
+        options: z.array(z.string().max(200)).min(1).max(400),
+      }),
+    )
+    .min(1)
+    .max(100),
+})
+
 const EventsBodySchema = z.object({
   form_fingerprint: z.string().min(1).max(128),
   events: z
@@ -45,9 +58,12 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
     // Harvest fixed-choice vocabularies as a side effect of every scan: the
     // form's real option lists feed the answers page's dropdowns. Never
     // blocks suggestions — a harvest failure is invisible to the caller.
+    // The count goes back to the panel so the user can SEE the harvest work
+    // (0 on a dropdown-heavy form = the extension build is outdated).
+    let vocabCaptured = 0
     try {
       const optionsBySelector = new Map(parsed.data.fields.map((f) => [f.selector, f.options]))
-      recordAnswerVocab(
+      vocabCaptured = recordAnswerVocab(
         sqlite,
         suggestions
           .filter((s) => !s.do_not_fill)
@@ -60,7 +76,7 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
     } catch {
       /* vocab is a bonus, suggestions are the product */
     }
-    return { suggestions, form_fingerprint: formFingerprint(parsed.data.fields) }
+    return { suggestions, form_fingerprint: formFingerprint(parsed.data.fields), vocab_captured: vocabCaptured }
   })
 
   // Dev/testing escape hatch: wipe every cached classification map so the
@@ -69,6 +85,28 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
   app.delete('/api/autofill/cache', async () => {
     const cleared = sqlite.prepare(`DELETE FROM autofill_form_cache`).run().changes
     return { cleared }
+  })
+
+  // Fill-time vocabulary harvest: some widget menus render lazily and are
+  // empty at scan time — but the fill pass opens them, so the content script
+  // reads the populated menus afterwards and the panel posts them here.
+  app.post('/api/autofill/options', async (req, reply) => {
+    const parsed = OptionsBodySchema.safeParse(req.body)
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: 'validation_failed',
+        issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
+      })
+    }
+    const stored = recordAnswerVocab(
+      sqlite,
+      parsed.data.entries.map((e) => ({
+        canonical: e.canonical_field,
+        options: e.options,
+        source_host: parsed.data.page_host,
+      })),
+    )
+    return { stored }
   })
 
   app.post('/api/autofill/events', async (req, reply) => {

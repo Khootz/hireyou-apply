@@ -1,6 +1,7 @@
 import {
   applyFillToDocument,
   coerceValueForControl,
+  comboboxMenuOptions,
   datePartTarget,
   discoverFields,
   isCombobox,
@@ -76,7 +77,9 @@ function init(): void {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: FillOutcome[] }> {
+async function runAutofill(
+  suggestions: FieldSuggestion[],
+): Promise<{ outcomes: FillOutcome[]; menu_options: { selector: string; options: string[] }[] }> {
   // Pass 1: prototype-setter fill, verified synchronously. Fields are filled
   // one at a time with a short pause and a highlight flash — watchable, and
   // paced like fast typing rather than an instant blink.
@@ -88,7 +91,7 @@ async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: 
       const el = document.querySelector<HTMLElement>(s.selector)
       el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       flash(el)
-      await sleep(160)
+      await sleep(50)
     }
   }
 
@@ -101,7 +104,7 @@ async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: 
     const el = document.querySelector(o.selector)
     if (!s?.value || !(el instanceof HTMLInputElement) || !isCombobox(el)) continue
     el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    await sleep(250) // let the scroll finish so the menu opens where the eye is
+    await sleep(100) // let the scroll finish so the menu opens where the eye is
     if (await fillCombobox(el, s.value)) {
       o.status = 'filled'
       o.reason = undefined
@@ -109,6 +112,17 @@ async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: 
     } else {
       o.reason = 'Dropdown — no matching option found, pick it manually.'
     }
+  }
+
+  // Menu harvest AFTER driving: lazily-rendered menus are empty at scan time
+  // but populated once the fill pass has opened them — read them now so the
+  // panel can ship the real choices to the answers page.
+  const menuOptions: { selector: string; options: string[] }[] = []
+  for (const s of suggestions) {
+    const el = document.querySelector(s.selector)
+    if (!(el instanceof HTMLInputElement) || !isCombobox(el)) continue
+    const options = comboboxMenuOptions(el)
+    if (options.length >= 2) menuOptions.push({ selector: s.selector, options })
   }
 
   // Pass 2: give the page's framework a tick to react, then verify again —
@@ -153,7 +167,7 @@ async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: 
 
   const filled = outcomes.filter((o) => o.status === 'filled').length
   showToast(`filled ${filled}/${outcomes.length} fields · review before submitting · `)
-  return { outcomes }
+  return { outcomes, menu_options: menuOptions }
 }
 
 // Poll until a condition holds — dropdown menus open/filter/close on their
@@ -251,7 +265,7 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
     // typed text filtered the menu to nothing ("No result") — clear it and
     // match against the FULL option list instead
     setNativeValue(el, '')
-    await sleep(200)
+    await sleep(120)
     match = pickFrom(menuOptions())
   }
 
@@ -274,7 +288,7 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
   el.blur()
   document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })) // close click-away menus
   await waitFor(() => !menuOpen(), 800)
-  await sleep(250) // settle: close animations finish before the next field
+  await sleep(100) // settle: close animations finish before the next field
   return ok
 }
 

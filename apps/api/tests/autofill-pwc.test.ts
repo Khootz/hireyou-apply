@@ -253,10 +253,43 @@ describe('harvested answer vocabularies (scans feed the answers-page dropdowns)'
       mk('Family Name in English (e.g., Han)', { selector: '#family' }),
     ])
     expect(res.statusCode).toBe(200)
+    // the panel surfaces this so the user can SEE the harvest happen
+    expect((res.json() as { vocab_captured: number }).vocab_captured).toBe(1)
     const v = await vocab()
     expect(Object.keys(v)).toEqual(['academic_ranking'])
     expect(v.academic_ranking.options).toEqual(['Top 10%', 'Top 25%', 'Top 50%', 'Below 50%'])
     expect(v.academic_ranking.source_host).toBe('apply.mokahr.com')
+  })
+
+  it('POST /api/autofill/options stores fill-time harvested menus (lazy-render path)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/autofill/options',
+      headers: AUTH,
+      payload: {
+        page_host: 'apply.mokahr.com',
+        entries: [
+          { canonical_field: 'citizenship_status', options: ['Please select', 'HK Permanent Resident', 'HK Resident (visa)', 'Non-resident'] },
+          { canonical_field: 'SENSITIVE_DO_NOT_FILL', options: ['Male', 'Female'] },
+          { canonical_field: 'not_a_canonical', options: ['a', 'b'] },
+        ],
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect((res.json() as { stored: number }).stored).toBe(1)
+    const v = await vocab()
+    expect(v.citizenship_status.options).toEqual(['HK Permanent Resident', 'HK Resident (visa)', 'Non-resident'])
+    expect(v.SENSITIVE_DO_NOT_FILL).toBeUndefined()
+  })
+
+  it('rejects a malformed options payload', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/autofill/options',
+      headers: AUTH,
+      payload: { entries: [] },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('the captured MokaHR widget feeds the vocab end-to-end (scan → harvest → answers page)', async () => {
