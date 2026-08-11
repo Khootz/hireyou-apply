@@ -22,6 +22,16 @@ export class LlmError extends Error {
   }
 }
 
+// Provider failures (network, auth, rate limit, outage) are NOT validation
+// failures: they must surface as "DeepSeek is down/misconfigured", never be
+// retried as if the model answered badly, and never fake a degraded success.
+export class LlmProviderError extends LlmError {
+  constructor(message: string, readonly status?: number) {
+    super(message)
+    this.name = 'LlmProviderError'
+  }
+}
+
 export function resolveMode(): LlmMode {
   const explicit = process.env.LLM_MODE
   if (explicit === 'live' || explicit === 'replay' || explicit === 'record') return explicit
@@ -68,6 +78,7 @@ export async function chatJSON<S extends z.ZodTypeAny>(opts: ChatJsonOptions<S>)
     if (mode === 'record') writeFixture(opts.fixture, first)
     return parsed
   } catch (err) {
+    if (err instanceof LlmProviderError) throw err
     const correction =
       `Your previous reply failed validation: ${(err as Error).message}. ` +
       `Return ONLY the corrected JSON object, nothing else.`
@@ -121,24 +132,40 @@ async function callDeepseek<S extends z.ZodTypeAny>(
   }
 
   const base = process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com'
-  const res = await undiciFetch(`${base}/chat/completions`, {
-    method: 'POST',
-    dispatcher: proxyDispatcher(),
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages,
-      response_format: { type: 'json_object' },
-      temperature: opts.temperature ?? 0.3,
-    }),
-  })
+  let res: Awaited<ReturnType<typeof undiciFetch>>
+  try {
+    res = await undiciFetch(`${base}/chat/completions`, {
+      method: 'POST',
+      dispatcher: proxyDispatcher(),
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        messages,
+        response_format: { type: 'json_object' },
+        temperature: opts.temperature ?? 0.3,
+      }),
+    })
+  } catch (err) {
+    const cause = (err as { cause?: { code?: string } }).cause
+    const detail = cause?.code ?? (err as Error).message
+    throw new LlmProviderError(`DeepSeek unreachable (${detail}) — check network/proxy, not your data`)
+  }
   if (!res.ok) {
-    throw new LlmError(`DeepSeek HTTP ${res.status}: ${await res.text()}`)
+    const body = (await res.text()).slice(0, 200)
+    const reason =
+      res.status === 401 || res.status === 403
+        ? 'authentication failed — check DEEPSEEK_API_KEY'
+        : res.status === 429
+          ? 'rate limited — wait and retry'
+          : res.status >= 500
+            ? "provider outage on DeepSeek's side"
+            : 'request rejected'
+    throw new LlmProviderError(`DeepSeek HTTP ${res.status} (${reason}): ${body}`, res.status)
   }
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] }
   const content = data.choices?.[0]?.message?.content
   if (typeof content !== 'string' || content.length === 0) {
-    throw new LlmError('DeepSeek response contained no content')
+    throw new LlmProviderError('DeepSeek returned an empty response (provider issue, not your data)')
   }
   return content
 }
