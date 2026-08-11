@@ -15,7 +15,7 @@
    university, notice period…) with zero LLM; one batched cheap-model call handles the leftovers;
    results are cached per form shape. Demographic/EEO fields classify to a hard do-not-fill bucket.
 3. **Answer** — contact fields copy from your profile; derived facts (current title/company,
-   university, degree) come from your latest profile entries, never generated; your 39 saved
+   university, degree) come from your latest profile entries, never generated; your 42 saved
    answers cover the questions no resume answers; free-text essays are only drafted when the job's
    JD is attached, grounded in profile facts.
 4. **Fill + verify** — values are written the way React apps expect, then read back from the DOM;
@@ -28,7 +28,7 @@
 1. `Start HireYou Apply.bat` (API :3100, web :5180).
 2. `npm run build:extension`, then `chrome://extensions` → HireYou Apply → **⟳ Reload**.
 3. Extension ⚙: API URL `http://127.0.0.1:3100`, token = `API_AUTH_TOKEN` from `.env`.
-4. `localhost:5180` → **Autofill answers** → fill all **39** (grouped: Identity, Links, Work
+4. `localhost:5180` → **Autofill answers** → fill all **42** (grouped: Identity, Links, Work
    eligibility, Availability & pay, Education, Experience, Languages & skills, Employer
    questions). Make sure your **profile has a location** — it feeds Location/Country fields.
    **Fixed-choice questions are dropdowns now.** Yes/No questions come pre-loaded; for everything
@@ -71,11 +71,12 @@ Built from the transcribed question list **plus your full-page DOM capture** of 
 (MokaHR is unreachable from this machine — your browser session is the only way in). The capture
 revealed MokaHR "selects" are ARIA-free text inputs inside a widget shell — the filler now
 **clicks them open and drives the menu like a human** instead of typing into them, and verifies
-via the widget's display value. MokaHR also parks each closed menu in the DOM, so a **scan
-harvests every dropdown's real choices** — after one scan of the PwC form, the answers page
-offers its exact option wordings for citizenship, proficiencies, ranking, referral channel, and
-the rest. **Recommended order: scan the PwC form first, then fill the answers page, then
-autofill.** With the 39 answers filled, expect to fill:
+via the widget's display value. MokaHR builds each menu only when it opens (and tears it down on
+close), so the real choices are harvested **while the filler drives each dropdown** — after one
+autofill pass, the answers page offers the exact option wordings for citizenship, proficiencies,
+ranking, referral channel, and the rest. **Recommended order: scan + autofill once, fix any
+"no matching option" rows on the answers page (now dropdowns), then autofill again.** With the
+42 answers filled, expect to fill:
 programme/other-opportunities/visa selects, Chinese + English name variants, preferred English
 name, mobile (**local number only** — the +852 goes into the code select now), citizenship +
 status, current country, school country, major (+ major type), academic ranking,

@@ -18,6 +18,12 @@ const BodySchema = z.object({
 // Suggestion telemetry (M9): which canonical fields actually get used. The
 // extension posts fire-and-forget; values are never sent — only the canonical
 // name and what happened to the suggestion.
+// Scanning our own app must never harvest our own UI back into the answer
+// vocabulary — the answers page's selects would otherwise become the
+// "captured choices" for their own questions (seen live: "— not answered —"
+// stored as an option for 7 canonicals).
+const SELF_HOSTS = /^(localhost|127\.0\.0\.1)(:\d+)?$|^hireyou-apply\.vercel\.app$/i
+
 const OptionsBodySchema = z.object({
   page_host: z.string().max(200).default(''),
   entries: z
@@ -62,6 +68,7 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
     // (0 on a dropdown-heavy form = the extension build is outdated).
     let vocabCaptured = 0
     try {
+      if (SELF_HOSTS.test(parsed.data.page_host)) throw new Error('self-scan')
       const optionsBySelector = new Map(parsed.data.fields.map((f) => [f.selector, f.options]))
       vocabCaptured = recordAnswerVocab(
         sqlite,
@@ -98,6 +105,7 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
         issues: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`),
       })
     }
+    if (SELF_HOSTS.test(parsed.data.page_host)) return { stored: 0 }
     const stored = recordAnswerVocab(
       sqlite,
       parsed.data.entries.map((e) => ({

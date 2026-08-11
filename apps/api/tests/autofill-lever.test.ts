@@ -67,7 +67,10 @@ const loadProfile = () =>
     ),
   )
 
-describe('Lever application form (real captured Palantir HTML)', () => {
+// full-page discovery over the real capture sits near the 15s global timeout
+// under parallel load (jsdom getComputedStyle + deep label walks per element)
+// — whole-suite headroom, same flake class the global bump addressed
+describe('Lever application form (real captured Palantir HTML)', { timeout: 60_000 }, () => {
   it('discovers classic Lever fields, collapses radio groups, skips internals', () => {
     const fields = discoverFields(new JSDOM(FORM).window.document)
     const selectors = fields.map((f) => f.selector)

@@ -37,6 +37,9 @@ export const CANONICAL_FIELDS = [
   'major',
   'academic_ranking',
   'graduation_date',
+  // "What is your major type?" (PwC) — a different option set than Major
+  // ("STEM Engineering" vs "Computer Engineering"); one answer can't serve both
+  'major_type',
   // date-range widgets (MokaHR education/work period year+month selects) —
   // derived from the profile's entry dates, never asked on the answers page
   'education_period_start',
@@ -429,6 +432,8 @@ const RULES: [CanonicalField, RegExp][] = [
   // the location rule (country)
   ['school_country', /\b(country|region)[^?]{0,15}\bof\s+school|school[^?]{0,15}\b(country|region)\b/i],
   ['education_institution', /\b(university|school|institution|college)\b/i],
+  // before major: "What is your major type?" has its own option vocabulary
+  ['major_type', /\bmajor\s*type\b/i],
   ['major', /\bmajor\b/i],
   ['degree', /\b(degree|qualification)\b/i],
   ['academic_ranking', /\b(academic|class)\s+rank|ranking\b/i],
@@ -502,6 +507,7 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Links', key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
   { group: 'Links', key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
   { group: 'Links', key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
+  { group: 'Identity', key: 'location', question: 'Current country/region (as application forms word it)', hint: 'e.g. Hong Kong SAR, China — overrides the location from your profile on forms' },
   // Work eligibility
   { group: 'Work eligibility', key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes', options: ['Yes', 'No'] },
   { group: 'Work eligibility', key: 'visa_sponsorship_required', question: 'Do you require visa sponsorship / work authorisation?', hint: 'e.g. No', options: ['Yes', 'No'] },
@@ -519,6 +525,8 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Education', key: 'graduation_date', question: 'Expected graduation / certificate date', hint: 'e.g. 2026-06-30' },
   { group: 'Education', key: 'school_country', question: 'Country/Region of your school', hint: 'e.g. Hong Kong SAR' },
   { group: 'Education', key: 'major', question: 'Major / field of study', hint: 'e.g. Computer Engineering' },
+  { group: 'Education', key: 'major_type', question: 'Major type / category (when a form asks separately)', hint: 'e.g. STEM Engineering' },
+  { group: 'Education', key: 'degree', question: 'Degree category (as fixed-choice forms word it)', hint: 'e.g. Full-time Bachelor Degree — overrides the degree text from your profile' },
   { group: 'Education', key: 'academic_ranking', question: 'Academic ranking', hint: 'e.g. Top 10% — or Not ranked' },
   // Experience
   { group: 'Experience', key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
@@ -662,9 +670,16 @@ export function comboboxMenuOptions(el: Element): string[] {
 
 // "Please select", "Choose…", "---" — prompt rows, not answers. Used when
 // harvesting form vocabularies so the answers page only offers real choices.
+// Our own answers-page sentinels are here too: scanning our own app must
+// never harvest our own UI chrome back into the vocabulary.
 export function isPlaceholderOption(text: string): boolean {
   const t = text.trim()
-  return /^(please\s+(select|choose)\b.*|select\b.{0,15}|choose\b.{0,10}|-+|—+|…|\.{2,})$/i.test(t) || t === ''
+  return (
+    /^(please\s+(select|choose)\b.*|select\b.{0,15}|choose\b.{0,10}|-+|—+|…|\.{2,})$/i.test(t) ||
+    /^—\s*not\s*answered\s*—$/i.test(t) ||
+    /^custom\s*answer…?$/i.test(t) ||
+    t === ''
+  )
 }
 
 // Saved answers are prose ("Yes — Hong Kong resident, no permit needed");

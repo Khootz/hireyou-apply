@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "HireYou Apply",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Job application copilot: save jobs from the HKUST career board, tailor your resume and cover letter.",
   "action": {
     "default_title": "HireYou Apply"

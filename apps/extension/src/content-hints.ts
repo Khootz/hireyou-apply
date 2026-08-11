@@ -77,9 +77,16 @@ function init(): void {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+// Menus read while OPEN, during driving — MokaHR unmounts menu contents on
+// close, so an after-the-fact sweep sees empty nodes (live finding: zero
+// options harvested despite a full fill pass). Longest list seen wins:
+// type-filtering shrinks the visible list, the first open shows it whole.
+const menuHarvest = new Map<Element, string[]>()
+
 async function runAutofill(
   suggestions: FieldSuggestion[],
 ): Promise<{ outcomes: FillOutcome[]; menu_options: { selector: string; options: string[] }[] }> {
+  menuHarvest.clear()
   // Pass 1: prototype-setter fill, verified synchronously. Fields are filled
   // one at a time with a short pause and a highlight flash — watchable, and
   // paced like fast typing rather than an instant blink.
@@ -133,14 +140,14 @@ async function runAutofill(
     }
   }
 
-  // Menu harvest AFTER driving: lazily-rendered menus are empty at scan time
-  // but populated once the fill pass has opened them — read them now so the
-  // panel can ship the real choices to the answers page.
+  // Menu harvest: primarily what the driver saw while each menu was OPEN
+  // (MokaHR unmounts menu contents on close); parked-in-DOM menus that were
+  // never driven still contribute via the closed-state read.
   const menuOptions: { selector: string; options: string[] }[] = []
   for (const s of suggestions) {
     const el = document.querySelector(s.selector)
     if (!(el instanceof HTMLInputElement) || !isCombobox(el)) continue
-    const options = comboboxMenuOptions(el)
+    const options = menuHarvest.get(el) ?? comboboxMenuOptions(el)
     if (options.length >= 2) menuOptions.push({ selector: s.selector, options })
   }
 
@@ -250,6 +257,20 @@ async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): P
   }
   const menuOpen = () => el.getAttribute('aria-expanded') === 'true' || menuOptions().length > 0
   const selectedText = () => comboboxDisplay(el)
+  // harvest the open menu for the answers-page vocabulary — unfiltered node
+  // list (not the on-screen subset used for clicking), innermost items only
+  const recordMenu = () => {
+    const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
+    const scope = (listId && document.getElementById(listId)) || dropdownScope || document.body
+    const texts = Array.from(
+      scope.querySelectorAll<HTMLElement>(
+        '[role="option"], [class*="select__option"], [class*="select-item-option"], [class*="Menu-content-item"]',
+      ),
+    )
+      .map((o) => (o.textContent ?? '').trim())
+      .filter(Boolean)
+    if (texts.length > (menuHarvest.get(el)?.length ?? 0)) menuHarvest.set(el, [...new Set(texts)])
+  }
   const target = value.trim().toLowerCase()
   const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
   const pickFrom = (options: HTMLElement[]): HTMLElement | undefined => {
@@ -281,12 +302,15 @@ async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): P
     }
   }
 
+  if (opened) recordMenu()
+
   let match = pickFrom(menuOptions())
   if (!match && !el.readOnly && el.value) {
     // typed text filtered the menu to nothing ("No result") — clear it and
     // match against the FULL option list instead
     setNativeValue(el, '')
     await sleep(120)
+    recordMenu() // unfiltered now — the fullest view of the choices
     match = pickFrom(menuOptions())
   }
 

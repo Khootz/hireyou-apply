@@ -89,7 +89,7 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
     ['Country/Region of School', 'school_country'],
     ['In which of the following categories does your degree fall?', 'degree'],
     ['Major', 'major'],
-    ['What is your major type?', 'major'],
+    ['What is your major type?', 'major_type'],
     ['Academic Ranking', 'academic_ranking'],
     // work experience
     ['Department', 'department'],
@@ -138,7 +138,9 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
   it('every answerable canonical is on the answers page exactly once', () => {
     const keys = ANSWER_QUESTIONS.map((q) => q.key)
     expect(new Set(keys).size).toBe(keys.length)
-    expect(keys.length).toBe(39)
+    // 42 = 39 + location/degree/major_type: derived values are only a guess
+    // on fixed-choice forms — a saved answer must be able to override them
+    expect(keys.length).toBe(42)
   })
 })
 
@@ -254,6 +256,7 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
       ['school or university', 'education_institution'],
       ['categories does your degree fall', 'degree'],
       ['major', 'major'],
+      ['what is your major type', 'major_type'],
       ['academic ranking', 'academic_ranking'],
       ['department', 'department'],
       ['responsibilities', 'responsibilities'],
@@ -439,6 +442,30 @@ describe('harvested answer vocabularies (scans feed the answers-page dropdowns)'
       payload: { entries: [] },
     })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('scanning our own app never harvests our own UI (self-scan guard + sentinel strip)', async () => {
+    // the live incident: the answers page's own selects became the
+    // "captured choices" for their own questions
+    for (const host of ['localhost:5180', '127.0.0.1:5180', 'hireyou-apply.vercel.app']) {
+      const scanRes = await post(
+        [mk('Academic Ranking', { selector: '#rank', tag: 'select', options: ['— not answered —', 'Top 10%', 'Custom answer…'] })],
+        host,
+      )
+      expect((scanRes.json() as { vocab_captured: number }).vocab_captured, host).toBe(0)
+      const optRes = await app.inject({
+        method: 'POST',
+        url: '/api/autofill/options',
+        headers: AUTH,
+        payload: { page_host: host, entries: [{ canonical_field: 'skills', options: ['Python', 'Java'] }] },
+      })
+      expect((optRes.json() as { stored: number }).stored, host).toBe(0)
+    }
+    expect(await vocab()).toEqual({})
+    // and even from a real form, our sentinel strings are never real options
+    await post([mk('Academic Ranking', { selector: '#rank', tag: 'select', options: ['— not answered —', 'Top 10%', 'Top 25%', 'Custom answer…'] })])
+    const v = await vocab()
+    expect(v.academic_ranking.options).toEqual(['Top 10%', 'Top 25%'])
   })
 
   it('the captured MokaHR widget feeds the vocab end-to-end (scan → harvest → answers page)', async () => {
