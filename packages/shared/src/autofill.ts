@@ -15,6 +15,7 @@ export const CANONICAL_FIELDS = [
   'name_pronunciation',
   'family_name_chinese',
   'given_name_chinese',
+  'gender',
   'email',
   'phone',
   'phone_country_code',
@@ -70,6 +71,8 @@ export const CANONICAL_FIELDS = [
   'proudest_accomplishment',
   'additional_info',
   'referral_source',
+  'referral_code',
+  'degree_category',
   'programme_interest',
   'open_to_other_opportunities',
   'previously_employed_here',
@@ -363,8 +366,12 @@ export function discoverFields(doc: Document): FieldInfo[] {
 
 // ---------- tier-1 deterministic classification ----------
 
+// Gender left this list 2026-08-12 by the user's explicit, repeated call —
+// mandatory Gender fields on Chinese-market ATS forms (PwC/MokaHR) blocked
+// their flow. It fills ONLY from a saved answer, never derived or generated.
+// Everything else here stays hard-blocked.
 const SENSITIVE_PATTERNS =
-  /\b(gender|sex\b|race|ethnic|religio|veteran|disabilit|sexual\s*orientation|marital|date\s*of\s*birth|birth\s*date|\bdob\b|nationality|age\b|pregnan|criminal|convict)/i
+  /\b(race|ethnic|religio|veteran|disabilit|sexual\s*orientation|marital|date\s*of\s*birth|birth\s*date|\bdob\b|nationality|age\b|pregnan|criminal|convict)/i
 
 const RULES: [CanonicalField, RegExp][] = [
   // "…please provide his/her full name & PwC email…" — employer-relation
@@ -382,6 +389,8 @@ const RULES: [CanonicalField, RegExp][] = [
   // both BEFORE full_name: "How do you pronounce your name?" and "Preferred
   // Name" (Lever) contain "name" phrasings the name rules would claim
   ['name_pronunciation', /\bpronounc/i],
+  // saved-answer only (see SENSITIVE_PATTERNS note): mandatory on PwC/MokaHR
+  ['gender', /\bgender\b|\bsex\b/i],
   ['preferred_name', /\b(preferred\s*(english\s*)?name|like\s+us\s+to\s+call|nickname)\b/i],
   ['full_name', /\b(full\s*name|your\s*name|applicant\s*name)\b/i],
   ['first_name', /\b(first|given)\s*name\b/i],
@@ -438,6 +447,9 @@ const RULES: [CanonicalField, RegExp][] = [
   // before major: "What is your major type?" has its own option vocabulary
   ['major_type', /\bmajor\s*type\b/i],
   ['major', /\bmajor\b/i],
+  // "In which of the following categories does your degree fall?" (PwC) has
+  // its own option vocabulary — the plain Degree select wants "Bachelor"
+  ['degree_category', /categor[^?]{0,30}\bdegree|\bdegree\b[^?]{0,30}categor/i],
   ['degree', /\b(degree|qualification)\b/i],
   ['academic_ranking', /\b(academic|class)\s+rank|ranking\b/i],
   // "Cumulative GPA (e.g. 3.75" and "Out of (e.g. 4)" — the sub-fields PwC
@@ -463,6 +475,8 @@ const RULES: [CanonicalField, RegExp][] = [
   ['why_this_company', /\bwhy\s+(do\s+you\s+want\s+to\s+(work|join)|us|our\s+company)\b/i],
   // "how you heard about" (Lever), "how did you hear" (Greenhouse), "from
   // which channel did you learn about" (PwC/MokaHR) all count
+  // an invite code, not "how did you hear about us" — must beat referral_source
+  ['referral_code', /\breferral\s*code\b/i],
   ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|which\s+channel|where\s+did\s+you\s+(find|learn|see)|referr(al|ed))\b/i],
   ['location', /\b(location|city|address|country)\b/i],
   // LAST, deliberately: PwC's work-experience block labels its fields with
@@ -482,7 +496,7 @@ const AUTOCOMPLETE_MAP: Record<string, CanonicalField> = {
   'organization-title': 'current_title',
   'address-level2': 'location',
   bday: 'SENSITIVE_DO_NOT_FILL',
-  sex: 'SENSITIVE_DO_NOT_FILL',
+  sex: 'gender',
 }
 
 // ---------- application answers (Simplify-style personalization) ----------
@@ -510,6 +524,7 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Identity', key: 'name_pronunciation', question: 'How do you pronounce your name?', hint: 'e.g. TEEN-zhee KOO' },
   { group: 'Identity', key: 'family_name_chinese', question: 'Family name in Chinese', hint: 'e.g. 邱 — or N/A if not applicable' },
   { group: 'Identity', key: 'given_name_chinese', question: 'Given name in Chinese', hint: 'e.g. 天志 — or N/A if not applicable' },
+  { group: 'Identity', key: 'gender', question: 'Gender (fills mandatory gender fields — leave blank to always answer manually)', hint: 'e.g. Male' },
   // Links
   { group: 'Links', key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
   { group: 'Links', key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
@@ -533,7 +548,8 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Education', key: 'school_country', question: 'Country/Region of your school', hint: 'e.g. Hong Kong SAR' },
   { group: 'Education', key: 'major', question: 'Major / field of study', hint: 'e.g. Computer Engineering' },
   { group: 'Education', key: 'major_type', question: 'Major type / category (when a form asks separately)', hint: 'e.g. STEM Engineering' },
-  { group: 'Education', key: 'degree', question: 'Degree category (as fixed-choice forms word it)', hint: 'e.g. Full-time Bachelor Degree — overrides the degree text from your profile' },
+  { group: 'Education', key: 'degree', question: 'Degree level (plain "Degree" dropdowns)', hint: 'e.g. Bachelor — overrides the degree text from your profile' },
+  { group: 'Education', key: 'degree_category', question: 'Degree category (when a form asks it as its own question)', hint: 'e.g. Full-time Bachelor Degree - No JUPAS Admission' },
   { group: 'Education', key: 'academic_ranking', question: 'Academic ranking', hint: 'e.g. Top 10%, or the form\'s "Cumulative GPA" choice' },
   { group: 'Education', key: 'gpa', question: 'Cumulative GPA', hint: 'e.g. 3.40 — fills the GPA box that appears after picking the GPA ranking option' },
   { group: 'Education', key: 'gpa_scale', question: 'GPA scale ("out of")', hint: 'e.g. 4.3' },
@@ -552,6 +568,7 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Languages & skills', key: 'professional_qualification', question: 'Professional qualification', hint: 'e.g. None' },
   // Employer questions
   { group: 'Employer questions', key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
+  { group: 'Employer questions', key: 'referral_code', question: 'Referral / invite code (if you have one)', hint: 'e.g. HKUST — leave blank to skip' },
   { group: 'Employer questions', key: 'programme_interest', question: 'Programme you are applying to (update per season)', hint: 'e.g. FY27 Winter Intern' },
   { group: 'Employer questions', key: 'open_to_other_opportunities', question: 'Willing to consider other opportunities?', hint: 'e.g. Yes', options: ['Yes', 'No'] },
   { group: 'Employer questions', key: 'previously_employed_here', question: 'Previously employed by the company you apply to? (default)', hint: 'e.g. No', options: ['Yes', 'No'] },
@@ -825,9 +842,6 @@ export function classifyFieldDeterministic(field: FieldInfo): CanonicalField {
   // Sensitive stays above: the amber warning must render on EEO tick-boxes.
   if (field.input_type === 'checkbox') return 'UNKNOWN'
 
-  // "Referral code" is an invite code, not "how did you hear about us" —
-  // the referral_source rule would otherwise type "LinkedIn" into it (PwC)
-  if (/\breferral\s*code\b/i.test(haystack)) return 'UNKNOWN'
   // PwC's primary name field is labeled just "Name" — too bare for the
   // rules, exact enough to trust on its own
   if (/^name$/i.test(field.label.trim())) return 'full_name'

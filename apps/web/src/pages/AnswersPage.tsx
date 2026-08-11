@@ -146,8 +146,9 @@ export function AnswersPage() {
         Dropdown questions fill by matching your answer against the option list. Scan a real form once with the
         extension and its exact choices appear here as dropdowns automatically — picking from those guarantees the
         match. For questions still shown as text, write the answer exactly as the form's dropdown displays it
-        (e.g. "Hong Kong SAR", not "HK"). Demographic and voluntary-disclosure questions (gender, date of birth,
-        ethnicity, criminal history, …) are never asked here and never auto-filled — those stay yours.
+        (e.g. "Hong Kong SAR", not "HK"). Gender fills only from the answer you save above — leave it blank to
+        always answer manually. Date of birth, ethnicity, criminal history and other voluntary-disclosure
+        questions are never asked here and never auto-filled — those stay yours.
       </p>
     </div>
   )

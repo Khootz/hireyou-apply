@@ -189,4 +189,11 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - User's exact PwC wordings saved: programme_interest="Winter Intern", academic_ranking="Cumulative GPA (eg. 3.75 out of 4)", gpa="3.40", gpa_scale="3.1" (⚠ flagged to user: scale 3.1 < GPA 3.40 — likely meant 4.3), languages="None" (PwC's Other-languages select; note: also feeds generic "Languages you speak" fields on other forms).
 - Vercel redeployed, API restarted, cache cleared, verify exit 0.
 
+**2026-08-12 — Gender opt-in (explicit user override ×2) + degree split + referral code + period fills removed, v0.3.5 → GREEN (exit 0)**
+- **Gender left SENSITIVE_PATTERNS by the user's explicit, repeated instruction** ("ignore the other use cases just do it") — mandatory on PwC/MokaHR. Fills ONLY from the saved answer (no derivation, no generation, blank = manual); race/ethnicity/veteran/disability/DOB/criminal stay hard-blocked. autocomplete sex→gender. All eval assertions updated; ethnicity now carries the negative cases. AnswersPage footer + docs copy updated.
+- **Degree split**: plain "Degree" (→ "Bachelor") vs "In which categories does your degree fall?" (→ new `degree_category`, "Full-time Bachelor Degree - No JUPAS Admission") — one canonical was feeding both selects and mismatching one. **referral_code** canonical (was UNKNOWN-guarded): "HKUST". ANSWER_QUESTIONS 44 → **47**.
+- **Period fills REMOVED** (user: "empty beats wrong or slow") — the live run drove year/month widgets incorrectly; canonicals/classification stay, DIRECT_COPY values deleted, fields honestly skipped. Test flipped to assert valuelessness.
+- **Stale-page autosave race caught red-handed**: the answers page's full-replace autosave, running on an outdated bundle against an old API process, silently dropped location AND reverted visa/major_type/graduation_date. All restored (47/47 verified round-trip). Rule for user: hard-refresh the answers page after every deploy BEFORE editing. TODO next loop: make PUT /api/answers merge-safe across schema versions.
+- Vercel redeployed, API restarted, cache cleared, verify exit 0.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

@@ -61,7 +61,10 @@ describe('tier-1 deterministic classification', () => {
   })
 
   it('sends every demographic field to SENSITIVE_DO_NOT_FILL, beating other signals', () => {
-    expect(classifyFieldDeterministic(mk({ label: 'Gender' }))).toBe('SENSITIVE_DO_NOT_FILL')
+    // gender left the sensitive bucket by explicit user opt-in (2026-08-12):
+    // fills from a saved answer only, never derived or generated
+    expect(classifyFieldDeterministic(mk({ label: 'Gender' }))).toBe('gender')
+    expect(classifyFieldDeterministic(mk({ label: 'Ethnicity' }))).toBe('SENSITIVE_DO_NOT_FILL')
     expect(classifyFieldDeterministic(mk({ label: 'Race / Ethnicity' }))).toBe('SENSITIVE_DO_NOT_FILL')
     expect(classifyFieldDeterministic(mk({ label: 'Veteran status' }))).toBe('SENSITIVE_DO_NOT_FILL')
     expect(classifyFieldDeterministic(mk({ label: 'Date of birth' }))).toBe('SENSITIVE_DO_NOT_FILL')
@@ -102,10 +105,14 @@ describe('POST /api/autofill (LLM replayed from fixtures)', () => {
     expect(by('role').value).toContain('Data Engineering Intern')
 
     // sensitive — no value, explicit refusal note
-    for (const id of ['gender', 'ethnicity', 'dob']) {
+    for (const id of ['ethnicity', 'dob']) {
       expect(by(id).do_not_fill, id).toBe(true)
       expect(by(id).value, id).toBeNull()
     }
+    // gender is answerable since the user's opt-in — but with no saved
+    // answer it stays honestly empty (never derived, never generated)
+    expect(by('gender').do_not_fill).toBe(false)
+    expect(by('gender').value).toBeNull()
 
     // generative respects maxlength
     const why = by('why')

@@ -84,8 +84,10 @@ department, employee type, responsibilities (from your latest profile role), the
 proficiencies, English exam, skill, professional qualification, the b–e legal declarations,
 related-to-employee, previously-employed, and referral channel.
 
-Stays manual **by design**: Gender, Date of Birth, the criminal-proceeding and conviction
-questions, and the accuracy-confirmation checkbox. Stays manual as a **known limit**: the
+Gender fills **only from your saved answer** (explicit opt-in — leave the answer blank to keep it
+manual). Stays manual **by design**: Date of Birth, the criminal-proceeding and conviction
+questions, and the accuracy-confirmation checkbox. Education/work **period widgets are
+recognized but left empty** (your call, 2026-08-12: empty beats wrong or slow). Stays manual as a **known limit**: the
 **graduation-date (and any other) calendar pickers** — they're readonly picker widgets, not
 selects; their open-state DOM was never captured, so the filler leaves them alone. If you want
 them driven, capture the page again with a picker **open** (F12 →

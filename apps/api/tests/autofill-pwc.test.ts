@@ -87,7 +87,8 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
     // education
     ['School or University', 'education_institution'],
     ['Country/Region of School', 'school_country'],
-    ['In which of the following categories does your degree fall?', 'degree'],
+    ['In which of the following categories does your degree fall?', 'degree_category'],
+    ['Referral code', 'referral_code'],
     ['Major', 'major'],
     ['What is your major type?', 'major_type'],
     ['Academic Ranking', 'academic_ranking'],
@@ -127,9 +128,12 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
     expect(classifyFieldDeterministic(mk(label))).toBe(expected)
   })
 
+  it('gender fills from the saved answer only (explicit user opt-in 2026-08-12)', () => {
+    expect(classifyFieldDeterministic(mk('Gender'))).toBe('gender')
+  })
+
   it('sensitive PwC questions stay hard-blocked', () => {
     for (const label of [
-      'Gender',
       'Date of Birth',
       'a)Are you a defendant in a criminal proceeding arising from the rendition of any professional or business services, or involving allegations of fraud or dishonesty?',
       'Have you ever been convicted of an offence by a court of law?',
@@ -141,9 +145,10 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
   it('every answerable canonical is on the answers page exactly once', () => {
     const keys = ANSWER_QUESTIONS.map((q) => q.key)
     expect(new Set(keys).size).toBe(keys.length)
-    // 44 = 39 + location/degree/major_type (derived-value overrides)
-    //         + gpa/gpa_scale (PwC's ranking pop-out sub-fields)
-    expect(keys.length).toBe(44)
+    // 47 = 39 + location/degree/major_type/degree_category (fixed-choice
+    // overrides) + gpa/gpa_scale (ranking pop-outs) + gender (explicit
+    // opt-in) + referral_code
+    expect(keys.length).toBe(47)
   })
 })
 
@@ -257,7 +262,7 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
       ['current country/region', 'location'],
       ['country/region of school', 'school_country'],
       ['school or university', 'education_institution'],
-      ['categories does your degree fall', 'degree'],
+      ['categories does your degree fall', 'degree_category'],
       ['major', 'major'],
       ['what is your major type', 'major_type'],
       ['academic ranking', 'academic_ranking'],
@@ -318,15 +323,15 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
 
   it('never guesses where it should stay silent', () => {
     const all = discover()
-    // "Referral code" is an invite code — the referral_source rule must not
-    // type "LinkedIn" into it
+    // "Referral code" is an invite code — its own canonical, never the
+    // referral_source rule ("LinkedIn" must not land in it)
     const referralCode = all.find((f) => f.label.trim() === 'Referral code')
     expect(referralCode).toBeDefined()
-    expect(classifyFieldDeterministic(referralCode!)).toBe('UNKNOWN')
-    // Gender stays hard-blocked
+    expect(classifyFieldDeterministic(referralCode!)).toBe('referral_code')
+    // Gender fills from the saved answer only (explicit user opt-in)
     const gender = all.find((f) => f.label.trim() === 'Gender')
     expect(gender).toBeDefined()
-    expect(classifyFieldDeterministic(gender!)).toBe('SENSITIVE_DO_NOT_FILL')
+    expect(classifyFieldDeterministic(gender!)).toBe('gender')
     // date-part selects of education/work periods must not catch the
     // expected-start-date rule ("Start and End Date" ≠ start date)
     expect(all.filter((f) => classifyFieldDeterministic(f) === 'expected_start_date')).toHaveLength(0)
@@ -361,12 +366,10 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
       ),
     )
     const suggestions = await suggestForFields(sqlite, [...eduParts, ...workParts], null)
-    const eduStart = suggestions.find((s) => s.canonical === 'education_period_start')!
-    const eduEnd = suggestions.find((s) => s.canonical === 'education_period_end')!
-    // full dates go out; year/month selects extract their part at fill time
-    expect(eduStart.value).toBe('Sep 2022')
-    expect(eduEnd.value).toBe('Jun 2026')
-    expect(suggestions.every((s) => s.value)).toBe(true)
+    // classified but VALUELESS by user decision (2026-08-12): the live run
+    // drove period widgets wrong — empty beats wrong or slow
+    expect(suggestions.every((s) => s.value === null)).toBe(true)
+    expect(suggestions.every((s) => !s.do_not_fill)).toBe(true)
   })
 
   it('readonly calendar pickers (DOB, graduation date) are not treated as fillable fields', () => {
@@ -404,7 +407,7 @@ describe('harvested answer vocabularies (scans feed the answers-page dropdowns)'
   it('stores real choices for answerable canonicals; placeholder rows, sensitive and option-less fields never land', async () => {
     const res = await post([
       mk('Academic Ranking', { selector: '#rank', tag: 'select', options: ['Please select', 'Top 10%', 'Top 25%', 'Top 50%', 'Below 50%'] }),
-      mk('Gender', { selector: '#gender', tag: 'select', options: ['Please select', 'Male', 'Female'] }),
+      mk('Ethnicity', { selector: '#ethnicity', tag: 'select', options: ['Please select', 'Group A', 'Group B'] }),
       mk('Family Name in English (e.g., Han)', { selector: '#family' }),
     ])
     expect(res.statusCode).toBe(200)

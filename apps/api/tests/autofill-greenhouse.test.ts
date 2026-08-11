@@ -183,7 +183,7 @@ describe('OKX Hong Kong application form (real captured HTML — primary demo ta
           notice_period: 'Available immediately',
           visa_sponsorship_required: 'No',
           linkedin_url: 'https://linkedin.com/in/tzkhoo',
-          gender: 'must never persist', // not a canonical key
+          ethnicity: 'must never persist', // not a canonical key
           SENSITIVE_DO_NOT_FILL: 'must never persist', // canonical but not answerable
           years_experience: '   ', // blank → dropped
         },
