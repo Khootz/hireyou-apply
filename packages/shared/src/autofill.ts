@@ -23,10 +23,15 @@ export const CANONICAL_FIELDS = [
   'education_institution',
   'degree',
   'graduation_date',
+  'highest_education_level',
   'work_authorization',
   'visa_sponsorship_required',
   'notice_period',
+  'expected_start_date',
+  'willing_to_relocate',
+  'languages',
   'salary_expectation',
+  'current_salary',
   'cover_letter',
   'why_this_role',
   'why_this_company',
@@ -186,14 +191,23 @@ const RULES: [CanonicalField, RegExp][] = [
   // before current_company: "notice period to your current employer" must not
   // classify as the employer-name field
   ['notice_period', /\bnotice\s*period\b/i],
+  ['expected_start_date', /\b(start\s*date|earliest\s+(possible\s+)?(start|commencement)|when\s+can\s+you\s+start|date\s+available|available\s+(from|to\s+start))\b/i],
+  ['willing_to_relocate', /\brelocat/i],
+  ['languages', /\blanguage/i],
   ['current_company', /\b(current|present)\s*(company|employer)\b/i],
   ['current_title', /\b(current|present|most\s+recent)\s*(role|title|position)\b/i],
   ['years_experience', /\byears?\s*(of)?\s*(work\s*)?experience\b/i],
+  // "highest qualification / education level" must win over the degree and
+  // institution rules below, which also mention qualification/education words
+  ['highest_education_level', /\b(highest\s*(level\s*of\s*)?(education|qualification|degree)|education\s*level)\b/i],
   ['education_institution', /\b(university|school|institution|college)\b/i],
   ['degree', /\b(degree|qualification|major)\b/i],
   ['graduation_date', /\bgraduat/i],
   ['work_authorization', /\b(work\s*authoriz|authoriz.*work|right\s*to\s*work|work\s*permit|legally\s*(entitled|authorized))/i],
   ['visa_sponsorship_required', /\b(visa|sponsor)/i],
+  // "current salary" before the generic salary rule — expected vs drawn are
+  // different questions with different answers
+  ['current_salary', /\b(current|present|latest|last)\s*(monthly\s*|annual\s*)?(salary|pay|compensation)\b/i],
   ['salary_expectation', /\b(salary|compensation|expected\s*pay|remuneration)\b/i],
   ['cover_letter', /\bcover\s*letter\b/i],
   ['why_this_role', /\bwhy\s+(do\s+you\s+want\s+)?(this|the)\s+(role|position|job)\b/i],
@@ -236,8 +250,13 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes — Hong Kong resident' },
   { key: 'visa_sponsorship_required', question: 'Will you require visa sponsorship?', hint: 'e.g. No' },
   { key: 'notice_period', question: 'Notice period / availability', hint: 'e.g. Available immediately' },
+  { key: 'expected_start_date', question: 'Earliest start date', hint: 'e.g. 1 June 2026 — or Immediately' },
   { key: 'salary_expectation', question: 'Expected salary', hint: 'e.g. HKD 25,000/month' },
+  { key: 'current_salary', question: 'Current / most recent salary', hint: 'e.g. HKD 20,000/month — or Prefer not to disclose' },
   { key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
+  { key: 'highest_education_level', question: 'Highest education level', hint: "e.g. Bachelor's degree (in progress)" },
+  { key: 'languages', question: 'Languages you speak', hint: 'e.g. English (fluent), Mandarin (native), Cantonese (conversational)' },
+  { key: 'willing_to_relocate', question: 'Willing to relocate?', hint: 'e.g. Yes — open to relocating within Asia' },
   { key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
 ]
 

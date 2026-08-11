@@ -9,6 +9,7 @@ import { registerEmailRoutes, type EmailRouteDeps } from './routes/email'
 import { registerGenerationRoutes } from './routes/generation'
 import { registerJobRoutes } from './routes/jobs'
 import { registerProfileRoutes } from './routes/profile'
+import { recordKeySightings, rotationReminders } from './services/keyRotation'
 import { Runner } from './services/runs'
 
 export interface ServerDeps {
@@ -54,7 +55,13 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
     return reply.code(401).send({ error: 'unauthorized' })
   })
 
-  app.get('/health', async () => ({ status: 'ok', service: 'hireyou-apply-api' }))
+  recordKeySightings(deps.sqlite)
+
+  app.get('/health', async () => ({
+    status: 'ok',
+    service: 'hireyou-apply-api',
+    key_rotation_due: rotationReminders(deps.sqlite),
+  }))
 
   registerProfileRoutes(app, deps.sqlite)
   registerJobRoutes(app, deps.sqlite)

@@ -13,7 +13,7 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 | M6 Extension + HKUST | **DONE** (manual: load dist/ + live board check pending user) | 1 | `npm run verify:m6` |
 | M7 Email apply | **DONE — live send verified** (real Gmail → test inbox, 2 PDFs, 2026-08-10) | 3 | `npm run verify:m7` |
 | M8 Form hints (best-effort) | **DONE** (manual: live JobsDB/CTgoodjobs check pending user) | 1 | `npm run verify:m8` |
-| M9 Hardening | not started (optional) | 0 | — |
+| M9 Hardening | **DONE** (manual: JobsDB/CTgoodjobs live walk pending user — `docs/autofill-manual-check.md`) | 2 | `npm run verify:m9` |
 | M-UI Amploy UI parity | **DONE** (visual check pending user) | 1 | `npm run verify:m-ui` |
 
 ## Pre-build log
@@ -93,5 +93,14 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Jobs page: "N jobs tracked", status filter pills with live counts, search (title/company), inline status dropdown + colored dot, real Materials chips (jobs list now returns `materials` via GROUP_CONCAT over documents), row × delete, title ↗ link.
 - My Resume: two-pane — left editor with ⠿ HTML5 drag-reorder (+▲▼ kept), right sticky LIVE PDF preview via GET /api/profile/pdf (master profile through the SAME renderer as exports; cached by updated_at; /meta returns page count; refreshes after each autosave). Empty-profile render tested.
 - Redeployed to Vercel. Also earlier same day: fixed dev boot (tsx watch hangs under concurrently on Windows → plain tsx; `dev:api:watch` kept for code work) and made the launcher self-healing (health-check, kill half-dead, wait-until-ready).
+
+**2026-08-10/11 — interim (user-driven upgrades between M-UI and M9, committed without loop entries)**
+- Add Job dialog rebuilt to Amploy format (dea42d4); resume editor visible drag-reorder (110d3e3); autofill promoted from grey hints to REAL FILL on any http(s) page with fill→verify→retry loop, combobox driving, application-answers store, classification cache (ec77277); resume PDF one-page auto-fit (77e0b0f). Real captured Greenhouse (Anthropic) + OKX forms added as fixture evals.
+
+**2026-08-11 — M9, loops 1–2 → GREEN (verify:m9 exit 0; 78 passed, 1 skipped)**
+- Loop 1 (2c59df9): prompt-injection fencing for untrusted JD text (sanitized delimiters, lookalike defusal); LlmProviderError separates provider outages from validation failures — no retry on outages, honest surface, degraded results never cached.
+- Loop 2: **suggestion telemetry** — /api/autofill returns form_fingerprint; POST /api/autofill/events (copied/dismissed/ignored, zod-gated, batch ≤100) writes field_suggestion_events; panel reports Copy clicks + autofill-filled fields fire-and-forget (canonical name + action only, never values). **Key-rotation reminder** — app_meta stores sha256(secret)+first_seen (never the secret) for DEEPSEEK_API_KEY/SMTP_APP_PASSWORD/API_AUTH_TOKEN; unchanged hash past 30 days (KEY_ROTATION_REMIND_DAYS) surfaces in /health.key_rotation_due + boot console.warn; rotated key silently restarts the clock.
+- Also this loop (user ask): **answers page 9 → 14 questions** — expected_start_date, current_salary, willing_to_relocate, languages, highest_education_level added as canonicals + deterministic rules (current_salary ordered before salary_expectation; highest_education_level before degree/institution rules).
+- Manual checklist for user: `docs/autofill-manual-check.md` — live JobsDB/CTgoodjobs walkthrough (probe 2026-08-11: jobsdb refuses non-browser clients even via proxy, ctgoodjobs bot-blocks CLI — extension-in-Chrome is the only viable path, fixtures must come from the user's session).
 
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

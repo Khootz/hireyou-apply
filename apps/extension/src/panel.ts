@@ -240,6 +240,21 @@ interface FillOutcomeLite {
   value?: string
 }
 
+// Usage telemetry (M9): report which suggestions actually got used so the
+// classifier can be judged on real forms later. Values never leave the page —
+// only the canonical field name and what happened. Fire-and-forget: telemetry
+// must never break or slow the fill flow.
+function reportUsage(
+  fingerprint: string,
+  events: { canonical_field: string; action: 'copied' | 'dismissed' | 'ignored' }[],
+): void {
+  if (!fingerprint || events.length === 0) return
+  void api('/api/autofill/events', {
+    method: 'POST',
+    body: JSON.stringify({ form_fingerprint: fingerprint, events }),
+  }).catch(() => {})
+}
+
 // The content script is declared for every http(s) page, but pages that were
 // already open when the extension loaded (or reloaded) don't have it yet —
 // inject on demand instead of telling the user "unsupported".
@@ -273,7 +288,10 @@ async function scanForm(): Promise<void> {
       return
     }
     status.textContent = `${scan.fields.length} fields found — asking for suggestions…`
-    const { suggestions } = await api<{ suggestions: FieldSuggestionLite[] }>(`/api/autofill`, {
+    const { suggestions, form_fingerprint } = await api<{
+      suggestions: FieldSuggestionLite[]
+      form_fingerprint: string
+    }>(`/api/autofill`, {
       method: 'POST',
       body: JSON.stringify({ fields: scan.fields, job_id: null }),
     })
@@ -295,7 +313,7 @@ async function scanForm(): Promise<void> {
           if (!s.value) return ''
           return `<div class="gen-row"><div style="min-width:0"><strong>${esc(s.label || s.canonical)}</strong>
             <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(s.value)}</div></div>
-            <button class="secondary" data-copy="${esc(s.value)}">Copy</button></div>`
+            <button class="secondary" data-copy="${esc(s.value)}" data-canonical="${esc(s.canonical)}">Copy</button></div>`
         })
         .join('')
     results.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
@@ -303,15 +321,18 @@ async function scanForm(): Promise<void> {
         await navigator.clipboard.writeText(btn.dataset.copy ?? '')
         btn.textContent = '✓'
         setTimeout(() => (btn.textContent = 'Copy'), 1200)
+        reportUsage(form_fingerprint, [{ canonical_field: btn.dataset.canonical ?? 'UNKNOWN', action: 'copied' }])
       }),
     )
-    document.querySelector('#do-autofill')?.addEventListener('click', () => void runAutofill(tabId, suggestions))
+    document
+      .querySelector('#do-autofill')
+      ?.addEventListener('click', () => void runAutofill(tabId, suggestions, form_fingerprint))
   } catch (err) {
     status.textContent = `⚠ ${(err as Error).message}`
   }
 }
 
-async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[]): Promise<void> {
+async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[], fingerprint = ''): Promise<void> {
   const status = $('#scan-status')
   const results = $('#scan-results')
   const btn = document.querySelector<HTMLButtonElement>('#do-autofill')
@@ -324,6 +345,11 @@ async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[]): P
     const filled = outcomes.filter((o) => o.status === 'filled')
     const attempted = outcomes.filter((o) => o.status !== 'skipped')
     status.textContent = `✓ Filled ${filled.length}/${attempted.length} fields — review everything, then submit yourself.`
+    const canonicalOf = new Map(suggestions.map((s) => [s.selector, s.canonical]))
+    reportUsage(
+      fingerprint,
+      filled.map((o) => ({ canonical_field: canonicalOf.get(o.selector) ?? 'UNKNOWN', action: 'copied' as const })),
+    )
     const ICON: Record<FillOutcomeLite['status'], string> = { filled: '✓', skipped: '○', failed: '⚠', not_found: '⚠' }
     const COLOR: Record<FillOutcomeLite['status'], string> = {
       filled: '#16a34a',
