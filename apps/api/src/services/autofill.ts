@@ -22,6 +22,8 @@ const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>>
   full_name: (p) => p.contact.full_name,
   first_name: (p) => splitFullName(p.contact.full_name).first,
   last_name: (p) => splitFullName(p.contact.full_name).last,
+  // a saved answer overrides this default (answers are checked first)
+  preferred_name: (p) => splitFullName(p.contact.full_name).first,
   email: (p) => p.contact.email,
   phone: (p) => p.contact.phone,
   location: (p) => p.contact.location,
@@ -71,7 +73,13 @@ function findParagraph(profile: MasterProfile, titlePattern: RegExp): string {
   return ''
 }
 
-const GENERATIVE: Set<CanonicalField> = new Set(['cover_letter', 'why_this_role', 'why_this_company', 'additional_info'])
+const GENERATIVE: Set<CanonicalField> = new Set([
+  'cover_letter',
+  'why_this_role',
+  'why_this_company',
+  'proudest_accomplishment',
+  'additional_info',
+])
 
 const ClassifyBatchSchema = z.object({
   fields: z.array(z.object({ selector: z.string(), canonical: CanonicalFieldSchema })),
@@ -125,10 +133,10 @@ export async function suggestForFields(
   for (const f of fields) {
     const canonical = cached?.get(f.selector) ?? classifyFieldDeterministic(f)
     classified.set(f.selector, canonical)
-    // tick-boxes never receive values, so the model has nothing to add —
-    // a Lever language checklist would otherwise stuff 40 junk items in here
-    if (!cached && canonical === 'UNKNOWN' && f.input_type !== 'checkbox' && f.input_type !== 'radio')
-      unknown.push(f)
+    // checkboxes never receive values, so the model has nothing to add —
+    // a Lever language checklist would otherwise stuff 40 junk items in here.
+    // Radio GROUPS stay in: they carry a real question and can be answered.
+    if (!cached && canonical === 'UNKNOWN' && f.input_type !== 'checkbox') unknown.push(f)
   }
 
   // Tier 2: ONE batched call for everything the rules couldn't name.

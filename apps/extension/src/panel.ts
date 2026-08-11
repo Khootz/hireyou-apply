@@ -97,10 +97,26 @@ async function render(): Promise<void> {
       <p class="muted">Open a job posting on the <a href="https://career.hkust.edu.hk/web/job.php" target="_blank">HKUST career board</a> and this panel will pick it up.</p></div>
       <div class="card"><h2>On an application form?</h2>
       <p class="muted" style="margin-bottom:8px">I can scan any application page, suggest answers from your profile, and fill the form for you. You review every field — nothing is ever submitted automatically, and demographic questions are never touched.</p>
+      <label style="display:block;margin-bottom:4px">Tailor essay answers to a saved job (optional)</label>
+      <select id="scan-job" style="margin-bottom:8px;max-width:100%"><option value="">No job context — facts and saved answers only</option></select>
       <button class="primary" id="scan-form">Scan this page</button>
       <div id="scan-status" class="muted" style="margin-top:6px"></div>
       <div id="scan-results" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div></div>`
     document.querySelector('#scan-form')?.addEventListener('click', scanForm)
+    // "Why do you want to work at X?" boxes only get drafted with a JD in
+    // hand — offer the tracked jobs as context. Failure to load = no context.
+    api<{ jobs: { id: string; title: string; company: string }[] }>('/api/jobs')
+      .then(({ jobs }) => {
+        const select = document.querySelector<HTMLSelectElement>('#scan-job')
+        if (!select) return
+        for (const j of jobs) {
+          const opt = document.createElement('option')
+          opt.value = j.id
+          opt.textContent = `${j.title} — ${j.company}`
+          select.appendChild(opt)
+        }
+      })
+      .catch(() => {})
     return
   }
 
@@ -295,12 +311,13 @@ async function scanForm(): Promise<void> {
       fields.length < scan.fields.length
         ? `${scan.fields.length} fields found — asking about the ${fields.length} most fillable…`
         : `${fields.length} fields found — asking for suggestions…`
+    const jobId = document.querySelector<HTMLSelectElement>('#scan-job')?.value || null
     const { suggestions, form_fingerprint } = await api<{
       suggestions: FieldSuggestionLite[]
       form_fingerprint: string
     }>(`/api/autofill`, {
       method: 'POST',
-      body: JSON.stringify({ fields, job_id: null }),
+      body: JSON.stringify({ fields, job_id: jobId }),
     })
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
     if (withValue.length === 0) {

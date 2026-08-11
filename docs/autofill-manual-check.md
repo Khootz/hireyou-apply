@@ -28,20 +28,37 @@
 1. `Start HireYou Apply.bat` (API :3100, web :5180).
 2. `npm run build:extension`, then `chrome://extensions` → HireYou Apply → **⟳ Reload**.
 3. Extension ⚙: API URL `http://127.0.0.1:3100`, token = `API_AUTH_TOKEN` from `.env`.
-4. `localhost:5180` → **Autofill answers** → fill all 14.
+4. `localhost:5180` → **Autofill answers** → fill all **17** (incl. preferred name, name
+   pronunciation, proudest accomplishment). Make sure your **profile has a location** — it feeds
+   Location/Country fields.
+5. For essay questions ("Why do you want to work at X?"): **save the job first** (Add Job with the
+   JD pasted, or via the extension), then pick it in the panel's **"Tailor essay answers to a
+   saved job"** dropdown before scanning. No job selected = essays honestly left blank.
 
-## Test 1 — Greenhouse or Lever, no login needed (~5 min, the demo)
+## Test 1 — the Palantir/Lever full-autofill demo (~10 min)
 
-These are the exact form families the machine evals run on:
+This exact form is machine-verified END-TO-END with live-recorded LLM output — 16 fields fill,
+including the Yes/No radio questions.
 
-- **Greenhouse**: any `job-boards.greenhouse.io` / `boards.greenhouse.io` posting → **Apply**.
-- **Lever**: any `jobs.lever.co/<company>/<id>/apply` page (Palantir, Octopus Energy, …).
+1. Save the job: `localhost:5180` → **Add Job** → title/company + paste the JD from
+   `jobs.lever.co/palantir/<any posting>`.
+2. Open that posting → **Apply for this job**.
+3. Side panel → pick the Palantir job in the dropdown → **Scan this page** → **⚡ Autofill**.
+4. Expect ALL of this to fill: name, email, phone, location, current company,
+   LinkedIn/GitHub/Portfolio, preferred name, name pronunciation, university dropdown,
+   "how you heard", **"Are you legally authorized to work…" → Yes clicked**,
+   **"Will you require sponsorship…" → No clicked**, proudest accomplishment, the
+   "Why Palantir?" essay, and Additional information.
+5. Expect to stay untouched: the language checkboxes, the AI-notetaker consent, and the marketing
+   consent — consents are yours, always.
 
-Side panel → **Scan this page** → **⚡ Autofill**. Expect: contact + URL fields fill and stay
-filled, the university/referral dropdowns select or say "pick manually", EEO questions show the
-amber "never suggested" row, saved answers appear for their questions.
+## Test 2 — Greenhouse, no login needed (~5 min)
 
-## Test 2 — IBM, Deloitte, any corporate portal (~15 min, the frontier)
+Any `job-boards.greenhouse.io` / `boards.greenhouse.io` posting → **Apply** (Anthropic's form is
+the machine eval). Same flow. Expect: contact + Country fill, react-select dropdowns get driven
+or say "pick manually", EEO rows amber.
+
+## Test 3 — IBM, Deloitte, any corporate portal (~15 min, the frontier)
 
 Big-corporate careers run on a handful of ATS platforms under the hood — the flow is always the
 same: get to the actual form page (usually after creating an account), then **Scan this page** on
@@ -75,8 +92,9 @@ page that misbehaves:
 2. Paste into `tests/fixtures/forms/<company>-apply.html`
 3. Tell me the URL, what you expected, what happened.
 
-Known limits (documented, not surprises): no iframe/shadow-DOM traversal, radio groups are never
-auto-picked, file uploads are never touched.
+Known limits (documented, not surprises): no iframe/shadow-DOM traversal, checkboxes and consent
+questions are never auto-ticked, file uploads are never touched. Radio groups with a clear saved
+answer (work authorization, visa) ARE picked; anything ambiguous is left for you.
 
 ## Optional: confirm telemetry landed
 

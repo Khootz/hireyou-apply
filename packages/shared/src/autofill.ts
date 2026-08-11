@@ -11,6 +11,8 @@ export const CANONICAL_FIELDS = [
   'full_name',
   'first_name',
   'last_name',
+  'preferred_name',
+  'name_pronunciation',
   'email',
   'phone',
   'location',
@@ -35,6 +37,7 @@ export const CANONICAL_FIELDS = [
   'cover_letter',
   'why_this_role',
   'why_this_company',
+  'proudest_accomplishment',
   'additional_info',
   'referral_source',
   'SENSITIVE_DO_NOT_FILL',
@@ -81,9 +84,9 @@ function cssEscape(value: string): string {
   return value.replace(/([^\w-])/g, '\\$1')
 }
 
-// Required-field markers ("First Name*") are noise for classification.
+// Required-field markers ("First Name*", Lever's "✱") are noise for classification.
 function cleanLabel(text: string): string {
-  return text.replace(/\s*\*\s*$/, '').trim()
+  return text.replace(/\s*[*✱]\s*$/, '').trim()
 }
 
 function resolveLabel(el: Element): string {
@@ -133,6 +136,35 @@ function stableSelector(el: Element, index: number): string {
 
 const EXCLUDED_INPUT_TYPES = new Set(['hidden', 'submit', 'button', 'reset', 'image', 'file', 'password', 'search'])
 
+// A radio GROUP is one question, not N fields. Scanned per-option, the
+// question text is lost — every option labels itself "Yes"/"No" and nothing
+// classifies. The question usually sits just before the option list (Lever's
+// .application-label, a fieldset legend, a plain heading) — walk up from the
+// first option looking for preceding text.
+function resolveGroupQuestion(el: Element): string {
+  let node: Element | null = el
+  for (let depth = 0; depth < 6 && node; depth++) {
+    if (node.tagName === 'FIELDSET') {
+      const legend = node.querySelector('legend')
+      if (legend?.textContent?.trim()) return cleanLabel(legend.textContent)
+    }
+    let sib = node.previousElementSibling
+    while (sib) {
+      const text = sib.textContent?.trim()
+      if (text && text.length >= 8 && text.length < 300) return cleanLabel(text)
+      sib = sib.previousElementSibling
+    }
+    node = node.parentElement
+  }
+  return resolveLabel(el)
+}
+
+function radioOptionLabel(radio: Element): string {
+  const wrapped = radio.closest('label')?.textContent?.trim()
+  if (wrapped) return cleanLabel(wrapped)
+  return cleanLabel(resolveLabel(radio))
+}
+
 // A busy listing page (CTgoodjobs: filter sidebars with 100+ checkboxes) can
 // out-shout the actual apply form and blow the API's batch cap — the exact
 // failure seen live on 2026-08-11 ("Array must contain at most 100"). Text
@@ -150,6 +182,21 @@ export function prioritizeFields(fields: FieldInfo[], cap = MAX_AUTOFILL_FIELDS)
 export function discoverFields(doc: Document): FieldInfo[] {
   const fields: FieldInfo[] = []
   const elements = Array.from(doc.querySelectorAll('input, textarea, select'))
+
+  // pre-pass: collect visible named radios into groups (document order kept —
+  // the group is emitted where its first option appears)
+  const radioGroups = new Map<string, Element[]>()
+  for (const el of elements) {
+    if (el.tagName.toLowerCase() !== 'input') continue
+    if ((el.getAttribute('type') ?? '').toLowerCase() !== 'radio') continue
+    const name = el.getAttribute('name')
+    if (!name || !isVisible(el) || el.hasAttribute('disabled')) continue
+    const group = radioGroups.get(name) ?? []
+    group.push(el)
+    radioGroups.set(name, group)
+  }
+
+  const emittedGroups = new Set<string>()
   elements.forEach((el, i) => {
     const tag = el.tagName.toLowerCase()
     const inputType = (el.getAttribute('type') ?? (tag === 'input' ? 'text' : '')).toLowerCase()
@@ -160,15 +207,38 @@ export function discoverFields(doc: Document): FieldInfo[] {
     if (el.getAttribute('aria-hidden') === 'true') return
     if (el.getAttribute('tabindex') === '-1') return
     if (el.hasAttribute('disabled') || el.hasAttribute('readonly')) return
+
+    // named radios surface once, as their whole group
+    const radioName = inputType === 'radio' ? el.getAttribute('name') : null
+    if (radioName && radioGroups.has(radioName)) {
+      if (emittedGroups.has(radioName)) return
+      emittedGroups.add(radioName)
+      const group = radioGroups.get(radioName)!
+      fields.push(
+        FieldInfoSchema.parse({
+          selector: `input[name="${radioName.replace(/(["\\])/g, '\\$1')}"]`,
+          tag: 'input',
+          input_type: 'radio',
+          name: radioName,
+          id: '',
+          autocomplete: '',
+          placeholder: '',
+          maxlength: null,
+          required: group.some((r) => r.hasAttribute('required')),
+          label: resolveGroupQuestion(group[0]),
+          options: group.map(radioOptionLabel).filter(Boolean),
+        }),
+      )
+      return
+    }
+
     const maxlengthAttr = el.getAttribute('maxlength')
     const options =
       tag === 'select'
         ? Array.from(el.querySelectorAll('option'))
             .map((o) => o.textContent?.trim() ?? '')
             .filter(Boolean)
-        : inputType === 'radio'
-          ? [] // radio groups handled per-input; label carries the option
-          : []
+        : []
     fields.push(
       FieldInfoSchema.parse({
         selector: stableSelector(el, i),
@@ -196,6 +266,10 @@ const SENSITIVE_PATTERNS =
 const RULES: [CanonicalField, RegExp][] = [
   ['email', /\be-?mail\b/i],
   ['phone', /\b(phone|mobile|contact\s*number|tel)\b/i],
+  // both BEFORE full_name: "How do you pronounce your name?" and "Preferred
+  // Name" (Lever) contain "name" phrasings the name rules would claim
+  ['name_pronunciation', /\bpronounc/i],
+  ['preferred_name', /\b(preferred\s*name|like\s+us\s+to\s+call|nickname)\b/i],
   ['full_name', /\b(full\s*name|your\s*name|applicant\s*name)\b/i],
   ['first_name', /\b(first|given)\s*name\b/i],
   ['last_name', /\b(last|family)\s*name|surname\b/i],
@@ -224,11 +298,12 @@ const RULES: [CanonicalField, RegExp][] = [
   ['current_salary', /\b(current|present|latest|last)\s*(monthly\s*|annual\s*)?(salary|pay|compensation)\b/i],
   ['salary_expectation', /\b(salary|compensation|expected\s*pay|remuneration)\b/i],
   ['cover_letter', /\bcover\s*letter\b/i],
+  ['proudest_accomplishment', /\b(proudest|favou?rite\s+project|greatest\s+accomplishment)\b/i],
   ['why_this_role', /\bwhy\s+(do\s+you\s+want\s+)?(this|the)\s+(role|position|job)\b/i],
   ['why_this_company', /\bwhy\s+(do\s+you\s+want\s+to\s+(work|join)|us|our\s+company)\b/i],
   // "how you heard about" (Lever) and "how did you hear" (Greenhouse) both count
   ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|referr(al|ed))\b/i],
-  ['location', /\b(location|city|address)\b/i],
+  ['location', /\b(location|city|address|country)\b/i],
 ]
 
 const AUTOCOMPLETE_MAP: Record<string, CanonicalField> = {
@@ -259,6 +334,9 @@ export interface AnswerQuestion {
 }
 
 export const ANSWER_QUESTIONS: AnswerQuestion[] = [
+  { key: 'preferred_name', question: 'Preferred name / what should we call you?', hint: 'e.g. TZ — defaults to your first name if blank' },
+  { key: 'name_pronunciation', question: 'How do you pronounce your name?', hint: 'e.g. TEEN-zhee KOO' },
+  { key: 'proudest_accomplishment', question: 'Proudest accomplishment / favorite project (default answer)', hint: 'A few sentences — used when a form asks for your proudest work' },
   { key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
   { key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
   { key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
@@ -339,6 +417,27 @@ export function isCombobox(el: Element): boolean {
   return el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list'
 }
 
+// Saved answers are prose ("Yes — Hong Kong resident, no permit needed");
+// options are terse ("Yes"). Match progressively: exact → answer starts with
+// the option → option starts with the answer → option contains the answer.
+// Returns the option index, -1 when nothing matches (no guessing).
+export function matchOption(value: string, options: string[]): number {
+  const target = value.trim().toLowerCase()
+  if (!target) return -1
+  const texts = options.map((o) => o.trim().toLowerCase())
+  let idx = texts.findIndex((t) => t === target)
+  if (idx === -1) idx = texts.findIndex((t) => t !== '' && target.startsWith(t))
+  if (idx === -1) idx = texts.findIndex((t) => t !== '' && t.startsWith(target))
+  if (idx === -1) idx = texts.findIndex((t) => t !== '' && t.includes(target))
+  return idx
+}
+
+function groupRadios(doc: Document, selector: string): HTMLInputElement[] {
+  return Array.from(doc.querySelectorAll(selector)).filter(
+    (r): r is HTMLInputElement => (r as HTMLInputElement).type === 'radio',
+  )
+}
+
 // A number input silently rejects non-numeric text, so "Jun 2026" must become
 // "2026" BEFORE the write — fill and verify both coerce so they agree.
 export function coerceValueForControl(el: Element, value: string): string {
@@ -369,8 +468,27 @@ export function applyFillToDocument(doc: Document, suggestions: FieldSuggestion[
     if (typeof input.value !== 'string') {
       return { ...base, status: 'failed', reason: 'Unsupported control type.', value: s.value }
     }
-    if (input.type === 'checkbox' || input.type === 'radio') {
-      return { ...base, status: 'skipped', reason: 'Checkbox/radio — tick this one yourself.', value: s.value }
+    if (input.type === 'radio') {
+      // a radio group answers from the saved answer — pick the matching
+      // option, check it, fire events; no match = honest failure, no guess
+      const radios = groupRadios(doc, s.selector)
+      const labels = radios.map(radioOptionLabel)
+      const idx = matchOption(s.value, labels)
+      if (idx === -1) {
+        return { ...base, status: 'failed', reason: 'No option matches your saved answer — pick it yourself.', value: s.value }
+      }
+      const chosen = radios[idx]
+      chosen.checked = true
+      const win = chosen.ownerDocument.defaultView
+      const EventCtor = win?.Event ?? Event
+      chosen.dispatchEvent(new EventCtor('input', { bubbles: true }))
+      chosen.dispatchEvent(new EventCtor('change', { bubbles: true }))
+      return chosen.checked
+        ? { ...base, status: 'filled', value: labels[idx] }
+        : { ...base, status: 'failed', reason: 'Page rejected the selection.', value: s.value }
+    }
+    if (input.type === 'checkbox') {
+      return { ...base, status: 'skipped', reason: 'Checkbox — tick this one yourself.', value: s.value }
     }
     const coerced = coerceValueForControl(input, s.value)
     setNativeValue(input, coerced)
@@ -393,6 +511,15 @@ export function verifyFill(doc: Document, suggestions: FieldSuggestion[]): { sel
     .map((s) => {
       const el = doc.querySelector(s.selector) as HTMLInputElement | HTMLSelectElement | null
       if (!el) return { selector: s.selector, ok: false, actual: '' }
+      // radio group: verified when the checked option is the one the saved
+      // answer matches — .value would read the option value of the first radio
+      if ((el as HTMLInputElement).type === 'radio') {
+        const radios = groupRadios(doc, s.selector)
+        const labels = radios.map(radioOptionLabel)
+        const idx = matchOption(s.value!, labels)
+        const checked = radios.findIndex((r) => r.checked)
+        return { selector: s.selector, ok: idx !== -1 && checked === idx, actual: checked === -1 ? '' : labels[checked] }
+      }
       const actual = typeof el.value === 'string' ? el.value : ''
       const ok =
         actual === coerceValueForControl(el, s.value!) ||
@@ -411,14 +538,12 @@ export function classifyFieldDeterministic(field: FieldInfo): CanonicalField {
   if (field.options.length > 0 && field.options.length <= 30 && SENSITIVE_PATTERNS.test(field.options.join(' ')))
     return 'SENSITIVE_DO_NOT_FILL'
 
-  // Tick-boxes are never filled, so a value-bearing canonical is always wrong
+  // Checkboxes are never filled, so a value-bearing canonical is always wrong
   // — on Lever's real language checklist, "Telugu (TEL)" hit the phone rule.
-  // Sensitive stays above: the amber warning must render on EEO radio groups.
-  if (field.input_type === 'checkbox' || field.input_type === 'radio') return 'UNKNOWN'
-
-  // "How do you pronounce your name?" (Lever) must not hit the name rules —
-  // typing the actual name into a pronunciation field is a wrong fill
-  if (/pronounc/i.test(haystack)) return 'UNKNOWN'
+  // Radio GROUPS are exempt: they arrive as one field carrying the actual
+  // question ("Are you legally authorized…?") and CAN be answered.
+  // Sensitive stays above: the amber warning must render on EEO tick-boxes.
+  if (field.input_type === 'checkbox') return 'UNKNOWN'
 
   const ac = field.autocomplete.toLowerCase().trim()
   if (ac && AUTOCOMPLETE_MAP[ac]) return AUTOCOMPLETE_MAP[ac]

@@ -69,6 +69,7 @@ describe('Greenhouse application form (real captured HTML)', () => {
     expect(canon.get('#last_name')).toBe('last_name')
     expect(canon.get('#email')).toBe('email')
     expect(canon.get('#phone')).toBe('phone')
+    expect(canon.get('#country')).toBe('location')
   })
 
   it('fills 100% of suggested fields, verified by reading the DOM back', async () => {

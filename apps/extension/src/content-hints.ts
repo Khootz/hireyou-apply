@@ -115,11 +115,13 @@ async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: 
   await sleep(150)
   let failed = verifyFill(document, suggestions).filter((v) => !v.ok)
 
-  // Pass 3: keyboard-simulation retry for anything reverted.
+  // Pass 3: keyboard-simulation retry for anything reverted. Radio groups are
+  // excluded — retyping text into a radio is meaningless; their verdict stands.
   for (const v of failed) {
     const s = suggestions.find((x) => x.selector === v.selector)
     const el = document.querySelector(v.selector)
     if (!s?.value || !(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) continue
+    if (el instanceof HTMLInputElement && el.type === 'radio') continue
     const retryValue = coerceValueForControl(el, s.value)
     el.focus()
     el.select?.()
