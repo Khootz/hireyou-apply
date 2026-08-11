@@ -131,7 +131,9 @@ async function runAutofill(
     const s = suggestions.find((x) => x.selector === o.selector)
     const el = document.querySelector(o.selector)
     if (!s?.value || !(el instanceof HTMLInputElement) || !isCombobox(el)) continue
-    if (comboboxDisplay(el).trim() !== '') continue // selection still standing
+    // standing selections render in the display node OR in the input itself
+    // (sd-Select keeps some commits in .value) — never re-drive over either
+    if (comboboxDisplay(el).trim() !== '' || el.value.trim() !== '') continue
     if (await fillCombobox(el, s.value)) {
       flash(el.closest<HTMLElement>('.select-shell') ?? el)
     } else {
@@ -289,7 +291,13 @@ async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): P
 
   el.focus()
   clickOn(el)
-  if (!el.readOnly) setNativeValue(el, value) // typing filters the menu
+  // The retry attempt drives WITHOUT typing: the type-filter re-renders the
+  // menu, and a click on a node the re-render replaced silently does nothing
+  // (seen live on PwC's programme select — the "selection" the user watched
+  // vanish was only the typed filter text). The unfiltered list is stable.
+  const typed = !el.readOnly && attempt === 0
+  if (typed) setNativeValue(el, value) // typing filters the menu
+  let lastTyped = typed ? value.trim().toLowerCase() : ''
   let opened = await waitFor(() => menuOptions().length > 0, el.readOnly ? 400 : 1500)
   if (!opened) {
     // still closed (readonly inner input) — click the shell open
@@ -309,6 +317,7 @@ async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): P
     // typed text filtered the menu to nothing ("No result") — clear it and
     // match against the FULL option list instead
     setNativeValue(el, '')
+    lastTyped = ''
     await sleep(120)
     recordMenu() // unfiltered now — the fullest view of the choices
     match = pickFrom(menuOptions())
@@ -323,27 +332,44 @@ async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): P
   let chosen = ''
   if (match) {
     chosen = text(match)
+    // the filter re-render may have swapped the matched node for a fresh one
+    // — a click on the detached original goes nowhere, so re-grab by text
+    if (!match.isConnected) match = menuOptions().find((o) => text(o) === chosen) ?? match
     // events bubble UP: click the innermost content node so the handler is
     // hit wherever the widget attached it (container vs inner item)
     clickOn(match.querySelector<HTMLElement>('[class*="content-item"]') ?? match)
-    ok = await waitFor(() => selectedText().includes(chosen) || el.value.trim().toLowerCase() === chosen, 1500)
+    // the input matching what WE typed proves nothing — trust .value as a
+    // commit signal only when the widget itself must have written it
+    ok = await waitFor(
+      () => selectedText().includes(chosen) || (el.value.trim().toLowerCase() === chosen && chosen !== lastTyped),
+      1500,
+    )
   }
 
   // Exit hygiene decides whether the selection SURVIVES. Leftover typed
   // filter text reads as uncommitted input — on blur the widget resets
   // itself and the just-made selection vanishes ("filled then deleted",
-  // seen live on PwC). And Escape is a REVERT key in many select widgets,
-  // so it is only safe on the failure path.
-  if (!el.readOnly && el.value) setNativeValue(el, '')
+  // seen live on PwC). But when the widget renders its commit INSIDE the
+  // input, clearing would wipe the selection — only clear when the
+  // selection is safely rendered outside the input, or nothing committed.
+  // And Escape is a REVERT key in many select widgets, so it is only safe
+  // on the failure path.
+  if (!el.readOnly && el.value && (!ok || selectedText().includes(chosen))) setNativeValue(el, '')
   if (!ok) pressKey('Escape', 27)
   el.blur()
   document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })) // close click-away menus
   await waitFor(() => !menuOpen(), 800)
   await sleep(100) // settle: close animations finish before the next field
 
+  // A matched option that would not commit is the type-filter race — retry
+  // once from a settled state, without typing, before failing honestly.
+  if (!ok && match && attempt === 0) return fillCombobox(el, value, 1)
+
   // Revert check: if cleanup (blur/close) cost us the selection, drive the
-  // widget once more — the second pass starts from a settled, closed state.
-  if (ok && chosen && !selectedText().includes(chosen)) {
+  // widget once more — the second pass starts from a settled, closed state
+  // and types nothing. A commit standing in the input counts as surviving.
+  const standing = selectedText().includes(chosen) || el.value.trim().toLowerCase() === chosen
+  if (ok && chosen && !standing) {
     if (attempt === 0) return fillCombobox(el, value, 1)
     return false // honest failure: the page refuses to keep the selection
   }
