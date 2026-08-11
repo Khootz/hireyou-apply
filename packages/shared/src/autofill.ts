@@ -13,17 +13,29 @@ export const CANONICAL_FIELDS = [
   'last_name',
   'preferred_name',
   'name_pronunciation',
+  'family_name_chinese',
+  'given_name_chinese',
   'email',
   'phone',
+  'phone_country_code',
   'location',
+  'citizenship',
+  'citizenship_status',
+  'country_of_birth',
   'linkedin_url',
   'github_url',
   'portfolio_url',
   'current_company',
   'current_title',
   'years_experience',
+  'department',
+  'employee_type',
+  'responsibilities',
   'education_institution',
+  'school_country',
   'degree',
+  'major',
+  'academic_ranking',
   'graduation_date',
   'highest_education_level',
   'work_authorization',
@@ -32,6 +44,12 @@ export const CANONICAL_FIELDS = [
   'expected_start_date',
   'willing_to_relocate',
   'languages',
+  'english_proficiency',
+  'mandarin_proficiency',
+  'cantonese_proficiency',
+  'english_exam',
+  'skills',
+  'professional_qualification',
   'salary_expectation',
   'current_salary',
   'cover_letter',
@@ -40,6 +58,11 @@ export const CANONICAL_FIELDS = [
   'proudest_accomplishment',
   'additional_info',
   'referral_source',
+  'programme_interest',
+  'open_to_other_opportunities',
+  'previously_employed_here',
+  'related_to_employee',
+  'legal_declarations',
   'SENSITIVE_DO_NOT_FILL',
   'UNKNOWN',
 ] as const
@@ -264,35 +287,76 @@ const SENSITIVE_PATTERNS =
   /\b(gender|sex\b|race|ethnic|religio|veteran|disabilit|sexual\s*orientation|marital|date\s*of\s*birth|birth\s*date|\bdob\b|nationality|age\b|pregnan|criminal|convict)/i
 
 const RULES: [CanonicalField, RegExp][] = [
+  // "…please provide his/her full name & PwC email…" — employer-relation
+  // questions mention email/name in the label and must win over both rules
+  ['related_to_employee', /\brelated\s+to\s+(a|any)?\s*\w*\s*(partner|principal|employee)|\brelative\s+(work|employ)/i],
   ['email', /\be-?mail\b/i],
+  // "Country/Region Code" next to a phone input — must beat the phone rule,
+  // whose "contact number" phrasing appears in the same label (PwC/MokaHR)
+  ['phone_country_code', /\b(country|region|dial(ing)?)\s*[/-]?\s*(region\s*)?code\b/i],
   ['phone', /\b(phone|mobile|contact\s*number|tel)\b/i],
+  // Chinese-name variants (PwC campus forms) before the generic name rules —
+  // "Family name in Chinese" must NOT receive the English family name
+  ['family_name_chinese', /\b(family|last)\s*name\s*in\s*chinese|chinese\s*(family|last)\s*name/i],
+  ['given_name_chinese', /\bgiven\s*name\s*in\s*chinese|chinese\s*(given|first)\s*name/i],
   // both BEFORE full_name: "How do you pronounce your name?" and "Preferred
   // Name" (Lever) contain "name" phrasings the name rules would claim
   ['name_pronunciation', /\bpronounc/i],
-  ['preferred_name', /\b(preferred\s*name|like\s+us\s+to\s+call|nickname)\b/i],
+  ['preferred_name', /\b(preferred\s*(english\s*)?name|like\s+us\s+to\s+call|nickname)\b/i],
   ['full_name', /\b(full\s*name|your\s*name|applicant\s*name)\b/i],
   ['first_name', /\b(first|given)\s*name\b/i],
   ['last_name', /\b(last|family)\s*name|surname\b/i],
   ['linkedin_url', /linked\s*in/i],
   ['github_url', /github/i],
   ['portfolio_url', /\b(portfolio|personal\s*(web)?site|website)\b/i],
+  // employer-specific screeners (PwC "Other" block)
+  ['previously_employed_here', /\bhave\s+you\s+(ever\s+)?been\s+(employed|worked)|\bpreviously\s+(employed|worked)\s+(by|at|for|with)/i],
+  ['programme_interest', /\bprogram(me)?\b[^?]{0,40}\binterested\b|\binterested\s+in\b[^?]{0,40}\bprogram(me)?\b/i],
+  ['open_to_other_opportunities', /\b(willing|open)\s+to\s+consider\s+other|\bother\s+opportunit(y|ies)\b/i],
+  ['legal_declarations', /\b(pcaob|rule\s*102|disciplinary\s+(sanction|proceeding)|civil\s+proceeding|labou?r\s+dispute)\b/i],
   // before current_company: "notice period to your current employer" must not
   // classify as the employer-name field
   ['notice_period', /\bnotice\s*period\b/i],
   ['expected_start_date', /\b(start\s*date|earliest\s+(possible\s+)?(start|commencement)|when\s+can\s+you\s+start|date\s+available|available\s+(from|to\s+start))\b/i],
   ['willing_to_relocate', /\brelocat/i],
+  // per-language proficiency selects (HK forms) before the generic language rule
+  ['english_exam', /\benglish\s+(examination|exam|test)\b/i],
+  ['english_proficiency', /\benglish\b.{0,20}proficien|proficien.{0,20}\benglish\b/i],
+  ['mandarin_proficiency', /\b(mandarin|putonghua)\b/i],
+  ['cantonese_proficiency', /\bcantonese\b/i],
   ['languages', /\blanguage/i],
+  ['skills', /\bskills?\b/i],
   ['current_company', /\b(current|present)\s*(company|employer)\b/i],
   ['current_title', /\b(current|present|most\s+recent)\s*(role|title|position)\b/i],
   ['years_experience', /\byears?\s*(of)?\s*(work\s*)?experience\b/i],
+  ['department', /\bdepartment\b/i],
+  ['employee_type', /\bemploy(ee|ment)\s*type\b/i],
+  ['responsibilities', /\bresponsibilit|\bduties\b/i],
+  // before the school/education rules: "certificates of graduation … official
+  // school transcript" (PwC) is a graduation-date question, not a school field
+  ['graduation_date', /\bgraduat/i],
+  // "Professional qualification" before the degree/education rules that also
+  // use the word qualification
+  ['professional_qualification', /\bprofessional\s+qualification|\bcertification\b/i],
   // "highest qualification / education level" must win over the degree and
   // institution rules below, which also mention qualification/education words
   ['highest_education_level', /\b(highest\s*(level\s*of\s*)?(education|qualification|degree)|education\s*level)\b/i],
+  // "Country/Region of School" before both the institution rule (school) and
+  // the location rule (country)
+  ['school_country', /\b(country|region)[^?]{0,15}\bof\s+school|school[^?]{0,15}\b(country|region)\b/i],
   ['education_institution', /\b(university|school|institution|college)\b/i],
-  ['degree', /\b(degree|qualification|major)\b/i],
-  ['graduation_date', /\bgraduat/i],
-  ['work_authorization', /\b(work\s*authoriz|authoriz.*work|right\s*to\s*work|work\s*permit|legally\s*(entitled|authorized))/i],
+  ['major', /\bmajor\b/i],
+  ['degree', /\b(degree|qualification)\b/i],
+  ['academic_ranking', /\b(academic|class)\s+rank|ranking\b/i],
+  // "Do you REQUIRE work authorisation or visa?" asks the sponsorship
+  // question — the authorized-to-work rule below would invert the answer
+  ['visa_sponsorship_required', /\brequire[sd]?\b[^?]{0,40}\b(authori[sz]ation|visa|sponsor)/i],
+  ['work_authorization', /\b(work\s*authori[sz]|authori[sz].*work|right\s*to\s*work|work\s*permit|legally\s*(entitled|authori[sz]ed))/i],
   ['visa_sponsorship_required', /\b(visa|sponsor)/i],
+  // citizenship before location: "Country/Region (Citizenship)" contains country
+  ['citizenship_status', /\bcitizenship\s+status\b/i],
+  ['citizenship', /\bcitizenship\b/i],
+  ['country_of_birth', /\b(country|place|region)[^?]{0,15}\bof\s+birth\b/i],
   // "current salary" before the generic salary rule — expected vs drawn are
   // different questions with different answers
   ['current_salary', /\b(current|present|latest|last)\s*(monthly\s*|annual\s*)?(salary|pay|compensation)\b/i],
@@ -301,8 +365,9 @@ const RULES: [CanonicalField, RegExp][] = [
   ['proudest_accomplishment', /\b(proudest|favou?rite\s+project|greatest\s+accomplishment)\b/i],
   ['why_this_role', /\bwhy\s+(do\s+you\s+want\s+)?(this|the)\s+(role|position|job)\b/i],
   ['why_this_company', /\bwhy\s+(do\s+you\s+want\s+to\s+(work|join)|us|our\s+company)\b/i],
-  // "how you heard about" (Lever) and "how did you hear" (Greenhouse) both count
-  ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|referr(al|ed))\b/i],
+  // "how you heard about" (Lever), "how did you hear" (Greenhouse), "from
+  // which channel did you learn about" (PwC/MokaHR) all count
+  ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|which\s+channel|where\s+did\s+you\s+(find|learn|see)|referr(al|ed))\b/i],
   ['location', /\b(location|city|address|country)\b/i],
 ]
 
@@ -331,26 +396,57 @@ export interface AnswerQuestion {
   key: CanonicalField
   question: string
   hint: string
+  group: string
 }
 
 export const ANSWER_QUESTIONS: AnswerQuestion[] = [
-  { key: 'preferred_name', question: 'Preferred name / what should we call you?', hint: 'e.g. TZ — defaults to your first name if blank' },
-  { key: 'name_pronunciation', question: 'How do you pronounce your name?', hint: 'e.g. TEEN-zhee KOO' },
-  { key: 'proudest_accomplishment', question: 'Proudest accomplishment / favorite project (default answer)', hint: 'A few sentences — used when a form asks for your proudest work' },
-  { key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
-  { key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
-  { key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
-  { key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes — Hong Kong resident' },
-  { key: 'visa_sponsorship_required', question: 'Will you require visa sponsorship?', hint: 'e.g. No' },
-  { key: 'notice_period', question: 'Notice period / availability', hint: 'e.g. Available immediately' },
-  { key: 'expected_start_date', question: 'Earliest start date', hint: 'e.g. 1 June 2026 — or Immediately' },
-  { key: 'salary_expectation', question: 'Expected salary', hint: 'e.g. HKD 25,000/month' },
-  { key: 'current_salary', question: 'Current / most recent salary', hint: 'e.g. HKD 20,000/month — or Prefer not to disclose' },
-  { key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
-  { key: 'highest_education_level', question: 'Highest education level', hint: "e.g. Bachelor's degree (in progress)" },
-  { key: 'languages', question: 'Languages you speak', hint: 'e.g. English (fluent), Mandarin (native), Cantonese (conversational)' },
-  { key: 'willing_to_relocate', question: 'Willing to relocate?', hint: 'e.g. Yes — open to relocating within Asia' },
-  { key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
+  // Identity
+  { group: 'Identity', key: 'preferred_name', question: 'Preferred name / what should we call you?', hint: 'e.g. TZ — defaults to your first name if blank' },
+  { group: 'Identity', key: 'name_pronunciation', question: 'How do you pronounce your name?', hint: 'e.g. TEEN-zhee KOO' },
+  { group: 'Identity', key: 'family_name_chinese', question: 'Family name in Chinese', hint: 'e.g. 邱 — or N/A if not applicable' },
+  { group: 'Identity', key: 'given_name_chinese', question: 'Given name in Chinese', hint: 'e.g. 天志 — or N/A if not applicable' },
+  // Links
+  { group: 'Links', key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
+  { group: 'Links', key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
+  { group: 'Links', key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
+  // Work eligibility
+  { group: 'Work eligibility', key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes — Hong Kong resident' },
+  { group: 'Work eligibility', key: 'visa_sponsorship_required', question: 'Do you require visa sponsorship / work authorisation?', hint: 'e.g. No' },
+  { group: 'Work eligibility', key: 'citizenship', question: 'Country/Region of citizenship', hint: 'e.g. Malaysia' },
+  { group: 'Work eligibility', key: 'citizenship_status', question: 'Citizenship / residency status', hint: 'e.g. Hong Kong resident (student visa)' },
+  { group: 'Work eligibility', key: 'country_of_birth', question: 'Country/Region of birth (only filled if you answer it)', hint: 'e.g. Malaysia — leave blank to always fill manually' },
+  // Availability & pay
+  { group: 'Availability & pay', key: 'notice_period', question: 'Notice period / availability', hint: 'e.g. Available immediately' },
+  { group: 'Availability & pay', key: 'expected_start_date', question: 'Earliest start date', hint: 'e.g. 1 June 2026 — or Immediately' },
+  { group: 'Availability & pay', key: 'salary_expectation', question: 'Expected salary', hint: 'e.g. HKD 25,000/month' },
+  { group: 'Availability & pay', key: 'current_salary', question: 'Current / most recent salary', hint: 'e.g. HKD 20,000/month — or Prefer not to disclose' },
+  { group: 'Availability & pay', key: 'willing_to_relocate', question: 'Willing to relocate?', hint: 'e.g. Yes — open to relocating within Asia' },
+  // Education
+  { group: 'Education', key: 'highest_education_level', question: 'Highest education level', hint: "e.g. Bachelor's degree (in progress)" },
+  { group: 'Education', key: 'graduation_date', question: 'Expected graduation / certificate date', hint: 'e.g. 2026-06-30' },
+  { group: 'Education', key: 'school_country', question: 'Country/Region of your school', hint: 'e.g. Hong Kong SAR' },
+  { group: 'Education', key: 'major', question: 'Major / field of study', hint: 'e.g. Computer Engineering' },
+  { group: 'Education', key: 'academic_ranking', question: 'Academic ranking', hint: 'e.g. Top 10% — or Not ranked' },
+  // Experience
+  { group: 'Experience', key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
+  { group: 'Experience', key: 'department', question: 'Department (latest role)', hint: 'e.g. Engineering' },
+  { group: 'Experience', key: 'employee_type', question: 'Employment type (latest role)', hint: 'e.g. Internship' },
+  { group: 'Experience', key: 'proudest_accomplishment', question: 'Proudest accomplishment / favorite project (default answer)', hint: 'A few sentences — used when a form asks for your proudest work' },
+  // Languages & skills
+  { group: 'Languages & skills', key: 'languages', question: 'Languages you speak', hint: 'e.g. English (fluent), Mandarin (native), Cantonese (conversational)' },
+  { group: 'Languages & skills', key: 'english_proficiency', question: 'English proficiency', hint: 'e.g. Fluent' },
+  { group: 'Languages & skills', key: 'mandarin_proficiency', question: 'Mandarin / Putonghua proficiency', hint: 'e.g. Native' },
+  { group: 'Languages & skills', key: 'cantonese_proficiency', question: 'Cantonese proficiency', hint: 'e.g. Conversational' },
+  { group: 'Languages & skills', key: 'english_exam', question: 'Public English examination taken', hint: 'e.g. IELTS — or None' },
+  { group: 'Languages & skills', key: 'skills', question: 'Top skill (single answer for skill dropdowns)', hint: 'e.g. Python' },
+  { group: 'Languages & skills', key: 'professional_qualification', question: 'Professional qualification', hint: 'e.g. None' },
+  // Employer questions
+  { group: 'Employer questions', key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
+  { group: 'Employer questions', key: 'programme_interest', question: 'Programme you are applying to (update per season)', hint: 'e.g. FY27 Winter Intern' },
+  { group: 'Employer questions', key: 'open_to_other_opportunities', question: 'Willing to consider other opportunities?', hint: 'e.g. Yes' },
+  { group: 'Employer questions', key: 'previously_employed_here', question: 'Previously employed by the company you apply to? (default)', hint: 'e.g. No' },
+  { group: 'Employer questions', key: 'related_to_employee', question: 'Related to an employee of the company? (default)', hint: 'e.g. No' },
+  { group: 'Employer questions', key: 'legal_declarations', question: 'Legal/regulatory declarations (civil proceedings, disputes…)', hint: 'e.g. No — applies to the standard compliance checklist' },
 ]
 
 export const ANSWERABLE_KEYS = new Set<CanonicalField>(ANSWER_QUESTIONS.map((q) => q.key))
@@ -395,15 +491,46 @@ export function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value
   el.dispatchEvent(new EventCtor('change', { bubbles: true }))
 }
 
+const MONTH_NAMES = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+
+// Date-part selects (PwC/MokaHR education periods, graduation dates): a
+// "2026-06-30" or "Jun 2026" answer must land as "2026" in a year select and
+// as "6"/"Jun"/"June" in a month select — the raw string matches nothing.
+function datePartTarget(value: string, options: HTMLOptionElement[]): string | null {
+  const texts = options.map((o) => (o.textContent ?? '').trim()).filter(Boolean)
+  if (texts.length === 0) return null
+  const nonEmpty = texts.filter((t) => !/select|please|choose/i.test(t))
+  if (nonEmpty.length === 0) return null
+  if (nonEmpty.every((t) => /^(19|20)\d{2}$/.test(t))) {
+    return /(19|20)\d{2}/.exec(value)?.[0] ?? null
+  }
+  const numericMonths = nonEmpty.every((t) => /^\d{1,2}$/.test(t) && Number(t) >= 1 && Number(t) <= 12)
+  const namedMonths = nonEmpty.every((t) => MONTH_NAMES.includes(t.slice(0, 3).toLowerCase()))
+  if (numericMonths || namedMonths) {
+    const lower = value.toLowerCase()
+    let month = MONTH_NAMES.findIndex((m) => lower.includes(m)) + 1
+    if (month === 0) {
+      const iso = /\b(19|20)\d{2}[-/](\d{1,2})/.exec(value)
+      if (iso) month = Number(iso[2])
+    }
+    if (month < 1 || month > 12) return null
+    return numericMonths ? String(month) : MONTH_NAMES[month - 1]
+  }
+  return null
+}
+
 function fillSelect(el: HTMLSelectElement, value: string): boolean {
-  const target = value.trim().toLowerCase()
   const options = Array.from(el.options)
   const text = (o: HTMLOptionElement) => (o.textContent ?? '').trim().toLowerCase()
-  const match =
-    options.find((o) => o.value.trim().toLowerCase() === target) ??
-    options.find((o) => text(o) === target) ??
-    options.find((o) => text(o) !== '' && text(o).includes(target)) ??
-    options.find((o) => text(o) !== '' && target.includes(text(o)))
+  const findFor = (needle: string) =>
+    options.find((o) => o.value.trim().toLowerCase() === needle) ??
+    options.find((o) => text(o) === needle) ??
+    options.find((o) => text(o) !== '' && text(o).includes(needle)) ??
+    options.find((o) => text(o) !== '' && needle.includes(text(o)))
+  // year/month selects must match on the extracted date part ONLY — the
+  // generic substring fallback would happily match the "2" in "2026-06-30"
+  const datePart = datePartTarget(value, options)
+  const match = datePart !== null ? findFor(datePart.toLowerCase()) : findFor(value.trim().toLowerCase())
   if (!match) return false
   el.value = match.value
   const win = el.ownerDocument.defaultView
@@ -521,11 +648,17 @@ export function verifyFill(doc: Document, suggestions: FieldSuggestion[]): { sel
         return { selector: s.selector, ok: idx !== -1 && checked === idx, actual: checked === -1 ? '' : labels[checked] }
       }
       const actual = typeof el.value === 'string' ? el.value : ''
-      const ok =
-        actual === coerceValueForControl(el, s.value!) ||
-        // selects report the option VALUE; the suggestion may match its text
-        (el instanceof (doc.defaultView?.HTMLSelectElement ?? HTMLSelectElement) &&
-          ((el as HTMLSelectElement).selectedOptions[0]?.textContent ?? '').trim().toLowerCase() === s.value!.trim().toLowerCase())
+      let ok = actual === coerceValueForControl(el, s.value!)
+      if (!ok && el instanceof (doc.defaultView?.HTMLSelectElement ?? HTMLSelectElement)) {
+        // selects report the option VALUE; the suggestion may match its text,
+        // or — for year/month selects — the extracted date part
+        const select = el as HTMLSelectElement
+        const selectedText = (select.selectedOptions[0]?.textContent ?? '').trim().toLowerCase()
+        const datePart = datePartTarget(s.value!, Array.from(select.options))
+        ok =
+          selectedText === s.value!.trim().toLowerCase() ||
+          (datePart !== null && selectedText === datePart.toLowerCase())
+      }
       return { selector: s.selector, ok, actual }
     })
 }

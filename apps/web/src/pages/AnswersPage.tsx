@@ -69,23 +69,29 @@ export function AnswersPage() {
         </div>
       </div>
 
-      <section className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100">
-        {ANSWER_QUESTIONS.map((q) => (
-          <label key={q.key} className="block px-5 py-4">
-            <span className="text-sm font-medium text-slate-900">{q.question}</span>
-            <input
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={q.hint}
-              value={answers[q.key] ?? ''}
-              onChange={(e) => edit(q.key, e.target.value)}
-            />
-          </label>
-        ))}
-      </section>
+      {[...new Set(ANSWER_QUESTIONS.map((q) => q.group))].map((group) => (
+        <section key={group}>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{group}</h2>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100">
+            {ANSWER_QUESTIONS.filter((q) => q.group === group).map((q) => (
+              <label key={q.key} className="block px-5 py-4">
+                <span className="text-sm font-medium text-slate-900">{q.question}</span>
+                <input
+                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={q.hint}
+                  value={answers[q.key] ?? ''}
+                  onChange={(e) => edit(q.key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        </section>
+      ))}
 
       <p className="text-xs text-slate-400">
-        Demographic and voluntary-disclosure questions (gender, ethnicity, veteran status, …) are never asked here and
-        never auto-filled — those stay yours to answer.
+        Dropdown questions fill by matching your answer against the option list — write answers exactly as the
+        dropdown shows them (e.g. "Hong Kong SAR", not "HK"). Demographic and voluntary-disclosure questions (gender,
+        date of birth, ethnicity, criminal history, …) are never asked here and never auto-filled — those stay yours.
       </p>
     </div>
   )

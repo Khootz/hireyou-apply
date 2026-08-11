@@ -28,9 +28,13 @@
 1. `Start HireYou Apply.bat` (API :3100, web :5180).
 2. `npm run build:extension`, then `chrome://extensions` → HireYou Apply → **⟳ Reload**.
 3. Extension ⚙: API URL `http://127.0.0.1:3100`, token = `API_AUTH_TOKEN` from `.env`.
-4. `localhost:5180` → **Autofill answers** → fill all **17** (incl. preferred name, name
-   pronunciation, proudest accomplishment). Make sure your **profile has a location** — it feeds
-   Location/Country fields.
+4. `localhost:5180` → **Autofill answers** → fill all **39** (now grouped: Identity, Links, Work
+   eligibility, Availability & pay, Education, Experience, Languages & skills, Employer
+   questions). Make sure your **profile has a location** — it feeds Location/Country fields.
+   **Dropdown tip:** selects fill by matching your answer against the option text — open the
+   dropdown on the real form once and write the answer exactly as the option reads
+   ("Hong Kong SAR", not "HK"). Dates: use `2026-06-30` style — year/month split widgets extract
+   the right part automatically.
 5. For essay questions ("Why do you want to work at X?"): **save the job first** (Add Job with the
    JD pasted, or via the extension), then pick it in the panel's **"Tailor essay answers to a
    saved job"** dropdown before scanning. No job selected = essays honestly left blank.
@@ -58,7 +62,22 @@ Any `job-boards.greenhouse.io` / `boards.greenhouse.io` posting → **Apply** (A
 the machine eval). Same flow. Expect: contact + Country fill, react-select dropdowns get driven
 or say "pick manually", EEO rows amber.
 
-## Test 3 — IBM, Deloitte, any corporate portal (~15 min, the frontier)
+## Test 3 — PwC on MokaHR (Chinese campus-recruitment ATS)
+
+Built from the transcribed question list of the live form (MokaHR is unreachable from this
+machine — your browser session is the only way in). With the 39 answers filled, expect to fill:
+programme/other-opportunities/visa selects, Chinese + English name variants, preferred English
+name, mobile (**local number only** — the +852 goes into the code select now), citizenship +
+status, current country, graduation date, school country, major (+ major type), academic ranking,
+department, employee type, responsibilities (from your latest profile role), the three language
+proficiencies, English exam, skill, professional qualification, the b–e legal declarations,
+related-to-employee, previously-employed, and referral channel.
+
+Stays manual **by design**: Gender, Date of Birth, the criminal-proceeding and conviction
+questions, and the accuracy-confirmation checkbox. Repeating "Add" sections (second education
+period, awards): click Add first, then **re-scan** — new fields only exist after they render.
+
+## Test 4 — IBM, Deloitte, any corporate portal (~15 min, the frontier)
 
 Big-corporate careers run on a handful of ATS platforms under the hood — the flow is always the
 same: get to the actual form page (usually after creating an account), then **Scan this page** on

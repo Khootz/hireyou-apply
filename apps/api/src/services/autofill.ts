@@ -36,6 +36,14 @@ const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>>
   education_institution: (p) => educationEntry(p)?.organisation ?? '',
   degree: (p) => educationEntry(p)?.role ?? '',
   graduation_date: (p) => educationEntry(p)?.end_date ?? '',
+  // split phone widgets: the code select gets "+852", the number the rest
+  phone_country_code: (p) => /^\+\d{1,4}/.exec(p.contact.phone.trim())?.[0] ?? '',
+  responsibilities: (p) =>
+    (latestExperienceEntry(p)?.bullets ?? [])
+      .map((b) => b.text)
+      .filter(Boolean)
+      .join(' ')
+      .slice(0, 1000),
 }
 
 // "THIEN ZHI, KHOO" is GIVEN, FAMILY (HK convention); without a comma the
@@ -196,6 +204,10 @@ export async function suggestForFields(
 
   const answers = getAnswers(sqlite)
 
+  // a separate country-code control on the form means phone inputs want the
+  // LOCAL number — "+852 4492 4625" into a code-splitting widget truncates
+  const formHasCodeField = fields.some((f) => classified.get(f.selector) === 'phone_country_code')
+
   return fields.map((f): FieldSuggestion => {
     const canonical = classified.get(f.selector) ?? 'UNKNOWN'
     if (canonical === 'SENSITIVE_DO_NOT_FILL') {
@@ -209,7 +221,10 @@ export async function suggestForFields(
       }
     }
     // a saved application answer beats a derived guess for the keys it covers
-    const raw = answers[canonical] ?? DIRECT_COPY[canonical]?.(profile)
+    let raw = answers[canonical] ?? DIRECT_COPY[canonical]?.(profile)
+    if (canonical === 'phone' && formHasCodeField && raw) {
+      raw = raw.trim().replace(/^\+\d{1,4}[\s-]*/, '')
+    }
     if (raw) {
       const value = f.maxlength ? raw.slice(0, f.maxlength) : raw
       return { selector: f.selector, canonical, label: f.label, value, do_not_fill: false }
