@@ -23,16 +23,71 @@ export async function closePdfBrowser(): Promise<void> {
   }
 }
 
+// One-page auto-fit for resumes: measure the laid-out height at print width
+// and step through progressively tighter (still readable) presets until the
+// content fits a single A4 page. A resume that overflows the floor preset is
+// genuinely too long and honestly renders as two pages.
+interface FitPreset {
+  marginMm: number
+  css: string
+}
+
+const FIT_PRESETS: FitPreset[] = [
+  { marginMm: 18, css: '' }, // the default typography
+  {
+    marginMm: 16,
+    css: `body { font-size: 10pt; line-height: 1.3; } .section-title { margin: 8pt 0 4pt; } li { margin-bottom: 1pt; }`,
+  },
+  {
+    marginMm: 14,
+    css: `body { font-size: 9.5pt; line-height: 1.26; } .section-title { margin: 7pt 0 3.5pt; } li { margin-bottom: 0.5pt; } .name { font-size: 15pt; }`,
+  },
+  {
+    marginMm: 12,
+    css: `body { font-size: 9pt; line-height: 1.22; } .section-title { margin: 6pt 0 3pt; } li { margin-bottom: 0; } .name { font-size: 14pt; }`,
+  },
+]
+
+const A4_HEIGHT_MM = 297
+const A4_WIDTH_MM = 210
+const PX_PER_MM = 96 / 25.4
+
 export async function renderDocumentPdf(content: DocumentContent): Promise<Buffer> {
   const html = content.kind === 'resume' ? resumeHtml(content) : coverLetterHtml(content)
   const b = await getBrowser()
   const page = await b.newPage()
   try {
     await page.setContent(html, { waitUntil: 'load' })
+
+    let chosen = FIT_PRESETS[0]
+    if (content.kind === 'resume') {
+      for (const preset of FIT_PRESETS) {
+        // measure at the exact print content width so line wrapping matches
+        await page.setViewport({
+          width: Math.round((A4_WIDTH_MM - 2 * preset.marginMm) * PX_PER_MM),
+          height: 1024,
+        })
+        await page.evaluate((css) => {
+          let s = document.getElementById('fit-override')
+          if (!s) {
+            s = document.createElement('style')
+            s.id = 'fit-override'
+            document.head.appendChild(s)
+          }
+          s.textContent = css
+        }, preset.css)
+        const contentHeight = (await page.evaluate(() => document.body.scrollHeight)) as number
+        const available = (A4_HEIGHT_MM - 2 * preset.marginMm) * PX_PER_MM - 8 // safety buffer
+        chosen = preset
+        if (contentHeight <= available) break
+      }
+    }
+
+    const mm = `${chosen.marginMm}mm`
     const pdf = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '18mm', bottom: '18mm', left: '18mm', right: '18mm' },
+      margin: { top: mm, bottom: mm, left: mm, right: mm },
     })
     return Buffer.from(pdf)
   } finally {
