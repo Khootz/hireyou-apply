@@ -226,7 +226,8 @@ const RULES: [CanonicalField, RegExp][] = [
   ['cover_letter', /\bcover\s*letter\b/i],
   ['why_this_role', /\bwhy\s+(do\s+you\s+want\s+)?(this|the)\s+(role|position|job)\b/i],
   ['why_this_company', /\bwhy\s+(do\s+you\s+want\s+to\s+(work|join)|us|our\s+company)\b/i],
-  ['referral_source', /\b(how\s+did\s+you\s+hear|referr(al|ed))\b/i],
+  // "how you heard about" (Lever) and "how did you hear" (Greenhouse) both count
+  ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|referr(al|ed))\b/i],
   ['location', /\b(location|city|address)\b/i],
 ]
 
@@ -409,6 +410,15 @@ export function classifyFieldDeterministic(field: FieldInfo): CanonicalField {
   if (SENSITIVE_PATTERNS.test(haystack)) return 'SENSITIVE_DO_NOT_FILL'
   if (field.options.length > 0 && field.options.length <= 30 && SENSITIVE_PATTERNS.test(field.options.join(' ')))
     return 'SENSITIVE_DO_NOT_FILL'
+
+  // Tick-boxes are never filled, so a value-bearing canonical is always wrong
+  // — on Lever's real language checklist, "Telugu (TEL)" hit the phone rule.
+  // Sensitive stays above: the amber warning must render on EEO radio groups.
+  if (field.input_type === 'checkbox' || field.input_type === 'radio') return 'UNKNOWN'
+
+  // "How do you pronounce your name?" (Lever) must not hit the name rules —
+  // typing the actual name into a pronunciation field is a wrong fill
+  if (/pronounc/i.test(haystack)) return 'UNKNOWN'
 
   const ac = field.autocomplete.toLowerCase().trim()
   if (ac && AUTOCOMPLETE_MAP[ac]) return AUTOCOMPLETE_MAP[ac]

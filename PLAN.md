@@ -13,6 +13,15 @@ Flow: student opens a real posting → extension detects it → job saved to tra
 
 **Best-effort:** JobsDB + CTgoodjobs grey-hint field suggestions. If their apply flows resist (external redirects, login walls), acceptable landing = JD extraction + materials generation, no form hints. Amploy itself pivoted away from these boards; do not sink loops here.
 
+> **Scope pivot 2026-08-11 (user decision):** JobsDB and CTgoodjobs are ABANDONED as autofill
+> targets — both are easy-apply platforms, nothing to showcase. The autofill target is now
+> **individual corporate application sites** (IBM, Deloitte, and any company's own careers flow —
+> ATS families: Greenhouse, Lever, Workday, SuccessFactors, Taleo, iCIMS, Ashby). The engine was
+> already site-agnostic ("Scan this page" works on any http(s) page); machine evals now cover real
+> captured Greenhouse (Anthropic), Lever (Palantir) and OKX forms. The "out of v1" line below is
+> superseded for autofill scanning; deep per-ATS integrations (session handling, multi-step state)
+> remain out.
+
 **Hard rules (from teardown, non-negotiable):**
 1. Never auto-submit anything. Suggestions only; the student is always the hands.
 2. Suggestion-first autofill: grey hint text rendered near/in fields, **no value injection** in v1 (sidesteps the React-controlled-input trap entirely).

@@ -108,4 +108,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - JobsDB dropped from the manual checklist per user (easy-apply, doesn't showcase); guide now leads with CTgoodjobs + public Greenhouse forms (no login, same form family as the machine eval) as the demo path.
 - Flake hardening: global vitest hookTimeout 30s / testTimeout 15s (Chrome shutdown + pdfjs exceeded 10s/5s defaults under parallel load — 3 different suites flaked on a loaded machine, all pass in isolation).
 
+**2026-08-11 — SCOPE PIVOT: corporate ATS sites (user decision) → GREEN (84 passed, 1 skipped)**
+- JobsDB + CTgoodjobs ABANDONED as autofill targets (easy-apply, nothing to showcase). New target: individual corporate application sites (IBM, Deloitte, any company's own flow). PLAN.md §1 addendum records it.
+- Engine was already site-agnostic (content script on all http(s) + on-demand injection). New machine proof: **real Palantir apply form captured live from Lever** (jobs.lever.co, via undici through the proxy — curl exits 43 on this box, use node/undici for captures) → `tests/fixtures/forms/lever-apply.html` + `autofill-lever.test.ts` eval (discover → classify → suggest → fill → verify; 8 core fields + university/referral/why-company/cover-letter all deterministic, generative fields null without job context, empty profile location honestly skipped).
+- The capture surfaced 3 live classifier bugs, all fixed + regression-locked: "Telugu (TEL)" checkbox → phone (tick-boxes now classify only to SENSITIVE/UNKNOWN and are excluded from the tier-2 LLM batch — they're never filled, so value canonicals are always wrong); "How do you pronounce your name?" → full_name (pronounc guard); "how you heard about" missing the referral rule (Lever phrasing).
+- Corporate ATS eval coverage now: Greenhouse (Anthropic), Lever (Palantir), OKX. Guide rewritten corporate-first with per-ATS expectations (Workday multi-step = scan per step; SuccessFactors/Taleo iframes = known limit).
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)

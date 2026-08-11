@@ -125,7 +125,10 @@ export async function suggestForFields(
   for (const f of fields) {
     const canonical = cached?.get(f.selector) ?? classifyFieldDeterministic(f)
     classified.set(f.selector, canonical)
-    if (!cached && canonical === 'UNKNOWN') unknown.push(f)
+    // tick-boxes never receive values, so the model has nothing to add —
+    // a Lever language checklist would otherwise stuff 40 junk items in here
+    if (!cached && canonical === 'UNKNOWN' && f.input_type !== 'checkbox' && f.input_type !== 'radio')
+      unknown.push(f)
   }
 
   // Tier 2: ONE batched call for everything the rules couldn't name.
