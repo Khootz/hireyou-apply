@@ -1,6 +1,7 @@
 import {
   applyFillToDocument,
   coerceValueForControl,
+  datePartTarget,
   discoverFields,
   isCombobox,
   setNativeValue,
@@ -166,53 +167,84 @@ async function waitFor(cond: () => boolean, timeoutMs: number, stepMs = 60): Pro
   return cond()
 }
 
-// Drive a react-select style combobox like a user: type → WAIT for the menu
-// to open and filter → click the matching option (react-select selects on
-// mousedown, and clicking is far more reliable than Enter) → WAIT for the
-// rendered selection → close the menu before anyone touches the next field.
-// Returns true only if the selection is verifiably rendered.
+// Drive a combobox like a user. Two widget families:
+//  - react-select style: type → menu filters → click the option
+//  - AntD/MokaHR style: the inner input is READONLY, typing does nothing —
+//    the dropdown opens on CLICK and options render in a body-level portal
+// Strategy: try typing; if no menu opened, click the widget shell open.
+// Match options by text (with date-part extraction for year/month pickers),
+// click the match, verify the rendered selection. Returns true only if the
+// selection is verifiably rendered.
 async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolean> {
   const pressKey = (key: string, keyCode: number) => {
     for (const type of ['keydown', 'keyup'] as const) {
       el.dispatchEvent(new KeyboardEvent(type, { key, keyCode, which: keyCode, bubbles: true, cancelable: true }))
     }
   }
+  const clickOn = (target: HTMLElement) => {
+    for (const type of ['mousedown', 'mouseup', 'click'] as const) {
+      target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }))
+    }
+  }
   const menuOpen = () => el.getAttribute('aria-expanded') === 'true'
   const menuOptions = (): HTMLElement[] => {
     const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
-    const scope = (listId && document.getElementById(listId)) || el.closest('.select-shell') || document.body
-    return Array.from(scope.querySelectorAll<HTMLElement>('[role="option"], [class*="select__option"]'))
+    const scoped =
+      (listId && document.getElementById(listId)) ||
+      el.closest('.select-shell') ||
+      null
+    const nodes = Array.from(
+      (scoped ?? document.body).querySelectorAll<HTMLElement>(
+        '[role="option"], [class*="select__option"], [class*="select-item-option"]',
+      ),
+    )
+    // portal dropdowns (AntD) live under <body>; skip options of CLOSED menus
+    return nodes.filter((o) => o.offsetParent !== null || scoped !== null)
   }
-  // the committed selection renders OUTSIDE the menu (react-select's
-  // single-value node) — checking the whole shell would false-positive on
-  // the still-open menu showing the same text
+  // the committed selection renders OUTSIDE the menu — react-select's
+  // single-value node or AntD's selection-item
   const selectedText = () => {
-    const shell = el.closest('.select-shell, .select__container') ?? el.parentElement?.parentElement
-    return (shell?.querySelector('[class*="single-value"], [class*="multi-value"]')?.textContent ?? '').toLowerCase()
+    const shell =
+      el.closest('.select-shell, .select__container, [class*="ant-select"]') ?? el.parentElement?.parentElement
+    const node = shell?.querySelector('[class*="single-value"], [class*="multi-value"], [class*="selection-item"]')
+    return ((node?.getAttribute('title') || node?.textContent) ?? '').toLowerCase()
   }
   const target = value.trim().toLowerCase()
 
   el.focus()
-  setNativeValue(el, value)
-  await waitFor(() => menuOpen() && menuOptions().length > 0, 2000)
+  if (!el.readOnly) setNativeValue(el, value)
+  let opened = await waitFor(() => menuOpen() && menuOptions().length > 0, el.readOnly ? 300 : 2000)
+  if (!opened) {
+    // typing didn't open it (readonly inner input) — click the widget open,
+    // walking out from the input to the clickable shell
+    const shells = [el, el.parentElement, el.closest<HTMLElement>('[class*="selector"], [class*="select"]')]
+    for (const shell of shells) {
+      if (!shell) continue
+      clickOn(shell)
+      opened = await waitFor(() => menuOpen() && menuOptions().length > 0, 700)
+      if (opened) break
+    }
+  }
 
   const options = menuOptions()
   const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
+  // year/month pickers: "2026-06-30" must match the "2026" / "6" option
+  const datePart = datePartTarget(value, options.map((o) => o.textContent ?? ''))?.toLowerCase()
+  const findFor = (needle: string) =>
+    options.find((o) => text(o) === needle) ??
+    options.find((o) => text(o).includes(needle)) ??
+    options.find((o) => needle.includes(text(o)) && text(o) !== '')
   const match =
-    options.find((o) => text(o) === target) ??
-    options.find((o) => text(o).includes(target)) ??
-    options.find((o) => target.includes(text(o)) && text(o) !== '') ??
+    (datePart ? findFor(datePart) : findFor(target)) ??
     // the type-ahead already filtered: a single survivor IS the match
     (options.length === 1 ? options[0] : undefined)
 
   let ok = false
   if (match) {
     const chosen = text(match)
-    for (const type of ['mousedown', 'mouseup', 'click'] as const) {
-      match.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }))
-    }
+    clickOn(match)
     ok = await waitFor(() => selectedText().includes(chosen), 1500)
-  } else if (options.length > 0) {
+  } else if (options.length > 0 && !el.readOnly) {
     // no readable option nodes matched — fall back to keyboard selection
     pressKey('Enter', 13)
     ok = await waitFor(() => selectedText().includes(target), 1000)
@@ -220,7 +252,7 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
 
   // leave the field clean and CLOSED whatever happened — a menu left open
   // swallows the next field's events
-  if (!ok) setNativeValue(el, '')
+  if (!ok && !el.readOnly) setNativeValue(el, '')
   if (menuOpen()) pressKey('Escape', 27)
   el.blur()
   await waitFor(() => !menuOpen(), 800)

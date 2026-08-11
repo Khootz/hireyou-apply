@@ -361,7 +361,10 @@ async function scanForm(): Promise<void> {
       status.textContent = 'No confident suggestions for this form — fill it manually.'
       return
     }
-    status.textContent = `${withValue.length} suggestion${withValue.length === 1 ? '' : 's'} ready.`
+    const unanswered = suggestions.filter((s) => !s.value && !s.do_not_fill).length
+    status.textContent =
+      `${withValue.length} suggestion${withValue.length === 1 ? '' : 's'} ready.` +
+      (unanswered > 0 ? ` ${unanswered} field${unanswered === 1 ? ' has' : 's have'} no saved answer — see the Answers page.` : '')
     results.innerHTML =
       `<button class="primary" id="do-autofill">⚡ Autofill ${withValue.length} field${withValue.length === 1 ? '' : 's'}</button>
        <div class="muted" style="font-size:12px">Fills the form for you — nothing is ever submitted automatically.</div>` +

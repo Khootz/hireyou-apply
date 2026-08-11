@@ -229,7 +229,11 @@ export function discoverFields(doc: Document): FieldInfo[] {
     // internals (e.g. react-select's proxy "required" input), never real fields
     if (el.getAttribute('aria-hidden') === 'true') return
     if (el.getAttribute('tabindex') === '-1') return
-    if (el.hasAttribute('disabled') || el.hasAttribute('readonly')) return
+    if (el.hasAttribute('disabled')) return
+    // readonly normally means "not a field" — EXCEPT combobox widgets (AntD/
+    // MokaHR selects), whose inner search input is readonly by design while
+    // the dropdown around it is fully interactive
+    if (el.hasAttribute('readonly') && !isCombobox(el)) return
 
     // named radios surface once, as their whole group
     const radioName = inputType === 'radio' ? el.getAttribute('name') : null
@@ -496,8 +500,9 @@ const MONTH_NAMES = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'se
 // Date-part selects (PwC/MokaHR education periods, graduation dates): a
 // "2026-06-30" or "Jun 2026" answer must land as "2026" in a year select and
 // as "6"/"Jun"/"June" in a month select — the raw string matches nothing.
-function datePartTarget(value: string, options: HTMLOptionElement[]): string | null {
-  const texts = options.map((o) => (o.textContent ?? '').trim()).filter(Boolean)
+// Takes plain option texts so combobox menus (extension) can use it too.
+export function datePartTarget(value: string, optionTexts: string[]): string | null {
+  const texts = optionTexts.map((t) => t.trim()).filter(Boolean)
   if (texts.length === 0) return null
   const nonEmpty = texts.filter((t) => !/select|please|choose/i.test(t))
   if (nonEmpty.length === 0) return null
@@ -529,7 +534,7 @@ function fillSelect(el: HTMLSelectElement, value: string): boolean {
     options.find((o) => text(o) !== '' && needle.includes(text(o)))
   // year/month selects must match on the extracted date part ONLY — the
   // generic substring fallback would happily match the "2" in "2026-06-30"
-  const datePart = datePartTarget(value, options)
+  const datePart = datePartTarget(value, options.map((o) => o.textContent ?? ''))
   const match = datePart !== null ? findFor(datePart.toLowerCase()) : findFor(value.trim().toLowerCase())
   if (!match) return false
   el.value = match.value
@@ -654,7 +659,7 @@ export function verifyFill(doc: Document, suggestions: FieldSuggestion[]): { sel
         // or — for year/month selects — the extracted date part
         const select = el as HTMLSelectElement
         const selectedText = (select.selectedOptions[0]?.textContent ?? '').trim().toLowerCase()
-        const datePart = datePartTarget(s.value!, Array.from(select.options))
+        const datePart = datePartTarget(s.value!, Array.from(select.options).map((o) => o.textContent ?? ''))
         ok =
           selectedText === s.value!.trim().toLowerCase() ||
           (datePart !== null && selectedText === datePart.toLowerCase())
