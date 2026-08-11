@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { ExperienceEntry, FactBullet, MasterProfile, ProfileSection } from '@app/shared'
 import { api, profilePdfMeta, profilePdfUrl, type CvParseResponse } from '../api'
 
@@ -42,6 +42,17 @@ const TYPE_LABEL: Record<ProfileSection['type'], string> = {
   bullets: 'Bullets',
 }
 
+// Custom pointer-based section drag: the list collapses to compact rows while
+// dragging so the whole order is visible, a pill follows the cursor, and a
+// ghost row marks the drop slot. `from` is the section's original index;
+// the drop index is measured against the list *without* the dragged item.
+interface SectionDrag {
+  from: number
+  x: number
+  y: number
+  active: boolean
+}
+
 export function ProfilePage() {
   const [profile, setProfile] = useState<MasterProfile | null>(null)
   const [saveState, setSaveState] = useState<SaveState>('loading')
@@ -51,8 +62,12 @@ export function ProfilePage() {
   const [pdfVersion, setPdfVersion] = useState(1)
   const [pages, setPages] = useState<number | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
-  const dragIndex = useRef<number | null>(null)
   const dirty = useRef(0)
+  const [drag, setDrag] = useState<SectionDrag | null>(null)
+  const [overIndex, setOverIndex] = useState(0)
+  const dragRef = useRef<SectionDrag | null>(null)
+  const overRef = useRef(0)
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
     api
@@ -93,15 +108,7 @@ export function ProfilePage() {
   const editSection = (id: string, updater: (s: ProfileSection) => ProfileSection) =>
     edit((p) => ({ ...p, sections: p.sections.map((s) => (s.id === id ? updater(s) : s)) }))
 
-  const moveSection = (index: number, delta: -1 | 1) =>
-    edit((p) => {
-      const next = [...p.sections]
-      const target = index + delta
-      if (target < 0 || target >= next.length) return p
-      ;[next[index], next[target]] = [next[target], next[index]]
-      return { ...p, sections: next }
-    })
-
+  // `to` is the insertion index in the list with the dragged item removed.
   const moveSectionTo = (from: number, to: number) =>
     edit((p) => {
       if (from === to || from < 0 || to < 0 || from >= p.sections.length || to >= p.sections.length) return p
@@ -110,6 +117,46 @@ export function ProfilePage() {
       next.splice(to, 0, moved)
       return { ...p, sections: next }
     })
+
+  const beginDrag = (i: number) => (e: ReactPointerEvent) => {
+    e.preventDefault()
+    const start: SectionDrag = { from: i, x: e.clientX, y: e.clientY, active: false }
+    dragRef.current = start
+    overRef.current = i
+    setDrag(start)
+    setOverIndex(i)
+    const onMove = (ev: PointerEvent) => {
+      const d = dragRef.current
+      if (!d) return
+      // 5px threshold so a plain click on the grip doesn't collapse the list
+      if (!d.active && Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 5) return
+      const next: SectionDrag = { from: d.from, x: ev.clientX, y: ev.clientY, active: true }
+      dragRef.current = next
+      setDrag(next)
+      let idx = 0
+      for (const row of rowRefs.current) {
+        if (!row) continue
+        const r = row.getBoundingClientRect()
+        if (ev.clientY > r.top + r.height / 2) idx++
+      }
+      overRef.current = idx
+      setOverIndex(idx)
+      if (ev.clientY < 90) window.scrollBy(0, -16)
+      else if (ev.clientY > window.innerHeight - 90) window.scrollBy(0, 16)
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      const d = dragRef.current
+      dragRef.current = null
+      setDrag(null)
+      if (d?.active) moveSectionTo(d.from, overRef.current)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+  }
 
   const removeSection = (id: string) => edit((p) => ({ ...p, sections: p.sections.filter((s) => s.id !== id) }))
 
@@ -151,7 +198,12 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
+    <div className={`mx-auto max-w-7xl px-4 py-8 space-y-6 ${drag?.active ? 'select-none cursor-grabbing' : ''}`}>
+      {drag?.active && (
+        <div className="fixed z-50 pointer-events-none w-80 rotate-1" style={{ left: drag.x - 24, top: drag.y - 22 }}>
+          <SectionPill section={profile.sections[drag.from]} floating />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-slate-900">My Resume</h1>
         <div className="flex items-center gap-3">
@@ -207,45 +259,41 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {profile.sections.map((section, i) => (
+      {drag?.active
+        ? (() => {
+            const dragged = profile.sections[drag.from]
+            const others = profile.sections.filter((_, idx) => idx !== drag.from)
+            rowRefs.current = []
+            const rows: JSX.Element[] = []
+            others.forEach((s, j) => {
+              if (j === overIndex) rows.push(<SectionPill key="__ghost" section={dragged} ghost />)
+              rows.push(
+                <div
+                  key={s.id}
+                  ref={(el) => {
+                    rowRefs.current[j] = el
+                  }}
+                >
+                  <SectionPill section={s} />
+                </div>,
+              )
+            })
+            if (overIndex >= others.length) rows.push(<SectionPill key="__ghost" section={dragged} ghost />)
+            return rows
+          })()
+        : profile.sections.map((section, i) => (
         <section
           key={section.id}
           className="bg-white rounded-xl border border-slate-200 shadow-sm"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => {
-            if (dragIndex.current !== null) moveSectionTo(dragIndex.current, i)
-            dragIndex.current = null
-          }}
         >
           <header className="flex items-center gap-2 px-5 pt-4">
             <span
-              className="cursor-grab text-slate-300 hover:text-slate-500 select-none text-lg leading-none"
+              className="cursor-grab touch-none text-slate-300 hover:text-slate-500 select-none text-lg leading-none"
               title="Drag to reorder"
-              draggable
-              onDragStart={() => {
-                dragIndex.current = i
-              }}
+              onPointerDown={beginDrag(i)}
             >
               ⠿
             </span>
-            <div className="flex flex-col">
-              <button
-                className="text-slate-400 hover:text-slate-700 disabled:opacity-25 leading-none"
-                disabled={i === 0}
-                onClick={() => moveSection(i, -1)}
-                title="Move up"
-              >
-                ▲
-              </button>
-              <button
-                className="text-slate-400 hover:text-slate-700 disabled:opacity-25 leading-none"
-                disabled={i === profile.sections.length - 1}
-                onClick={() => moveSection(i, 1)}
-                title="Move down"
-              >
-                ▼
-              </button>
-            </div>
             <input
               className="flex-1 font-semibold tracking-wide text-slate-900 uppercase text-sm bg-transparent focus:outline-none focus:border-b focus:border-blue-500"
               placeholder="SECTION TITLE"
@@ -407,6 +455,22 @@ function CvReviewDialog({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function SectionPill({ section, ghost, floating }: { section: ProfileSection; ghost?: boolean; floating?: boolean }) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-xl border bg-white px-5 py-4 ${
+        ghost ? 'border-dashed border-blue-400 bg-blue-50 opacity-50' : floating ? 'border-slate-200 shadow-xl' : 'border-slate-200 shadow-sm'
+      }`}
+    >
+      <span className="text-slate-300 text-lg leading-none select-none">⠿</span>
+      <span className="flex-1 min-w-0 truncate font-semibold tracking-wide text-slate-900 uppercase text-sm">
+        {section.title || 'Untitled'}
+      </span>
+      <span className="text-[11px] rounded-md bg-slate-100 text-slate-500 px-2 py-0.5">{TYPE_LABEL[section.type]}</span>
     </div>
   )
 }
