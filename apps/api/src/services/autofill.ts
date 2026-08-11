@@ -131,10 +131,14 @@ export async function suggestForFields(
   fields: FieldInfo[],
   job: JobRecord | null,
   fixtures = { classify: 'autofill-classify', answers: 'autofill-answers' },
+  // noCache: classify from scratch even on a fingerprint hit — the escape
+  // hatch when a cached map predates a classifier fix (fresh results still
+  // overwrite the cache, so one fresh scan heals the entry for everyone)
+  noCache = false,
 ): Promise<FieldSuggestion[]> {
   const profile = getProfile(sqlite)
   const fingerprint = formFingerprint(fields)
-  const cached = readCachedClassifications(sqlite, fingerprint)
+  const cached = noCache ? null : readCachedClassifications(sqlite, fingerprint)
   const classified = new Map<string, CanonicalField>()
   const unknown: FieldInfo[] = []
 

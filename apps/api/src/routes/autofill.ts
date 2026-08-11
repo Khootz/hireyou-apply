@@ -11,6 +11,8 @@ const BodySchema = z.object({
   fields: z.array(FieldInfoSchema).min(1).max(MAX_AUTOFILL_FIELDS),
   job_id: z.string().nullable().default(null),
   page_host: z.string().max(200).default(''),
+  // fresh scan: ignore cached classifications (they may predate rule fixes)
+  no_cache: z.boolean().default(false),
 })
 
 // Suggestion telemetry (M9): which canonical fields actually get used. The
@@ -39,7 +41,7 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
       })
     }
     const job = parsed.data.job_id ? getJob(sqlite, parsed.data.job_id) : null
-    const suggestions = await suggestForFields(sqlite, parsed.data.fields, job)
+    const suggestions = await suggestForFields(sqlite, parsed.data.fields, job, undefined, parsed.data.no_cache)
     // Harvest fixed-choice vocabularies as a side effect of every scan: the
     // form's real option lists feed the answers page's dropdowns. Never
     // blocks suggestions — a harvest failure is invisible to the caller.
@@ -59,6 +61,14 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
       /* vocab is a bonus, suggestions are the product */
     }
     return { suggestions, form_fingerprint: formFingerprint(parsed.data.fields) }
+  })
+
+  // Dev/testing escape hatch: wipe every cached classification map so the
+  // next scan of ANY form re-runs the current rules. Harvested answer
+  // vocabularies are kept — they are user-facing data, not derived state.
+  app.delete('/api/autofill/cache', async () => {
+    const cleared = sqlite.prepare(`DELETE FROM autofill_form_cache`).run().changes
+    return { cleared }
   })
 
   app.post('/api/autofill/events', async (req, reply) => {

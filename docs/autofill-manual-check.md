@@ -122,9 +122,13 @@ Checklist per page:
 The Palantir capture alone surfaced and fixed three classifier bugs, so this loop works. For any
 page that misbehaves:
 
-1. `F12` → Console → `copy(document.documentElement.outerHTML)`
-2. Paste into `tests/fixtures/forms/<company>-apply.html`
-3. Tell me the URL, what you expected, what happened.
+1. First try again with **"Fresh scan — ignore cached field matches"** ticked (under the Scan
+   button): classifications are cached per form shape, so a page scanned before a fix keeps its
+   old (wrong) matches until a fresh scan overwrites them. `DELETE /api/autofill/cache` wipes
+   every cached map at once.
+2. Still wrong? `F12` → Console → `copy(document.documentElement.outerHTML)`
+3. Paste into `tests/fixtures/forms/<company>-apply.html`
+4. Tell me the URL, what you expected, what happened.
 
 Known limits (documented, not surprises): no iframe/shadow-DOM traversal, checkboxes and consent
 questions are never auto-ticked, file uploads are never touched. Radio groups with a clear saved

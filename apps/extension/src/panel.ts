@@ -100,6 +100,9 @@ async function render(): Promise<void> {
       <label style="display:block;margin-bottom:4px">Tailor essay answers to a saved job (optional)</label>
       <select id="scan-job" style="margin-bottom:8px;max-width:100%"><option value="">No job context — facts and saved answers only</option></select>
       <button class="primary" id="scan-form">Scan this page</button>
+      <label class="muted" style="display:flex;gap:6px;align-items:center;margin-top:6px;font-size:12px;cursor:pointer">
+        <input type="checkbox" id="scan-fresh" style="margin:0"> Fresh scan — ignore cached field matches (tick after updates or wrong fills)
+      </label>
       <div id="scan-status" class="muted" style="margin-top:6px"></div>
       <div id="scan-results" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div></div>`
     document.querySelector('#scan-form')?.addEventListener('click', scanForm)
@@ -347,6 +350,7 @@ async function scanForm(): Promise<void> {
         ? `${scan.fields.length} fields found — asking about the ${fields.length} most fillable…`
         : `${fields.length} fields found — asking for suggestions…`
     const jobId = document.querySelector<HTMLSelectElement>('#scan-job')?.value || null
+    const fresh = document.querySelector<HTMLInputElement>('#scan-fresh')?.checked ?? false
     const requestStarted = Date.now()
     const { suggestions, form_fingerprint } = await api<{
       suggestions: FieldSuggestionLite[]
@@ -354,7 +358,7 @@ async function scanForm(): Promise<void> {
     }>(`/api/autofill`, {
       method: 'POST',
       // page_host lets harvested option vocabularies say where they came from
-      body: JSON.stringify({ fields, job_id: jobId, page_host: hostOf(scan.url ?? tab.url ?? '') }),
+      body: JSON.stringify({ fields, job_id: jobId, page_host: hostOf(scan.url ?? tab.url ?? ''), no_cache: fresh }),
     })
     await demoPace(requestStarted, status, fields.length)
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)

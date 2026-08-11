@@ -278,6 +278,41 @@ describe('harvested answer vocabularies (scans feed the answers-page dropdowns)'
     expect(v.english_proficiency.source_host).toBe('b.example.com')
   })
 
+  it('no_cache bypasses a stale cached classification (pre-fix maps must not outlive the fix)', async () => {
+    const field = mk('Academic Ranking', { selector: '#rank', tag: 'select', options: ['Top 10%', 'Top 25%'] })
+    // poison the cache the way a pre-fix scan would have: same fingerprint,
+    // wrong canonical
+    const { formFingerprint } = await import('../src/services/autofill')
+    sqlite
+      .prepare(`INSERT INTO autofill_form_cache (form_fingerprint, classifications_json, created_at) VALUES (?, ?, ?)`)
+      .run(formFingerprint([field]), JSON.stringify({ '#rank': 'phone' }), new Date().toISOString())
+
+    const cachedRes = await post([field])
+    expect((cachedRes.json() as { suggestions: FieldSuggestion[] }).suggestions[0].canonical).toBe('phone')
+
+    const freshRes = await app.inject({
+      method: 'POST',
+      url: '/api/autofill',
+      headers: AUTH,
+      payload: { fields: [field], job_id: null, no_cache: true },
+    })
+    expect((freshRes.json() as { suggestions: FieldSuggestion[] }).suggestions[0].canonical).toBe('academic_ranking')
+
+    // the fresh result overwrote the poisoned entry — the next plain scan heals
+    const healedRes = await post([field])
+    expect((healedRes.json() as { suggestions: FieldSuggestion[] }).suggestions[0].canonical).toBe('academic_ranking')
+  })
+
+  it('DELETE /api/autofill/cache wipes every cached map', async () => {
+    sqlite
+      .prepare(`INSERT INTO autofill_form_cache (form_fingerprint, classifications_json, created_at) VALUES (?, ?, ?)`)
+      .run('ff', JSON.stringify({ '#x': 'email' }), new Date().toISOString())
+    const res = await app.inject({ method: 'DELETE', url: '/api/autofill/cache', headers: AUTH })
+    expect(res.statusCode).toBe(200)
+    expect((res.json() as { cleared: number }).cleared).toBe(1)
+    expect((sqlite.prepare(`SELECT count(*) n FROM autofill_form_cache`).get() as { n: number }).n).toBe(0)
+  })
+
   it('binary answer questions carry static Yes/No choices for the answers page', () => {
     const binary = ANSWER_QUESTIONS.filter((q) => q.options)
     expect(binary.map((q) => q.key).sort()).toEqual([

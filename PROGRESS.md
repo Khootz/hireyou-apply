@@ -145,4 +145,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - User flow (docs updated): **scan the PwC form once → answers page now offers its exact option wordings → pick → autofill matches verbatim**.
 - NOT selection-izable (told user): DOB/gender/criminal/consents (by design), graduation-date calendar picker (needs open-state capture), react-select portal menus (options render only while open — harvested only if scan catches them open; matchOption prose-bridging still applies), lazily-rendered MokaHR menus (empty until first open — open once, re-scan).
 
+**2026-08-12 — Cache poisoning found via user report ("answers still wrong") → fresh-scan controls → GREEN (135 passed, 1 skipped)**
+- Root cause confirmed on the live DB: **9 cached classification maps from 2026-08-11 were still authoritative** — a fingerprint hit reuses the stored map and SKIPS current rules entirely, so every classifier fix since a form's first scan was invisible on that form. The user's PwC misfires were frozen classifications, not rule failures.
+- Fixes: live cache wiped; `no_cache` on POST /api/autofill (fresh classify, result overwrites the stale entry — one fresh scan heals it for subsequent plain scans); **"Fresh scan — ignore cached field matches" checkbox** in the panel; `DELETE /api/autofill/cache` wipes all maps (vocab kept — user data, not derived state). Poisoned-cache regression test proves cached→wrong, no_cache→right, then healed.
+- Also this session: user's answers-page confusion unwound — Vercel UI was a stale build (redeployed; bundle verified to carry the new code) and the launcher's health check keeps an OLD-code API alive (killed + restarted twice). Chrome-side extension reload still pending on the user — vocab store is empty until a new-code scan happens.
+- Deployment gotcha recorded: **after any API change, restart the API** — the .bat only restarts unhealthy servers, and "healthy but outdated" passes its check.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
