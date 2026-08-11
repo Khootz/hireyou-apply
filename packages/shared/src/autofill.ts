@@ -82,6 +82,9 @@ export const FieldInfoSchema = z.object({
   required: z.boolean().default(false),
   label: z.string().default(''),
   options: z.array(z.string()).default([]),
+  // an input driven as a dropdown (MokaHR/AntD/react-select) — matters for
+  // classification: a combobox asking "Mobile" is the country-CODE half
+  is_combobox: z.boolean().default(false),
 })
 export type FieldInfo = z.infer<typeof FieldInfoSchema>
 
@@ -138,20 +141,36 @@ function resolveLabel(el: Element): string {
   if (ariaLabel?.trim()) return cleanLabel(ariaLabel)
   const wrapping = el.closest('label')
   if (wrapping?.textContent?.trim()) {
-    const text = cleanLabel(wrapping.textContent)
+    // A committed selection renders INSIDE the wrapping label (MokaHR's
+    // display-value span, react-select's single-value) — that's the field's
+    // current VALUE, not its question. Strip it before reading, or a filled
+    // dropdown is forever labeled by whatever happens to be selected.
+    const clone = wrapping.cloneNode(true) as HTMLElement
+    clone
+      .querySelectorAll('[class*="display-value"], [class*="single-value"], [class*="selection-item"]')
+      .forEach((n) => n.remove())
+    const text = cleanLabel(clone.textContent ?? '')
     // MokaHR wraps inputs in a label that holds only widget chrome — the
     // validation message must not become the field's "label"
     if (text && !ONLY_JUNK.test(text)) return text
   }
   // nearest preceding text within the same container — walk deep enough to
   // escape widget shells (MokaHR nests input→label→dropdown→tooltip→ctrl
-  // before the question title appears as a preceding sibling)
+  // before the question title appears as a preceding sibling). Value-render
+  // nodes are skipped: a combobox input's previous sibling is the widget's
+  // display-value span, and a committed selection must never become the
+  // question ("Macau SAR, China" is an answer, not a label).
+  // depth 8: MokaHR multi-selects wrap the input two levels deeper than
+  // single selects (tag-container span + div) before the same shell chain
+  const VALUE_RENDER = '[class*="display-value"], [class*="single-value"], [class*="selection-item"]'
   let node: Element | null = el
-  for (let depth = 0; depth < 6 && node; depth++) {
+  for (let depth = 0; depth < 8 && node; depth++) {
     let sib = node.previousElementSibling
     while (sib) {
-      const text = sib.textContent?.trim()
-      if (text && text.length < 400 && !JUNK_LABEL.test(text)) return cleanLabel(text)
+      if (!sib.matches(VALUE_RENDER)) {
+        const text = sib.textContent?.trim()
+        if (text && text.length < 400 && !JUNK_LABEL.test(text)) return cleanLabel(text)
+      }
       sib = sib.previousElementSibling
     }
     node = node.parentElement
@@ -274,16 +293,18 @@ export function discoverFields(doc: Document): FieldInfo[] {
     }
 
     const maxlengthAttr = el.getAttribute('maxlength')
-    // MokaHR-style widgets keep their menu in the DOM even while closed
-    // (parked offscreen) — reading it at scan time gives comboboxes the same
-    // option visibility native selects always had (classification, option
-    // matching, and the answers-page vocabulary all feed off this).
+    const combobox = tag === 'input' && isCombobox(el)
+    // A combobox's menu is readable at scan time only if the widget keeps it
+    // in the DOM while closed — MokaHR renders menus LAZILY (empty until the
+    // dropdown is first opened, proven by the user's fresh-page capture), so
+    // this is best-effort; the fill pass harvests the populated menus after
+    // driving them open.
     const options =
       tag === 'select'
         ? Array.from(el.querySelectorAll('option'))
             .map((o) => o.textContent?.trim() ?? '')
             .filter(Boolean)
-        : tag === 'input' && isCombobox(el)
+        : combobox
           ? comboboxMenuOptions(el)
           : []
     fields.push(
@@ -295,10 +316,13 @@ export function discoverFields(doc: Document): FieldInfo[] {
         id: el.getAttribute('id') ?? '',
         autocomplete: el.getAttribute('autocomplete') ?? '',
         placeholder: el.getAttribute('placeholder') ?? '',
-        maxlength: maxlengthAttr ? Number(maxlengthAttr) : null,
+        // MokaHR stamps maxlength="-1" — a non-positive cap is "no cap", and
+        // passing -1 through would slice() the last char off every answer
+        maxlength: maxlengthAttr && Number(maxlengthAttr) > 0 ? Number(maxlengthAttr) : null,
         required: el.hasAttribute('required'),
         label: resolveLabel(el),
         options,
+        is_combobox: combobox,
       }),
     )
   })
@@ -393,6 +417,11 @@ const RULES: [CanonicalField, RegExp][] = [
   // which channel did you learn about" (PwC/MokaHR) all count
   ['referral_source', /\b(how\s+(did\s+)?you\s+hear(d)?\s+about|which\s+channel|where\s+did\s+you\s+(find|learn|see)|referr(al|ed))\b/i],
   ['location', /\b(location|city|address|country)\b/i],
+  // LAST, deliberately: PwC's work-experience block labels its fields with
+  // the bare words — anything more specific above ("why our company?",
+  // "current title") must win first
+  ['current_title', /\bjob\s*title\b/i],
+  ['current_company', /\bcompany\b/i],
 ]
 
 const AUTOCOMPLETE_MAP: Record<string, CanonicalField> = {
@@ -736,13 +765,25 @@ export function classifyFieldDeterministic(field: FieldInfo): CanonicalField {
   // Sensitive stays above: the amber warning must render on EEO tick-boxes.
   if (field.input_type === 'checkbox') return 'UNKNOWN'
 
+  // "Referral code" is an invite code, not "how did you hear about us" —
+  // the referral_source rule would otherwise type "LinkedIn" into it (PwC)
+  if (/\breferral\s*code\b/i.test(haystack)) return 'UNKNOWN'
+  // PwC's primary name field is labeled just "Name" — too bare for the
+  // rules, exact enough to trust on its own
+  if (/^name$/i.test(field.label.trim())) return 'full_name'
+
   const ac = field.autocomplete.toLowerCase().trim()
   if (ac && AUTOCOMPLETE_MAP[ac]) return AUTOCOMPLETE_MAP[ac]
   if (field.input_type === 'email') return 'email'
-  if (field.input_type === 'tel') return 'phone'
+  if (field.input_type === 'tel') return field.is_combobox ? 'phone_country_code' : 'phone'
 
   for (const [canonical, pattern] of RULES) {
-    if (pattern.test(haystack)) return canonical
+    if (pattern.test(haystack)) {
+      // a DROPDOWN asking "Mobile" is the country-code half of a split-phone
+      // widget (MokaHR) — the free-text half gets the actual number
+      if (canonical === 'phone' && field.is_combobox) return 'phone_country_code'
+      return canonical
+    }
   }
   return 'UNKNOWN'
 }

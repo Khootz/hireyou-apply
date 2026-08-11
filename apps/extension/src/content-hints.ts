@@ -269,15 +269,16 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
     match = pickFrom(menuOptions())
   }
 
+  // No match = honest failure. NEVER fall back to pressing Enter on the open
+  // menu: that commits whatever option happens to be highlighted, and the
+  // wrong selection SURVIVES on the form even after verification fails —
+  // seen live on PwC, where it stamped "Air Force Academy Taiwan" as the
+  // user's school. No guess beats a wrong committed answer.
   let ok = false
   if (match) {
     const chosen = text(match)
     clickOn(match)
     ok = await waitFor(() => selectedText().includes(chosen) || el.value.trim().toLowerCase() === chosen, 1500)
-  } else if (menuOptions().length > 0 && !el.readOnly) {
-    // no readable option nodes matched — fall back to keyboard selection
-    pressKey('Enter', 13)
-    ok = await waitFor(() => selectedText().includes(target), 1000)
   }
 
   // leave the field clean and CLOSED whatever happened — a menu left open

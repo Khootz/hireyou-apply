@@ -230,6 +230,122 @@ describe('date-part selects (PwC education period / graduation widgets)', () => 
   })
 })
 
+describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => {
+  const PAGE = fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/forms/pwc-apply.html'), 'utf8')
+  const discover = () => discoverFields(new JSDOM(PAGE).window.document)
+
+  it('classifies every answerable question on the page', () => {
+    const all = discover()
+    const byLabel = (frag: string) => all.find((f) => f.label.toLowerCase().includes(frag.toLowerCase()))
+    const CASES: [string, string][] = [
+      ['which programme you are interested in', 'programme_interest'],
+      ['willing to consider other opportunities', 'open_to_other_opportunities'],
+      ['require work authorisation or visa', 'visa_sponsorship_required'],
+      ['family name in chinese', 'family_name_chinese'],
+      ['given name in chinese', 'given_name_chinese'],
+      ['family name in english', 'last_name'],
+      ['given name in english', 'first_name'],
+      ['preferred english name', 'preferred_name'],
+      ['country/region (citizenship)', 'citizenship'],
+      ['citizenship status', 'citizenship_status'],
+      ['country/region of birth', 'country_of_birth'],
+      ['current country/region', 'location'],
+      ['country/region of school', 'school_country'],
+      ['school or university', 'education_institution'],
+      ['categories does your degree fall', 'degree'],
+      ['major', 'major'],
+      ['academic ranking', 'academic_ranking'],
+      ['department', 'department'],
+      ['responsibilities', 'responsibilities'],
+      ['employee type', 'employee_type'],
+      ['mandarin proficiency', 'mandarin_proficiency'],
+      ['cantonese proficiency', 'cantonese_proficiency'],
+      ['english proficiency', 'english_proficiency'],
+      ['public english examination', 'english_exam'],
+      ['other language(s)', 'languages'],
+      ['skill', 'skills'],
+      ['professional qualification', 'professional_qualification'],
+      ['labour dispute', 'legal_declarations'],
+      ['related to a pwc partner', 'related_to_employee'],
+      ['employed by pwc china', 'previously_employed_here'],
+      ['which channel did you learn', 'referral_source'],
+      ['job title', 'current_title'],
+      ['company', 'current_company'],
+    ]
+    for (const [frag, expected] of CASES) {
+      const f = byLabel(frag)
+      expect(f, `field found: ${frag}`).toBeDefined()
+      expect(classifyFieldDeterministic(f!), frag).toBe(expected)
+    }
+    // PwC's primary name field is labeled just "Name"
+    const name = all.find((f) => f.label.trim() === 'Name')
+    expect(name).toBeDefined()
+    expect(classifyFieldDeterministic(name!)).toBe('full_name')
+  })
+
+  it('the split Mobile widget classifies as code select + local-number input', () => {
+    const all = discover()
+    const codeSelects = all.filter((f) => classifyFieldDeterministic(f) === 'phone_country_code')
+    // primary Mobile code + Secondary contact number code
+    expect(codeSelects).toHaveLength(2)
+    expect(codeSelects.every((f) => f.is_combobox)).toBe(true)
+    const number = all.find((f) => f.placeholder === 'Enter mobile number')
+    expect(number).toBeDefined()
+    expect(classifyFieldDeterministic(number!)).toBe('phone')
+  })
+
+  it('split-phone answers route end-to-end on the real widgets', async () => {
+    saveProfile(
+      sqlite,
+      MasterProfileSchema.parse(
+        JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/generation/profile.json'), 'utf8')),
+      ),
+    )
+    const all = discover()
+    const code = all.find((f) => f.is_combobox && classifyFieldDeterministic(f) === 'phone_country_code' && !f.label.includes('Secondary'))!
+    const number = all.find((f) => f.placeholder === 'Enter mobile number')!
+    const suggestions = await suggestForFields(sqlite, [code, number], null)
+    const by = (sel: string) => suggestions.find((s) => s.selector === sel)!
+    expect(by(code.selector).value).toBe('+852')
+    expect(by(number.selector).value).toBe('44924625')
+  })
+
+  it('never guesses where it should stay silent', () => {
+    const all = discover()
+    // "Referral code" is an invite code — the referral_source rule must not
+    // type "LinkedIn" into it
+    const referralCode = all.find((f) => f.label.trim() === 'Referral code')
+    expect(referralCode).toBeDefined()
+    expect(classifyFieldDeterministic(referralCode!)).toBe('UNKNOWN')
+    // Gender stays hard-blocked
+    const gender = all.find((f) => f.label.trim() === 'Gender')
+    expect(gender).toBeDefined()
+    expect(classifyFieldDeterministic(gender!)).toBe('SENSITIVE_DO_NOT_FILL')
+    // date-part selects of education/work periods must not catch the
+    // expected-start-date rule ("Start and End Date" ≠ start date)
+    expect(all.filter((f) => classifyFieldDeterministic(f) === 'expected_start_date')).toHaveLength(0)
+    // every checkbox (instructions, Present, accuracy, consents) stays UNKNOWN
+    const checkboxes = all.filter((f) => f.input_type === 'checkbox')
+    expect(checkboxes.length).toBeGreaterThanOrEqual(5)
+    expect(checkboxes.every((f) => classifyFieldDeterministic(f) === 'UNKNOWN')).toBe(true)
+  })
+
+  it('readonly calendar pickers (DOB, graduation date) are not treated as fillable fields', () => {
+    const all = discover()
+    expect(all.some((f) => f.label.includes('Date of Birth'))).toBe(false)
+    expect(all.some((f) => f.label.includes('certificates of graduation'))).toBe(false)
+  })
+
+  it('fresh-load MokaHR menus are lazily rendered — comboboxes honestly carry zero options', () => {
+    const all = discover()
+    const combos = all.filter((f) => f.is_combobox)
+    expect(combos.length).toBeGreaterThanOrEqual(20)
+    expect(combos.every((f) => f.options.length === 0)).toBe(true)
+    // maxlength="-1" must not become a 1-char-truncating cap
+    expect(combos.every((f) => f.maxlength === null)).toBe(true)
+  })
+})
+
 describe('harvested answer vocabularies (scans feed the answers-page dropdowns)', () => {
   let app: FastifyInstance
 
