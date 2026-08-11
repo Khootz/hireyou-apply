@@ -114,6 +114,25 @@ async function runAutofill(
     }
   }
 
+  // Late-revert sweep: a later widget's interaction can wipe an EARLIER
+  // committed selection (framework re-render). Once everything has settled,
+  // re-check every driven dropdown still displays a value; re-drive what got
+  // wiped, and honestly fail whatever the page refuses to keep.
+  await sleep(300)
+  for (const o of outcomes) {
+    if (o.status !== 'filled' || !o.value) continue
+    const s = suggestions.find((x) => x.selector === o.selector)
+    const el = document.querySelector(o.selector)
+    if (!s?.value || !(el instanceof HTMLInputElement) || !isCombobox(el)) continue
+    if (comboboxDisplay(el).trim() !== '') continue // selection still standing
+    if (await fillCombobox(el, s.value)) {
+      flash(el.closest<HTMLElement>('.select-shell') ?? el)
+    } else {
+      o.status = 'failed'
+      o.reason = 'The page kept clearing this selection — pick it manually.'
+    }
+  }
+
   // Menu harvest AFTER driving: lazily-rendered menus are empty at scan time
   // but populated once the fill pass has opened them — read them now so the
   // panel can ship the real choices to the answers page.
@@ -170,6 +189,18 @@ async function runAutofill(
   return { outcomes, menu_options: menuOptions }
 }
 
+// The committed selection of a select widget renders outside its input —
+// react-select's single-value, AntD's selection-item, MokaHR's display-value.
+function comboboxDisplay(el: HTMLElement): string {
+  const shell =
+    el.closest('[class*="Select-container"], .select-shell, .select__container, [class*="ant-select"]') ??
+    el.parentElement?.parentElement
+  const node = shell?.querySelector(
+    '[class*="single-value"], [class*="multi-value"], [class*="selection-item"], [class*="display-value"]',
+  )
+  return ((node?.getAttribute('title') || node?.textContent) ?? '').toLowerCase()
+}
+
 // Poll until a condition holds — dropdown menus open/filter/close on their
 // own schedule, so fixed sleeps either race them or waste demo time.
 async function waitFor(cond: () => boolean, timeoutMs: number, stepMs = 60): Promise<boolean> {
@@ -189,7 +220,7 @@ async function waitFor(cond: () => boolean, timeoutMs: number, stepMs = 60): Pro
 // Match options by text (with date-part extraction for year/month pickers),
 // click the match, verify the rendered selection. Returns true only if the
 // selection is verifiably rendered.
-async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolean> {
+async function fillCombobox(el: HTMLInputElement, value: string, attempt = 0): Promise<boolean> {
   const pressKey = (key: string, keyCode: number) => {
     for (const type of ['keydown', 'keyup'] as const) {
       el.dispatchEvent(new KeyboardEvent(type, { key, keyCode, which: keyCode, bubbles: true, cancelable: true }))
@@ -218,17 +249,7 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
     ).filter(onScreen)
   }
   const menuOpen = () => el.getAttribute('aria-expanded') === 'true' || menuOptions().length > 0
-  // the committed selection renders OUTSIDE the menu — react-select's
-  // single-value, AntD's selection-item, MokaHR's display-value span
-  const selectedText = () => {
-    const shell =
-      el.closest('[class*="Select-container"], .select-shell, .select__container, [class*="ant-select"]') ??
-      el.parentElement?.parentElement
-    const node = shell?.querySelector(
-      '[class*="single-value"], [class*="multi-value"], [class*="selection-item"], [class*="display-value"]',
-    )
-    return ((node?.getAttribute('title') || node?.textContent) ?? '').toLowerCase()
-  }
+  const selectedText = () => comboboxDisplay(el)
   const target = value.trim().toLowerCase()
   const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
   const pickFrom = (options: HTMLElement[]): HTMLElement | undefined => {
@@ -275,21 +296,33 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
   // seen live on PwC, where it stamped "Air Force Academy Taiwan" as the
   // user's school. No guess beats a wrong committed answer.
   let ok = false
+  let chosen = ''
   if (match) {
-    const chosen = text(match)
-    clickOn(match)
+    chosen = text(match)
+    // events bubble UP: click the innermost content node so the handler is
+    // hit wherever the widget attached it (container vs inner item)
+    clickOn(match.querySelector<HTMLElement>('[class*="content-item"]') ?? match)
     ok = await waitFor(() => selectedText().includes(chosen) || el.value.trim().toLowerCase() === chosen, 1500)
   }
 
-  // leave the field clean and CLOSED whatever happened — a menu left open
-  // swallows the next field's events, and leftover typed text reads as a
-  // half-filled field to the page's validator
-  if (!ok && !el.readOnly && el.value) setNativeValue(el, '')
-  pressKey('Escape', 27)
+  // Exit hygiene decides whether the selection SURVIVES. Leftover typed
+  // filter text reads as uncommitted input — on blur the widget resets
+  // itself and the just-made selection vanishes ("filled then deleted",
+  // seen live on PwC). And Escape is a REVERT key in many select widgets,
+  // so it is only safe on the failure path.
+  if (!el.readOnly && el.value) setNativeValue(el, '')
+  if (!ok) pressKey('Escape', 27)
   el.blur()
   document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })) // close click-away menus
   await waitFor(() => !menuOpen(), 800)
   await sleep(100) // settle: close animations finish before the next field
+
+  // Revert check: if cleanup (blur/close) cost us the selection, drive the
+  // widget once more — the second pass starts from a settled, closed state.
+  if (ok && chosen && !selectedText().includes(chosen)) {
+    if (attempt === 0) return fillCombobox(el, value, 1)
+    return false // honest failure: the page refuses to keep the selection
+  }
   return ok
 }
 

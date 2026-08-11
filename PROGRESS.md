@@ -164,4 +164,10 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - Also from the fixture: bare-label rules ("Name" → full_name, "Company"/"Job title" tail rules for work-experience blocks), sibling walk 6→8 (multi-selects nest deeper), readonly calendar pickers confirmed excluded, "Start and End Date" confirmed NOT hitting expected_start_date. Lever/Greenhouse/OKX evals all still green.
 - API restarted, cache cleared. NEXT: user must load extension **v0.3.0** (chrome://extensions ⟳, version visible in panel now) — until then no new code runs in their browser.
 
+**2026-08-12 — "filled then deleted" (user's live report) → revert-proof dropdown driving, v0.3.1 → GREEN (143 passed, 1 skipped)**
+- Live symptom: dropdown selections rendered, then vanished — en masse. Root causes in the driver's EXIT sequence, which ran after verification (so we reported "filled" and never saw the revert): (1) our typed filter text stayed in the widget's search input on success — on blur the widget sees uncommitted text and RESETS the selection; now cleared on every path. (2) unconditional Escape — a revert key in many select widgets — now failure-path only. (3) clicks now target the innermost content node so the widget's handler is hit wherever it's attached (events bubble up, not down).
+- Two safety nets since MokaHR can't be reproduced here: fillCombobox re-checks its display AFTER cleanup and re-drives once from a settled state; runAutofill runs a late-revert sweep after all widgets are driven (framework re-renders can wipe earlier commits) — re-drive, else honest "the page kept clearing this selection".
+- Manifest 0.3.0 → **0.3.1** (every extension change bumps now — the panel badge is the user's reload proof). Driver logic is browser-side and not jsdom-testable (jsdom widgets don't render selections); typecheck + build + full suite green.
+- NEXT: user reloads v0.3.1, re-runs fresh scan + autofill on PwC; School/Country-of-School garbage values need manual clearing (left by the pre-fix guess-Enter).
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
