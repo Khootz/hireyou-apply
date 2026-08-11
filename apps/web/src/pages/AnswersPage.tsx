@@ -5,11 +5,22 @@ import { api } from '../api'
 // Simplify-style application answers: the questions every application asks
 // but no resume answers. Saved once here, reused by the extension's autofill
 // on every form whose field maps to the same canonical question.
+//
+// Fixed-choice questions render as dropdowns: static Yes/No lists for the
+// universal binaries, and — better — the REAL option lists harvested from
+// forms the extension has scanned, so the saved answer matches the form's
+// exact wording ("Hong Kong SAR", not "HK"). A custom escape hatch stays
+// available on every dropdown for forms that word things differently.
 
 type SaveState = 'loading' | 'idle' | 'saving' | 'saved' | 'error'
+type Vocab = Record<string, { options: string[]; source_host: string; updated_at: string }>
+
+const CUSTOM = '__custom__'
 
 export function AnswersPage() {
   const [answers, setAnswers] = useState<Record<string, string> | null>(null)
+  const [vocab, setVocab] = useState<Vocab>({})
+  const [customKeys, setCustomKeys] = useState<Set<string>>(new Set())
   const [saveState, setSaveState] = useState<SaveState>('loading')
   const dirty = useRef(0)
 
@@ -21,6 +32,11 @@ export function AnswersPage() {
         setSaveState('idle')
       })
       .catch(() => setSaveState('error'))
+    // vocab is an enhancement — failure just means plain text inputs
+    api
+      .getAnswerVocab()
+      .then(setVocab)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -73,25 +89,65 @@ export function AnswersPage() {
         <section key={group}>
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{group}</h2>
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100">
-            {ANSWER_QUESTIONS.filter((q) => q.group === group).map((q) => (
-              <label key={q.key} className="block px-5 py-4">
-                <span className="text-sm font-medium text-slate-900">{q.question}</span>
-                <input
-                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={q.hint}
-                  value={answers[q.key] ?? ''}
-                  onChange={(e) => edit(q.key, e.target.value)}
-                />
-              </label>
-            ))}
+            {ANSWER_QUESTIONS.filter((q) => q.group === group).map((q) => {
+              const harvested = vocab[q.key]
+              const options = harvested?.options ?? q.options ?? []
+              const value = answers[q.key] ?? ''
+              const custom = customKeys.has(q.key) || (value !== '' && !options.includes(value))
+              const inputBox =
+                'mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+              return (
+                <label key={q.key} className="block px-5 py-4">
+                  <span className="text-sm font-medium text-slate-900">{q.question}</span>
+                  {options.length > 0 ? (
+                    <>
+                      <select
+                        className={`${inputBox} bg-white`}
+                        value={custom ? CUSTOM : value}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setCustomKeys((prev) => {
+                            const next = new Set(prev)
+                            if (v === CUSTOM) next.add(q.key)
+                            else next.delete(q.key)
+                            return next
+                          })
+                          if (v !== CUSTOM) edit(q.key, v)
+                        }}
+                      >
+                        <option value="">— not answered —</option>
+                        {options.map((o) => (
+                          <option key={o} value={o}>
+                            {o}
+                          </option>
+                        ))}
+                        <option value={CUSTOM}>Custom answer…</option>
+                      </select>
+                      {custom && (
+                        <input className={inputBox} placeholder={q.hint} value={value} onChange={(e) => edit(q.key, e.target.value)} />
+                      )}
+                      {harvested && (
+                        <span className="mt-1 block text-xs text-slate-400">
+                          choices captured from {harvested.source_host || 'a scanned form'}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <input className={inputBox} placeholder={q.hint} value={value} onChange={(e) => edit(q.key, e.target.value)} />
+                  )}
+                </label>
+              )
+            })}
           </div>
         </section>
       ))}
 
       <p className="text-xs text-slate-400">
-        Dropdown questions fill by matching your answer against the option list — write answers exactly as the
-        dropdown shows them (e.g. "Hong Kong SAR", not "HK"). Demographic and voluntary-disclosure questions (gender,
-        date of birth, ethnicity, criminal history, …) are never asked here and never auto-filled — those stay yours.
+        Dropdown questions fill by matching your answer against the option list. Scan a real form once with the
+        extension and its exact choices appear here as dropdowns automatically — picking from those guarantees the
+        match. For questions still shown as text, write the answer exactly as the form's dropdown displays it
+        (e.g. "Hong Kong SAR", not "HK"). Demographic and voluntary-disclosure questions (gender, date of birth,
+        ethnicity, criminal history, …) are never asked here and never auto-filled — those stay yours.
       </p>
     </div>
   )

@@ -274,12 +274,18 @@ export function discoverFields(doc: Document): FieldInfo[] {
     }
 
     const maxlengthAttr = el.getAttribute('maxlength')
+    // MokaHR-style widgets keep their menu in the DOM even while closed
+    // (parked offscreen) — reading it at scan time gives comboboxes the same
+    // option visibility native selects always had (classification, option
+    // matching, and the answers-page vocabulary all feed off this).
     const options =
       tag === 'select'
         ? Array.from(el.querySelectorAll('option'))
             .map((o) => o.textContent?.trim() ?? '')
             .filter(Boolean)
-        : []
+        : tag === 'input' && isCombobox(el)
+          ? comboboxMenuOptions(el)
+          : []
     fields.push(
       FieldInfoSchema.parse({
         selector: stableSelector(el, i),
@@ -415,6 +421,10 @@ export interface AnswerQuestion {
   question: string
   hint: string
   group: string
+  // Fixed choices rendered as a dropdown on the answers page. Static lists
+  // cover the universal binaries (Yes/No); real forms' vocabularies are
+  // harvested at scan time and override these (see answer_option_vocab).
+  options?: string[]
 }
 
 export const ANSWER_QUESTIONS: AnswerQuestion[] = [
@@ -428,8 +438,8 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Links', key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
   { group: 'Links', key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
   // Work eligibility
-  { group: 'Work eligibility', key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes — Hong Kong resident' },
-  { group: 'Work eligibility', key: 'visa_sponsorship_required', question: 'Do you require visa sponsorship / work authorisation?', hint: 'e.g. No' },
+  { group: 'Work eligibility', key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes', options: ['Yes', 'No'] },
+  { group: 'Work eligibility', key: 'visa_sponsorship_required', question: 'Do you require visa sponsorship / work authorisation?', hint: 'e.g. No', options: ['Yes', 'No'] },
   { group: 'Work eligibility', key: 'citizenship', question: 'Country/Region of citizenship', hint: 'e.g. Malaysia' },
   { group: 'Work eligibility', key: 'citizenship_status', question: 'Citizenship / residency status', hint: 'e.g. Hong Kong resident (student visa)' },
   { group: 'Work eligibility', key: 'country_of_birth', question: 'Country/Region of birth (only filled if you answer it)', hint: 'e.g. Malaysia — leave blank to always fill manually' },
@@ -438,7 +448,7 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   { group: 'Availability & pay', key: 'expected_start_date', question: 'Earliest start date', hint: 'e.g. 1 June 2026 — or Immediately' },
   { group: 'Availability & pay', key: 'salary_expectation', question: 'Expected salary', hint: 'e.g. HKD 25,000/month' },
   { group: 'Availability & pay', key: 'current_salary', question: 'Current / most recent salary', hint: 'e.g. HKD 20,000/month — or Prefer not to disclose' },
-  { group: 'Availability & pay', key: 'willing_to_relocate', question: 'Willing to relocate?', hint: 'e.g. Yes — open to relocating within Asia' },
+  { group: 'Availability & pay', key: 'willing_to_relocate', question: 'Willing to relocate?', hint: 'e.g. Yes', options: ['Yes', 'No'] },
   // Education
   { group: 'Education', key: 'highest_education_level', question: 'Highest education level', hint: "e.g. Bachelor's degree (in progress)" },
   { group: 'Education', key: 'graduation_date', question: 'Expected graduation / certificate date', hint: 'e.g. 2026-06-30' },
@@ -461,10 +471,10 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   // Employer questions
   { group: 'Employer questions', key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
   { group: 'Employer questions', key: 'programme_interest', question: 'Programme you are applying to (update per season)', hint: 'e.g. FY27 Winter Intern' },
-  { group: 'Employer questions', key: 'open_to_other_opportunities', question: 'Willing to consider other opportunities?', hint: 'e.g. Yes' },
-  { group: 'Employer questions', key: 'previously_employed_here', question: 'Previously employed by the company you apply to? (default)', hint: 'e.g. No' },
-  { group: 'Employer questions', key: 'related_to_employee', question: 'Related to an employee of the company? (default)', hint: 'e.g. No' },
-  { group: 'Employer questions', key: 'legal_declarations', question: 'Legal/regulatory declarations (civil proceedings, disputes…)', hint: 'e.g. No — applies to the standard compliance checklist' },
+  { group: 'Employer questions', key: 'open_to_other_opportunities', question: 'Willing to consider other opportunities?', hint: 'e.g. Yes', options: ['Yes', 'No'] },
+  { group: 'Employer questions', key: 'previously_employed_here', question: 'Previously employed by the company you apply to? (default)', hint: 'e.g. No', options: ['Yes', 'No'] },
+  { group: 'Employer questions', key: 'related_to_employee', question: 'Related to an employee of the company? (default)', hint: 'e.g. No', options: ['Yes', 'No'] },
+  { group: 'Employer questions', key: 'legal_declarations', question: 'Legal/regulatory declarations (civil proceedings, disputes…)', hint: 'Applies to the whole standard compliance checklist', options: ['Yes', 'No'] },
 ]
 
 export const ANSWERABLE_KEYS = new Set<CanonicalField>(ANSWER_QUESTIONS.map((q) => q.key))
@@ -565,6 +575,31 @@ export function isCombobox(el: Element): boolean {
   // text inputs inside a select-shell label. Typing into them as text fields
   // filters their menu without ever committing a value (seen live on PwC).
   return !!el.closest('[class*="Select-container"], [class*="select-container"], [class*="ant-select"]')
+}
+
+// Option texts of a (closed) combobox whose menu lives in the surrounding
+// widget shell — MokaHR parks the full menu offscreen in the widget's own
+// Dropdown node. Portal-rendered menus (react-select) aren't in the shell
+// until opened, so this honestly returns [] for them.
+export function comboboxMenuOptions(el: Element): string[] {
+  const shell = el.closest('[class*="Dropdown-container"], .select-shell')
+  if (!shell) return []
+  const items = shell.querySelectorAll<HTMLElement>(
+    '[class*="Menu-content-item"], [role="option"], [class*="select__option"], [class*="select-item-option"]',
+  )
+  const seen = new Set<string>()
+  for (const item of Array.from(items)) {
+    const text = item.textContent?.trim()
+    if (text) seen.add(text)
+  }
+  return Array.from(seen)
+}
+
+// "Please select", "Choose…", "---" — prompt rows, not answers. Used when
+// harvesting form vocabularies so the answers page only offers real choices.
+export function isPlaceholderOption(text: string): boolean {
+  const t = text.trim()
+  return /^(please\s+(select|choose)\b.*|select\b.{0,15}|choose\b.{0,10}|-+|—+|…|\.{2,})$/i.test(t) || t === ''
 }
 
 // Saved answers are prose ("Yes — Hong Kong resident, no permit needed");

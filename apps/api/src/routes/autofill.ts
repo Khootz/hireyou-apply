@@ -3,12 +3,14 @@ import type { FastifyInstance } from 'fastify'
 import type Database from 'better-sqlite3'
 import { z } from 'zod'
 import { FieldInfoSchema, MAX_AUTOFILL_FIELDS } from '@app/shared/autofill'
+import { recordAnswerVocab } from '../services/answers'
 import { formFingerprint, suggestForFields } from '../services/autofill'
 import { getJob } from '../services/jobs'
 
 const BodySchema = z.object({
   fields: z.array(FieldInfoSchema).min(1).max(MAX_AUTOFILL_FIELDS),
   job_id: z.string().nullable().default(null),
+  page_host: z.string().max(200).default(''),
 })
 
 // Suggestion telemetry (M9): which canonical fields actually get used. The
@@ -38,6 +40,24 @@ export function registerAutofillRoutes(app: FastifyInstance, sqlite: Database.Da
     }
     const job = parsed.data.job_id ? getJob(sqlite, parsed.data.job_id) : null
     const suggestions = await suggestForFields(sqlite, parsed.data.fields, job)
+    // Harvest fixed-choice vocabularies as a side effect of every scan: the
+    // form's real option lists feed the answers page's dropdowns. Never
+    // blocks suggestions — a harvest failure is invisible to the caller.
+    try {
+      const optionsBySelector = new Map(parsed.data.fields.map((f) => [f.selector, f.options]))
+      recordAnswerVocab(
+        sqlite,
+        suggestions
+          .filter((s) => !s.do_not_fill)
+          .map((s) => ({
+            canonical: s.canonical,
+            options: optionsBySelector.get(s.selector) ?? [],
+            source_host: parsed.data.page_host,
+          })),
+      )
+    } catch {
+      /* vocab is a bonus, suggestions are the product */
+    }
     return { suggestions, form_fingerprint: formFingerprint(parsed.data.fields) }
   })
 

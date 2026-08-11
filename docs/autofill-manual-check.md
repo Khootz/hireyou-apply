@@ -28,13 +28,16 @@
 1. `Start HireYou Apply.bat` (API :3100, web :5180).
 2. `npm run build:extension`, then `chrome://extensions` → HireYou Apply → **⟳ Reload**.
 3. Extension ⚙: API URL `http://127.0.0.1:3100`, token = `API_AUTH_TOKEN` from `.env`.
-4. `localhost:5180` → **Autofill answers** → fill all **39** (now grouped: Identity, Links, Work
+4. `localhost:5180` → **Autofill answers** → fill all **39** (grouped: Identity, Links, Work
    eligibility, Availability & pay, Education, Experience, Languages & skills, Employer
    questions). Make sure your **profile has a location** — it feeds Location/Country fields.
-   **Dropdown tip:** selects fill by matching your answer against the option text — open the
-   dropdown on the real form once and write the answer exactly as the option reads
-   ("Hong Kong SAR", not "HK"). Dates: use `2026-06-30` style — year/month split widgets extract
-   the right part automatically.
+   **Fixed-choice questions are dropdowns now.** Yes/No questions come pre-loaded; for everything
+   else the extension **harvests the real option lists while scanning**: scan the actual form
+   once (even before answering anything), then revisit the answers page — the questions that are
+   dropdowns on that form now offer its exact choices, labeled "choices captured from <site>".
+   Pick from those and the fill match is guaranteed. Every dropdown keeps a **Custom answer…**
+   escape for forms that word things differently. Dates: use `2026-06-30` style — year/month
+   split widgets extract the right part automatically.
 5. For essay questions ("Why do you want to work at X?"): **save the job first** (Add Job with the
    JD pasted, or via the extension), then pick it in the panel's **"Tailor essay answers to a
    saved job"** dropdown before scanning. No job selected = essays honestly left blank.
@@ -68,7 +71,11 @@ Built from the transcribed question list **plus your full-page DOM capture** of 
 (MokaHR is unreachable from this machine — your browser session is the only way in). The capture
 revealed MokaHR "selects" are ARIA-free text inputs inside a widget shell — the filler now
 **clicks them open and drives the menu like a human** instead of typing into them, and verifies
-via the widget's display value. With the 39 answers filled, expect to fill:
+via the widget's display value. MokaHR also parks each closed menu in the DOM, so a **scan
+harvests every dropdown's real choices** — after one scan of the PwC form, the answers page
+offers its exact option wordings for citizenship, proficiencies, ranking, referral channel, and
+the rest. **Recommended order: scan the PwC form first, then fill the answers page, then
+autofill.** With the 39 answers filled, expect to fill:
 programme/other-opportunities/visa selects, Chinese + English name variants, preferred English
 name, mobile (**local number only** — the +852 goes into the code select now), citizenship +
 status, current country, school country, major (+ major type), academic ranking,

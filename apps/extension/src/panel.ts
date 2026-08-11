@@ -327,7 +327,7 @@ async function scanForm(): Promise<void> {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
     if (tab?.id === undefined) throw new Error('no active tab')
     const tabId = tab.id
-    let scan: { fields: FieldInfo[] }
+    let scan: { fields: FieldInfo[]; url?: string }
     try {
       await ensureContentScript(tabId)
       scan = await chrome.tabs.sendMessage(tabId, { type: 'scan-form' })
@@ -353,7 +353,8 @@ async function scanForm(): Promise<void> {
       form_fingerprint: string
     }>(`/api/autofill`, {
       method: 'POST',
-      body: JSON.stringify({ fields, job_id: jobId }),
+      // page_host lets harvested option vocabularies say where they came from
+      body: JSON.stringify({ fields, job_id: jobId, page_host: hostOf(scan.url ?? tab.url ?? '') }),
     })
     await demoPace(requestStarted, status, fields.length)
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
@@ -438,6 +439,14 @@ async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[], fi
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host
+  } catch {
+    return ''
+  }
 }
 
 // re-render when the user switches tabs or the page navigates

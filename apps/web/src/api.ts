@@ -43,6 +43,10 @@ export const api = {
     return request<CvParseResponse>('/api/profile/parse-cv', { method: 'POST', body: form })
   },
   getAnswers: () => request<{ answers: Record<string, string> }>('/api/answers').then((r) => r.answers),
+  getAnswerVocab: () =>
+    request<{ vocab: Record<string, { options: string[]; source_host: string; updated_at: string }> }>(
+      '/api/answers/vocab',
+    ).then((r) => r.vocab),
   saveAnswers: (answers: Record<string, string>) =>
     request<{ answers: Record<string, string> }>('/api/answers', {
       method: 'PUT',

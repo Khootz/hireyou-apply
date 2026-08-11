@@ -87,6 +87,18 @@ const MIGRATIONS: { id: string; sql: string }[] = [
     );`,
   },
   {
+    // Real option lists harvested from scanned forms, one per answerable
+    // canonical — the answers page renders these as dropdowns so saved
+    // answers match the form's exact wording. Latest scan wins.
+    id: '008_answer_option_vocab',
+    sql: `CREATE TABLE IF NOT EXISTS answer_option_vocab (
+      canonical TEXT PRIMARY KEY,
+      options_json TEXT NOT NULL,
+      source_host TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );`,
+  },
+  {
     id: '005_email_records',
     sql: `CREATE TABLE IF NOT EXISTS email_records (
       id TEXT PRIMARY KEY,
