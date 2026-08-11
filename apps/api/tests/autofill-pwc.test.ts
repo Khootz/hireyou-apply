@@ -145,10 +145,10 @@ describe('PwC/MokaHR question vocabulary (transcribed live labels)', () => {
   it('every answerable canonical is on the answers page exactly once', () => {
     const keys = ANSWER_QUESTIONS.map((q) => q.key)
     expect(new Set(keys).size).toBe(keys.length)
-    // 47 = 39 + location/degree/major_type/degree_category (fixed-choice
-    // overrides) + gpa/gpa_scale (ranking pop-outs) + gender (explicit
-    // opt-in) + referral_code
-    expect(keys.length).toBe(47)
+    // 48 = 39 + location/degree/major_type/degree_category/
+    // education_institution (fixed-choice overrides) + gpa/gpa_scale
+    // (ranking pop-outs) + gender (explicit opt-in) + referral_code
+    expect(keys.length).toBe(48)
   })
 })
 
@@ -370,6 +370,51 @@ describe('the real PwC apply page (fresh-load full capture, 2026-08-12)', () => 
     // drove period widgets wrong — empty beats wrong or slow
     expect(suggestions.every((s) => s.value === null)).toBe(true)
     expect(suggestions.every((s) => !s.do_not_fill)).toBe(true)
+  })
+
+  it('university comboboxes are never driven — big school lists are too slow (user call)', async () => {
+    saveProfile(
+      sqlite,
+      MasterProfileSchema.parse(
+        JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'tests/fixtures/generation/profile.json'), 'utf8')),
+      ),
+    )
+    const all = discover()
+    const school = all.find((f) => f.label.includes('School or University'))!
+    expect(school.is_combobox).toBe(true)
+    const [suggestion] = await suggestForFields(sqlite, [school], null)
+    expect(suggestion.value).toBeNull()
+    expect(suggestion.note).toMatch(/manually/i)
+    // a TEXT university field still fills from the profile
+    const [textField] = await suggestForFields(
+      sqlite,
+      [FieldInfoSchema.parse({ selector: '#uni', tag: 'input', label: 'University' })],
+      null,
+    )
+    expect(textField.value).toBe('The Hong Kong University of Science and Technology')
+  })
+
+  it('PUT /api/answers merges — a stale page can never wipe keys it does not know', async () => {
+    const app = buildServer({ sqlite })
+    const put = (answers: Record<string, string>) =>
+      app.inject({ method: 'PUT', url: '/api/answers', headers: AUTH, payload: { answers } })
+    await put({ gender: 'Male', gpa: '3.40', notice_period: 'Immediately' })
+    // an outdated bundle autosaves only the keys IT knows
+    await put({ notice_period: 'One month', languages: 'None' })
+    const got = (await app.inject({ method: 'GET', url: '/api/answers', headers: AUTH })).json() as {
+      answers: Record<string, string>
+    }
+    expect(got.answers.gender).toBe('Male') // survived the stale save
+    expect(got.answers.gpa).toBe('3.40')
+    expect(got.answers.notice_period).toBe('One month') // known keys still update
+    expect(got.answers.languages).toBe('None')
+    // an explicit blank deletes that one answer only
+    await put({ gpa: '' })
+    const after = (await app.inject({ method: 'GET', url: '/api/answers', headers: AUTH })).json() as {
+      answers: Record<string, string>
+    }
+    expect(after.answers.gpa).toBeUndefined()
+    expect(after.answers.gender).toBe('Male')
   })
 
   it('readonly calendar pickers (DOB, graduation date) are not treated as fillable fields', () => {

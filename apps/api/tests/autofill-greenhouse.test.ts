@@ -152,15 +152,17 @@ describe('OKX Hong Kong application form (real captured HTML — primary demo ta
     expect(value('#email')).toBe('tzkhoo@connect.ust.hk')
     expect(value('#phone')).toBe('+852 4492 4625')
 
-    // school/degree are react-select comboboxes: static fill skips them, but
-    // the suggestions MUST carry values — the extension's combobox pass types
-    // these into the live dropdown and verifies the rendered selection.
+    // degree is a react-select combobox: static fill skips it, but the
+    // suggestion MUST carry a value — the extension's combobox pass types it
+    // into the live dropdown and verifies the rendered selection. School is
+    // the exception BY USER DECISION (2026-08-12): university comboboxes
+    // carry giant lists and are too slow to drive — never filled, honest note.
     const by = (sel: string) => suggestions.find((s) => s.selector === sel)!
-    expect(by('#school--0').value).toBe('The Hong Kong University of Science and Technology')
+    expect(by('#school--0').value).toBeNull()
+    expect(by('#school--0').note).toMatch(/manually/i)
     expect(by('#degree--0').value).toBe('BEng in Computer Engineering and minor in Business (Year 4)')
     const schoolOutcome = outcomes.find((o) => o.selector === '#school--0')!
     expect(schoolOutcome.status).toBe('skipped')
-    expect(schoolOutcome.value).toBeTruthy()
 
     const verified = verifyFill(doc, suggestions)
     expect(verified.length).toBeGreaterThanOrEqual(4)

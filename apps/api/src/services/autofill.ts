@@ -228,6 +228,19 @@ export async function suggestForFields(
         note: 'Voluntary disclosure question — we never suggest answers for these.',
       }
     }
+    // University comboboxes carry thousands of options and are painfully slow
+    // to drive (user call 2026-08-12: don't fill) — text inputs and native
+    // selects still fill from the profile/saved answer as usual.
+    if (canonical === 'education_institution' && f.is_combobox) {
+      return {
+        selector: f.selector,
+        canonical,
+        label: f.label,
+        value: null,
+        do_not_fill: false,
+        note: 'Big school lists are slow to drive — pick your university manually.',
+      }
+    }
     // a saved application answer beats a derived guess for the keys it covers
     let raw = answers[canonical] ?? DIRECT_COPY[canonical]?.(profile)
     if (canonical === 'phone' && formHasCodeField && raw) {

@@ -545,6 +545,7 @@ export const ANSWER_QUESTIONS: AnswerQuestion[] = [
   // Education
   { group: 'Education', key: 'highest_education_level', question: 'Highest education level', hint: "e.g. Bachelor's degree (in progress)" },
   { group: 'Education', key: 'graduation_date', question: 'Expected graduation / certificate date', hint: 'e.g. 2026-06-30' },
+  { group: 'Education', key: 'education_institution', question: 'School / university (as forms list it)', hint: 'e.g. The Hong Kong University of Science and Technology — overrides your profile wording' },
   { group: 'Education', key: 'school_country', question: 'Country/Region of your school', hint: 'e.g. Hong Kong SAR' },
   { group: 'Education', key: 'major', question: 'Major / field of study', hint: 'e.g. Computer Engineering' },
   { group: 'Education', key: 'major_type', question: 'Major type / category (when a form asks separately)', hint: 'e.g. STEM Engineering' },

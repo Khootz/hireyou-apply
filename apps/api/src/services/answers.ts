@@ -90,16 +90,25 @@ export function getAnswerVocab(sqlite: Database.Database): Partial<Record<Canoni
 }
 
 export function saveAnswers(sqlite: Database.Database, input: unknown): AnswerMap {
-  const answers = AnswersSchema.parse(input)
+  // MERGE, never replace: an outdated answers page autosaving its stale
+  // state must not wipe keys it doesn't know exist (seen live TWICE — a
+  // pre-deploy tab erased gender/location/gpa/… saved minutes earlier).
+  // A key explicitly sent blank deletes that one answer; absent keys are
+  // untouched.
+  const raw = z.record(z.string(), z.string()).parse(input)
   const now = new Date().toISOString()
+  const upsert = sqlite.prepare(
+    `INSERT OR REPLACE INTO application_answers (canonical, value, updated_at) VALUES (?, ?, ?)`,
+  )
+  const del = sqlite.prepare(`DELETE FROM application_answers WHERE canonical = ?`)
   const tx = sqlite.transaction(() => {
-    // full replace: an emptied field on the page means "forget that answer"
-    sqlite.prepare(`DELETE FROM application_answers`).run()
-    const insert = sqlite.prepare(
-      `INSERT INTO application_answers (canonical, value, updated_at) VALUES (?, ?, ?)`,
-    )
-    for (const [canonical, value] of Object.entries(answers)) insert.run(canonical, value, now)
+    for (const [k, v] of Object.entries(raw)) {
+      const key = CanonicalFieldSchema.safeParse(k)
+      if (!key.success || !ANSWERABLE_KEYS.has(key.data)) continue
+      if (v.trim()) upsert.run(key.data, v.trim(), now)
+      else del.run(key.data)
+    }
   })
   tx()
-  return answers
+  return getAnswers(sqlite)
 }

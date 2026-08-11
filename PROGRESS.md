@@ -196,4 +196,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - **Stale-page autosave race caught red-handed**: the answers page's full-replace autosave, running on an outdated bundle against an old API process, silently dropped location AND reverted visa/major_type/graduation_date. All restored (47/47 verified round-trip). Rule for user: hard-refresh the answers page after every deploy BEFORE editing. TODO next loop: make PUT /api/answers merge-safe across schema versions.
 - Vercel redeployed, API restarted, cache cleared, verify exit 0.
 
+**2026-08-12 — University fill suppressed (user call) + MERGE-SAFE answers (third wipe = last wipe), v0.3.7 → GREEN (exit 0)**
+- **University comboboxes are never driven** — giant school lists are too slow live (user: "don't even fill that"). Applies to ALL sites (OKX eval updated to the policy); text-input/native-select university fields still fill. Honest note: "Big school lists are slow to drive — pick your university manually." education_institution answers-page override kept (48 questions).
+- **PUT /api/answers is now a MERGE, never a replace** — the stale-tab autosave wiped saved values a THIRD time (48 → 41 caught mid-session; 12 values restored again). New contract: keys present are upserted, keys sent explicitly blank are deleted one-by-one, absent keys untouched. A pre-deploy tab can no longer erase answers it doesn't know exist. Regression test simulates exactly the stale-bundle save.
+- All 13 demo-critical values verified in the live DB post-restart (gender Male, languages None, location HK SAR, programme Winter Intern, visa Neither, GPA set, referral HKUST, degree Bachelor + category…). No web redeploy needed this round.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
