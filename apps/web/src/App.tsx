@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, NavLink, Route, Routes } from 'react-router-dom'
 import { api } from './api'
+import { AnswersPage } from './pages/AnswersPage'
 import { ExtensionPage } from './pages/ExtensionPage'
 import { JobDetailPage } from './pages/JobDetailPage'
 import { JobsPage } from './pages/JobsPage'
@@ -36,6 +37,9 @@ export function App() {
             <NavLink to="/resume" className={navLink}>
               <span>📄</span> My Resume
             </NavLink>
+            <NavLink to="/answers" className={navLink}>
+              <span>⚡</span> Autofill answers
+            </NavLink>
             <NavLink to="/extension" className={navLink}>
               Install Extension <span className="text-xs">↗</span>
             </NavLink>
@@ -49,6 +53,7 @@ export function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/jobs/:id" element={<JobDetailPage />} />
           <Route path="/resume" element={<ProfilePage />} />
+          <Route path="/answers" element={<AnswersPage />} />
           <Route path="/extension" element={<ExtensionPage />} />
         </Routes>
       </div>

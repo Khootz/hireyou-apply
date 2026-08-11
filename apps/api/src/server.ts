@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import cors from '@fastify/cors'
 import multipart from '@fastify/multipart'
 import type Database from 'better-sqlite3'
+import { registerAnswerRoutes } from './routes/answers'
 import { registerAutofillRoutes } from './routes/autofill'
 import { registerDocumentRoutes } from './routes/documents'
 import { registerEmailRoutes, type EmailRouteDeps } from './routes/email'
@@ -61,6 +62,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
   registerDocumentRoutes(app, deps.sqlite)
   registerEmailRoutes(app, deps.sqlite, deps.email)
   registerAutofillRoutes(app, deps.sqlite)
+  registerAnswerRoutes(app, deps.sqlite)
 
   return app
 }

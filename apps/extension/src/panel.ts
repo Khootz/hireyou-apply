@@ -95,8 +95,8 @@ async function render(): Promise<void> {
     content().innerHTML = `<div class="card"><h2>No job detected</h2>
       <p class="muted">Open a job posting on the <a href="https://career.hkust.edu.hk/web/job.php" target="_blank">HKUST career board</a> and this panel will pick it up.</p></div>
       <div class="card"><h2>On an application form?</h2>
-      <p class="muted" style="margin-bottom:8px">On JobsDB or CTgoodjobs, I can suggest answers for the form's fields. Grey hints only — you review and type everything yourself. Never auto-submits.</p>
-      <button class="primary" id="scan-form">Fill application</button>
+      <p class="muted" style="margin-bottom:8px">I can scan any application page, suggest answers from your profile, and fill the form for you. You review every field — nothing is ever submitted automatically, and demographic questions are never touched.</p>
+      <button class="primary" id="scan-form">Scan this page</button>
       <div id="scan-status" class="muted" style="margin-top:6px"></div>
       <div id="scan-results" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div></div>`
     document.querySelector('#scan-form')?.addEventListener('click', scanForm)
@@ -232,6 +232,25 @@ interface FieldSuggestionLite {
   note?: string
 }
 
+interface FillOutcomeLite {
+  selector: string
+  label: string
+  status: 'filled' | 'skipped' | 'failed' | 'not_found'
+  reason?: string
+  value?: string
+}
+
+// The content script is declared for every http(s) page, but pages that were
+// already open when the extension loaded (or reloaded) don't have it yet —
+// inject on demand instead of telling the user "unsupported".
+async function ensureContentScript(tabId: number): Promise<void> {
+  try {
+    await chrome.tabs.sendMessage(tabId, { type: 'ping' })
+  } catch {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content-hints.js'] })
+  }
+}
+
 async function scanForm(): Promise<void> {
   const status = $('#scan-status')
   const results = $('#scan-results')
@@ -240,11 +259,13 @@ async function scanForm(): Promise<void> {
   try {
     const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
     if (tab?.id === undefined) throw new Error('no active tab')
+    const tabId = tab.id
     let scan: { fields: unknown[] }
     try {
-      scan = await chrome.tabs.sendMessage(tab.id, { type: 'scan-form' })
+      await ensureContentScript(tabId)
+      scan = await chrome.tabs.sendMessage(tabId, { type: 'scan-form' })
     } catch {
-      status.textContent = 'This page is not supported for form scanning (JobsDB and CTgoodjobs are).'
+      status.textContent = 'Cannot scan this page — browser-internal and extension-store pages are off limits.'
       return
     }
     if (!scan?.fields?.length) {
@@ -256,21 +277,27 @@ async function scanForm(): Promise<void> {
       method: 'POST',
       body: JSON.stringify({ fields: scan.fields, job_id: null }),
     })
-    const applied = (await chrome.tabs.sendMessage(tab.id, { type: 'apply-hints', suggestions })) as { applied: number }
     const withValue = suggestions.filter((s) => s.value && !s.do_not_fill)
-    status.textContent = `${withValue.length} suggestions ready (${applied?.applied ?? 0} grey hints shown in the form). Copy below, then paste into the form:`
-    results.innerHTML = suggestions
-      .map((s) => {
-        if (s.do_not_fill) {
-          return `<div class="gen-row" style="border-color:#fde68a"><div><strong>${esc(s.label || s.canonical)}</strong>
-            <div class="muted">${esc(s.note ?? 'Not suggested.')}</div></div></div>`
-        }
-        if (!s.value) return ''
-        return `<div class="gen-row"><div style="min-width:0"><strong>${esc(s.label || s.canonical)}</strong>
-          <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(s.value)}</div></div>
-          <button class="secondary" data-copy="${esc(s.value)}">Copy</button></div>`
-      })
-      .join('')
+    if (withValue.length === 0) {
+      status.textContent = 'No confident suggestions for this form — fill it manually.'
+      return
+    }
+    status.textContent = `${withValue.length} suggestion${withValue.length === 1 ? '' : 's'} ready.`
+    results.innerHTML =
+      `<button class="primary" id="do-autofill">⚡ Autofill ${withValue.length} field${withValue.length === 1 ? '' : 's'}</button>
+       <div class="muted" style="font-size:12px">Fills the form for you — nothing is ever submitted automatically.</div>` +
+      suggestions
+        .map((s) => {
+          if (s.do_not_fill) {
+            return `<div class="gen-row" style="border-color:#fde68a"><div><strong>${esc(s.label || s.canonical)}</strong>
+              <div class="muted">${esc(s.note ?? 'Not suggested.')}</div></div></div>`
+          }
+          if (!s.value) return ''
+          return `<div class="gen-row"><div style="min-width:0"><strong>${esc(s.label || s.canonical)}</strong>
+            <div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${esc(s.value)}</div></div>
+            <button class="secondary" data-copy="${esc(s.value)}">Copy</button></div>`
+        })
+        .join('')
     results.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
       btn.addEventListener('click', async () => {
         await navigator.clipboard.writeText(btn.dataset.copy ?? '')
@@ -278,8 +305,44 @@ async function scanForm(): Promise<void> {
         setTimeout(() => (btn.textContent = 'Copy'), 1200)
       }),
     )
+    document.querySelector('#do-autofill')?.addEventListener('click', () => void runAutofill(tabId, suggestions))
   } catch (err) {
     status.textContent = `⚠ ${(err as Error).message}`
+  }
+}
+
+async function runAutofill(tabId: number, suggestions: FieldSuggestionLite[]): Promise<void> {
+  const status = $('#scan-status')
+  const results = $('#scan-results')
+  const btn = document.querySelector<HTMLButtonElement>('#do-autofill')
+  if (btn) btn.disabled = true
+  status.textContent = 'Filling the form…'
+  try {
+    const { outcomes } = (await chrome.tabs.sendMessage(tabId, { type: 'autofill', suggestions })) as {
+      outcomes: FillOutcomeLite[]
+    }
+    const filled = outcomes.filter((o) => o.status === 'filled')
+    const attempted = outcomes.filter((o) => o.status !== 'skipped')
+    status.textContent = `✓ Filled ${filled.length}/${attempted.length} fields — review everything, then submit yourself.`
+    const ICON: Record<FillOutcomeLite['status'], string> = { filled: '✓', skipped: '○', failed: '⚠', not_found: '⚠' }
+    const COLOR: Record<FillOutcomeLite['status'], string> = {
+      filled: '#16a34a',
+      skipped: '#94a3b8',
+      failed: '#d97706',
+      not_found: '#d97706',
+    }
+    results.innerHTML = outcomes
+      .map(
+        (o) => `<div class="gen-row"><div style="min-width:0">
+          <strong style="color:${COLOR[o.status]}">${ICON[o.status]} ${esc(o.label)}</strong>
+          ${o.reason ? `<div class="muted">${esc(o.reason)}</div>` : ''}
+          ${o.status === 'filled' && o.value ? `<div class="muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">${esc(o.value)}</div>` : ''}
+        </div></div>`,
+      )
+      .join('')
+  } catch (err) {
+    status.textContent = `⚠ Autofill failed: ${(err as Error).message}`
+    if (btn) btn.disabled = false
   }
 }
 

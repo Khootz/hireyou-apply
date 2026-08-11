@@ -63,6 +63,30 @@ const MIGRATIONS: { id: string; sql: string }[] = [
     );`,
   },
   {
+    id: '006_autofill_cache_telemetry',
+    sql: `CREATE TABLE IF NOT EXISTS autofill_form_cache (
+      form_fingerprint TEXT PRIMARY KEY,
+      classifications_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS field_suggestion_events (
+      id TEXT PRIMARY KEY,
+      form_fingerprint TEXT NOT NULL,
+      canonical_field TEXT NOT NULL,
+      action TEXT NOT NULL CHECK (action IN ('copied','dismissed','ignored')),
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_suggestion_events_form ON field_suggestion_events (form_fingerprint);`,
+  },
+  {
+    id: '007_application_answers',
+    sql: `CREATE TABLE IF NOT EXISTS application_answers (
+      canonical TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );`,
+  },
+  {
     id: '005_email_records',
     sql: `CREATE TABLE IF NOT EXISTS email_records (
       id TEXT PRIMARY KEY,

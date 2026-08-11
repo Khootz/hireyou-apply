@@ -42,6 +42,12 @@ export const api = {
     form.append('file', file)
     return request<CvParseResponse>('/api/profile/parse-cv', { method: 'POST', body: form })
   },
+  getAnswers: () => request<{ answers: Record<string, string> }>('/api/answers').then((r) => r.answers),
+  saveAnswers: (answers: Record<string, string>) =>
+    request<{ answers: Record<string, string> }>('/api/answers', {
+      method: 'PUT',
+      body: JSON.stringify({ answers }),
+    }).then((r) => r.answers),
   listJobs: () => request<{ jobs: JobRecord[] }>('/api/jobs'),
   createJob: (input: Partial<JobInput>) =>
     request<{ job: JobRecord; deduped: boolean }>('/api/jobs', { method: 'POST', body: JSON.stringify(input) }),

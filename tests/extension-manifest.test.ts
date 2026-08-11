@@ -15,7 +15,12 @@ describe('built extension (dist/)', () => {
     for (const cs of manifest.content_scripts) {
       for (const js of cs.js) expect(fs.existsSync(path.join(DIST, js)), js).toBe(true)
     }
-    expect(manifest.host_permissions).toContain('https://career.hkust.edu.hk/*')
+    // autofill is generalized: the hints content script must reach any
+    // http(s) page, and the panel needs scripting for on-demand injection
+    expect(manifest.host_permissions).toContain('<all_urls>')
+    expect(manifest.permissions).toContain('scripting')
+    const hints = manifest.content_scripts.find((cs: { js: string[] }) => cs.js.includes('content-hints.js'))
+    expect(hints.matches).toEqual(['https://*/*', 'http://*/*'])
   })
 
   it('bundles are classic scripts with the shared extractor inlined', () => {

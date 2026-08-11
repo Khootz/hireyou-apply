@@ -38,5 +38,12 @@ API token in ⚙ settings (must match `API_AUTH_TOKEN` in `.env`).
 **What works end to end:** profile editor with CV-PDF pre-fill → save HKUST postings
 from the extension → tailored resume + cover letter (provenance-gated) → PDF preview/
 download → application email with attachments (SAFE_MODE delivers to the test inbox) →
-form-field suggestions on JobsDB/CTgoodjobs (grey hints + copy buttons, EEO fields
-always blocked). See PROGRESS.md for per-milestone status.
+one-click autofill on any http(s) application page (fill → verify → retry loop with
+per-field ✓/⚠ report, combobox type-ahead driving, staggered visible fill; EEO fields
+always blocked, never auto-submits). Classifications are cached per form shape in
+SQLite, so repeat scans are instant and survive LLM outages. Primary demo target:
+OKX Hong Kong postings on Greenhouse (e.g.
+`boards.greenhouse.io/embed/job_app?for=okx&token=7731745003`) — the evals in
+`apps/api/tests/autofill-greenhouse.test.ts` run the full pipeline against real
+captured OKX + Anthropic form HTML and require a 100% verified fill rate.
+See PROGRESS.md for per-milestone status.

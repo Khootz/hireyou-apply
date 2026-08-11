@@ -71,13 +71,22 @@ function isVisible(el: Element): boolean {
   return !(el as HTMLElement).hidden
 }
 
+function cssEscape(value: string): string {
+  if (typeof CSS !== 'undefined' && CSS.escape) return CSS.escape(value)
+  return value.replace(/([^\w-])/g, '\\$1')
+}
+
+// Required-field markers ("First Name*") are noise for classification.
+function cleanLabel(text: string): string {
+  return text.replace(/\s*\*\s*$/, '').trim()
+}
+
 function resolveLabel(el: Element): string {
   const doc = el.ownerDocument
   const id = el.getAttribute('id')
   if (id) {
-    const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id.replace(/(["\\])/g, '\\$1')
-    const forLabel = doc.querySelector(`label[for="${escaped}"]`)
-    if (forLabel?.textContent?.trim()) return forLabel.textContent.trim()
+    const forLabel = doc.querySelector(`label[for="${cssEscape(id)}"]`)
+    if (forLabel?.textContent?.trim()) return cleanLabel(forLabel.textContent)
   }
   const labelledBy = el.getAttribute('aria-labelledby')
   if (labelledBy) {
@@ -85,19 +94,19 @@ function resolveLabel(el: Element): string {
       .split(/\s+/)
       .map((lid) => doc.getElementById(lid)?.textContent?.trim() ?? '')
       .filter(Boolean)
-    if (parts.length) return parts.join(' ')
+    if (parts.length) return cleanLabel(parts.join(' '))
   }
   const ariaLabel = el.getAttribute('aria-label')
-  if (ariaLabel?.trim()) return ariaLabel.trim()
+  if (ariaLabel?.trim()) return cleanLabel(ariaLabel)
   const wrapping = el.closest('label')
-  if (wrapping?.textContent?.trim()) return wrapping.textContent.trim()
+  if (wrapping?.textContent?.trim()) return cleanLabel(wrapping.textContent)
   // nearest preceding text within the same container
   let node: Element | null = el
   for (let depth = 0; depth < 3 && node; depth++) {
     let sib = node.previousElementSibling
     while (sib) {
       const text = sib.textContent?.trim()
-      if (text && text.length < 200) return text
+      if (text && text.length < 200) return cleanLabel(text)
       sib = sib.previousElementSibling
     }
     node = node.parentElement
@@ -105,12 +114,16 @@ function resolveLabel(el: Element): string {
   return el.getAttribute('placeholder')?.trim() ?? ''
 }
 
+// id/name selectors survive a re-render; anonymous elements get tagged with a
+// data attribute during discovery (nth-of-type is NOT stable — it counts
+// within the parent, not the document, so it silently hit the wrong element).
 function stableSelector(el: Element, index: number): string {
   const id = el.getAttribute('id')
-  if (id) return `#${id}`
+  if (id) return `#${cssEscape(id)}`
   const name = el.getAttribute('name')
-  if (name) return `${el.tagName.toLowerCase()}[name="${name}"]`
-  return `${el.tagName.toLowerCase()}:nth-of-type(${index + 1})`
+  if (name) return `${el.tagName.toLowerCase()}[name="${name.replace(/(["\\])/g, '\\$1')}"]`
+  el.setAttribute('data-hy-field', String(index))
+  return `[data-hy-field="${index}"]`
 }
 
 const EXCLUDED_INPUT_TYPES = new Set(['hidden', 'submit', 'button', 'reset', 'image', 'file', 'password', 'search'])
@@ -123,6 +136,11 @@ export function discoverFields(doc: Document): FieldInfo[] {
     const inputType = (el.getAttribute('type') ?? (tag === 'input' ? 'text' : '')).toLowerCase()
     if (tag === 'input' && EXCLUDED_INPUT_TYPES.has(inputType)) return
     if (!isVisible(el)) return
+    // screen-reader-hidden / keyboard-unreachable inputs are framework
+    // internals (e.g. react-select's proxy "required" input), never real fields
+    if (el.getAttribute('aria-hidden') === 'true') return
+    if (el.getAttribute('tabindex') === '-1') return
+    if (el.hasAttribute('disabled') || el.hasAttribute('readonly')) return
     const maxlengthAttr = el.getAttribute('maxlength')
     const options =
       tag === 'select'
@@ -164,7 +182,10 @@ const RULES: [CanonicalField, RegExp][] = [
   ['last_name', /\b(last|family)\s*name|surname\b/i],
   ['linkedin_url', /linked\s*in/i],
   ['github_url', /github/i],
-  ['portfolio_url', /\b(portfolio|personal\s*(web)?site)\b/i],
+  ['portfolio_url', /\b(portfolio|personal\s*(web)?site|website)\b/i],
+  // before current_company: "notice period to your current employer" must not
+  // classify as the employer-name field
+  ['notice_period', /\bnotice\s*period\b/i],
   ['current_company', /\b(current|present)\s*(company|employer)\b/i],
   ['current_title', /\b(current|present|most\s+recent)\s*(role|title|position)\b/i],
   ['years_experience', /\byears?\s*(of)?\s*(work\s*)?experience\b/i],
@@ -173,7 +194,6 @@ const RULES: [CanonicalField, RegExp][] = [
   ['graduation_date', /\bgraduat/i],
   ['work_authorization', /\b(work\s*authoriz|authoriz.*work|right\s*to\s*work|work\s*permit|legally\s*(entitled|authorized))/i],
   ['visa_sponsorship_required', /\b(visa|sponsor)/i],
-  ['notice_period', /\bnotice\s*period\b/i],
   ['salary_expectation', /\b(salary|compensation|expected\s*pay|remuneration)\b/i],
   ['cover_letter', /\bcover\s*letter\b/i],
   ['why_this_role', /\bwhy\s+(do\s+you\s+want\s+)?(this|the)\s+(role|position|job)\b/i],
@@ -193,6 +213,160 @@ const AUTOCOMPLETE_MAP: Record<string, CanonicalField> = {
   'address-level2': 'location',
   bday: 'SENSITIVE_DO_NOT_FILL',
   sex: 'SENSITIVE_DO_NOT_FILL',
+}
+
+// ---------- application answers (Simplify-style personalization) ----------
+//
+// Common application questions that no resume answers ("notice period?",
+// "require sponsorship?"). The user answers each ONCE on the web app's
+// Autofill answers page; the autofill service then reuses them everywhere a
+// field classifies to the matching canonical. Sensitive/EEO canonicals are
+// deliberately absent — those stay unanswerable by design.
+
+export interface AnswerQuestion {
+  key: CanonicalField
+  question: string
+  hint: string
+}
+
+export const ANSWER_QUESTIONS: AnswerQuestion[] = [
+  { key: 'linkedin_url', question: 'LinkedIn profile URL', hint: 'https://linkedin.com/in/…' },
+  { key: 'github_url', question: 'GitHub profile URL', hint: 'https://github.com/…' },
+  { key: 'portfolio_url', question: 'Personal website / portfolio', hint: 'https://…' },
+  { key: 'work_authorization', question: 'Are you authorized to work in your target location?', hint: 'e.g. Yes — Hong Kong resident' },
+  { key: 'visa_sponsorship_required', question: 'Will you require visa sponsorship?', hint: 'e.g. No' },
+  { key: 'notice_period', question: 'Notice period / availability', hint: 'e.g. Available immediately' },
+  { key: 'salary_expectation', question: 'Expected salary', hint: 'e.g. HKD 25,000/month' },
+  { key: 'years_experience', question: 'Years of professional experience', hint: 'e.g. 2' },
+  { key: 'referral_source', question: 'How did you hear about us? (default answer)', hint: 'e.g. LinkedIn' },
+]
+
+export const ANSWERABLE_KEYS = new Set<CanonicalField>(ANSWER_QUESTIONS.map((q) => q.key))
+
+export const AnswersSchema = z.record(z.string(), z.string()).transform((rec) => {
+  const out: Partial<Record<CanonicalField, string>> = {}
+  for (const [k, v] of Object.entries(rec)) {
+    const key = CanonicalFieldSchema.safeParse(k)
+    if (key.success && ANSWERABLE_KEYS.has(key.data) && v.trim()) out[key.data] = v.trim()
+  }
+  return out
+})
+export type AnswerMap = z.infer<typeof AnswersSchema>
+
+// ---------- fill engine (generation half of the fill→verify loop) ----------
+//
+// Runs in the extension content script against the live DOM and in Vitest
+// against JSDOM fixtures, so the exact code the demo relies on is the code
+// the eval measures. Fills are verified by reading the value back; the
+// content script re-verifies after a delay and retries anything a framework
+// reverted. Never touches file inputs, never submits.
+
+export interface FillOutcome {
+  selector: string
+  label: string
+  status: 'filled' | 'skipped' | 'failed' | 'not_found'
+  reason?: string
+  value?: string
+}
+
+// React ignores direct `.value` writes (its instance tracker swallows them):
+// call the prototype's setter, then fire input/change so controlled state
+// catches up. Prototype lookup must go through the element's own realm —
+// `HTMLInputElement.prototype` here would be the wrong realm under JSDOM.
+export function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+  const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value')
+  if (desc?.set) desc.set.call(el, value)
+  else el.value = value
+  const win = el.ownerDocument.defaultView
+  const EventCtor = win?.Event ?? Event
+  el.dispatchEvent(new EventCtor('input', { bubbles: true }))
+  el.dispatchEvent(new EventCtor('change', { bubbles: true }))
+}
+
+function fillSelect(el: HTMLSelectElement, value: string): boolean {
+  const target = value.trim().toLowerCase()
+  const options = Array.from(el.options)
+  const text = (o: HTMLOptionElement) => (o.textContent ?? '').trim().toLowerCase()
+  const match =
+    options.find((o) => o.value.trim().toLowerCase() === target) ??
+    options.find((o) => text(o) === target) ??
+    options.find((o) => text(o) !== '' && text(o).includes(target)) ??
+    options.find((o) => text(o) !== '' && target.includes(text(o)))
+  if (!match) return false
+  el.value = match.value
+  const win = el.ownerDocument.defaultView
+  const EventCtor = win?.Event ?? Event
+  el.dispatchEvent(new EventCtor('input', { bubbles: true }))
+  el.dispatchEvent(new EventCtor('change', { bubbles: true }))
+  return el.selectedIndex === options.indexOf(match)
+}
+
+export function isCombobox(el: Element): boolean {
+  return el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list'
+}
+
+// A number input silently rejects non-numeric text, so "Jun 2026" must become
+// "2026" BEFORE the write — fill and verify both coerce so they agree.
+export function coerceValueForControl(el: Element, value: string): string {
+  if ((el as HTMLInputElement).type === 'number' && !/^\d+(\.\d+)?$/.test(value.trim())) {
+    const year = /\b(19|20)\d{2}\b/.exec(value)
+    if (year) return year[0]
+  }
+  return value
+}
+
+export function applyFillToDocument(doc: Document, suggestions: FieldSuggestion[]): FillOutcome[] {
+  return suggestions.map((s): FillOutcome => {
+    const base = { selector: s.selector, label: s.label || s.canonical }
+    if (s.do_not_fill) return { ...base, status: 'skipped', reason: s.note ?? 'Marked do-not-fill.' }
+    if (!s.value) return { ...base, status: 'skipped', reason: s.note ?? 'No suggested value.' }
+    const el = doc.querySelector(s.selector)
+    if (!el) return { ...base, status: 'not_found', reason: 'Field no longer on the page.' }
+    if (isCombobox(el)) {
+      return { ...base, status: 'skipped', reason: 'Custom dropdown — pick this one manually.', value: s.value }
+    }
+    if (el instanceof (doc.defaultView?.HTMLSelectElement ?? HTMLSelectElement)) {
+      const ok = fillSelect(el as HTMLSelectElement, s.value)
+      return ok
+        ? { ...base, status: 'filled', value: s.value }
+        : { ...base, status: 'failed', reason: 'No matching option in the dropdown.', value: s.value }
+    }
+    const input = el as HTMLInputElement | HTMLTextAreaElement
+    if (typeof input.value !== 'string') {
+      return { ...base, status: 'failed', reason: 'Unsupported control type.', value: s.value }
+    }
+    if (input.type === 'checkbox' || input.type === 'radio') {
+      return { ...base, status: 'skipped', reason: 'Checkbox/radio — tick this one yourself.', value: s.value }
+    }
+    const coerced = coerceValueForControl(input, s.value)
+    setNativeValue(input, coerced)
+    return input.value === coerced
+      ? { ...base, status: 'filled', value: coerced }
+      : { ...base, status: 'failed', reason: 'Page rejected the value.', value: s.value }
+  })
+}
+
+// The verification half: read every expected value back from the live DOM.
+// Comboboxes are excluded — their selection doesn't live in .value, so the
+// caller (content script) verifies those against the rendered selection text.
+export function verifyFill(doc: Document, suggestions: FieldSuggestion[]): { selector: string; ok: boolean; actual: string }[] {
+  return suggestions
+    .filter((s) => {
+      if (!s.value || s.do_not_fill) return false
+      const el = doc.querySelector(s.selector)
+      return !el || !isCombobox(el)
+    })
+    .map((s) => {
+      const el = doc.querySelector(s.selector) as HTMLInputElement | HTMLSelectElement | null
+      if (!el) return { selector: s.selector, ok: false, actual: '' }
+      const actual = typeof el.value === 'string' ? el.value : ''
+      const ok =
+        actual === coerceValueForControl(el, s.value!) ||
+        // selects report the option VALUE; the suggestion may match its text
+        (el instanceof (doc.defaultView?.HTMLSelectElement ?? HTMLSelectElement) &&
+          ((el as HTMLSelectElement).selectedOptions[0]?.textContent ?? '').trim().toLowerCase() === s.value!.trim().toLowerCase())
+      return { selector: s.selector, ok, actual }
+    })
 }
 
 export function classifyFieldDeterministic(field: FieldInfo): CanonicalField {

@@ -18,5 +18,6 @@ powershell -NoProfile -Command "for ($i=0; $i -lt 30; $i++) { try { Invoke-WebRe
 if not %errorlevel%==0 echo API did not come up - check the minimized "HireYou Apply servers" window for errors.
 
 :open
-start http://localhost:5180
+rem Hosted UI on Vercel; it talks to the local API on 127.0.0.1:3100.
+start https://hireyou-apply.vercel.app
 endlocal

@@ -1,57 +1,246 @@
-import { discoverFields, type FieldSuggestion } from '@app/shared/autofill'
+import {
+  applyFillToDocument,
+  coerceValueForControl,
+  discoverFields,
+  isCombobox,
+  setNativeValue,
+  verifyFill,
+  type FieldSuggestion,
+  type FillOutcome,
+} from '@app/shared/autofill'
 
-// Suggestion-first autofill (JobsDB / CTgoodjobs / generic apply forms).
-// Suggestions render as grey hint text via the placeholder attribute — never
-// as the field's value, so nothing can be submitted that the user did not
-// type, and framework-controlled inputs are never fought with (spec §11.D
-// simply doesn't apply). Copying real values happens from the side panel.
+// Runs on every http(s) page (also injected on demand by the panel when the
+// page loaded before the extension did — see the guard below).
+//
+// Two modes:
+//  - apply-hints: grey placeholder hints only, nothing typed for the user.
+//  - autofill: actually fills values, then runs a verify→retry loop — set the
+//    value, read it back after the framework has had a tick to react, and
+//    retry anything that got reverted with a keyboard-simulation fallback.
+//    File inputs, checkboxes and custom dropdowns are reported, not touched.
+//    NOTHING here ever submits the form.
 
-const originalPlaceholders = new Map<string, string>()
+const w = window as unknown as { __hireyouHintsLoaded?: boolean }
+if (!w.__hireyouHintsLoaded) {
+  w.__hireyouHintsLoaded = true
+  init()
+}
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === 'scan-form') {
-    sendResponse({ fields: discoverFields(document), page_title: document.title, url: window.location.href })
-    return false
-  }
-  if (message?.type === 'apply-hints') {
-    const suggestions = message.suggestions as FieldSuggestion[]
-    let applied = 0
-    for (const s of suggestions) {
-      if (!s.value || s.do_not_fill) continue
-      const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(s.selector)
-      if (!el || !('placeholder' in el)) continue
-      if (el.value) continue // user already typed — never interfere
-      if (!originalPlaceholders.has(s.selector)) originalPlaceholders.set(s.selector, el.placeholder)
-      el.placeholder = s.value
-      el.style.outline = '2px solid #93c5fd'
-      el.style.outlineOffset = '1px'
-      applied++
+function init(): void {
+  const originalPlaceholders = new Map<string, string>()
+
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type === 'scan-form') {
+      sendResponse({ fields: discoverFields(document), page_title: document.title, url: window.location.href })
+      return false
     }
-    showToast(applied)
-    sendResponse({ applied })
-    return false
-  }
-  if (message?.type === 'clear-hints') {
-    for (const [selector, original] of originalPlaceholders) {
-      const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)
-      if (el) {
-        el.placeholder = original
-        el.style.outline = ''
+    if (message?.type === 'autofill') {
+      void runAutofill(message.suggestions as FieldSuggestion[]).then(sendResponse)
+      return true // async response
+    }
+    if (message?.type === 'apply-hints') {
+      const suggestions = message.suggestions as FieldSuggestion[]
+      let applied = 0
+      for (const s of suggestions) {
+        if (!s.value || s.do_not_fill) continue
+        const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(s.selector)
+        if (!el || !('placeholder' in el)) continue
+        if (el.value) continue // user already typed — never interfere
+        if (!originalPlaceholders.has(s.selector)) originalPlaceholders.set(s.selector, el.placeholder)
+        el.placeholder = s.value
+        el.style.outline = '2px solid #93c5fd'
+        el.style.outlineOffset = '1px'
+        applied++
       }
+      showToast(`${applied} field hint${applied === 1 ? '' : 's'} shown · copy answers from the side panel · `)
+      sendResponse({ applied })
+      return false
     }
-    originalPlaceholders.clear()
-    document.getElementById('hireyou-toast')?.remove()
-    sendResponse({ ok: true })
+    if (message?.type === 'clear-hints') {
+      for (const [selector, original] of originalPlaceholders) {
+        const el = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)
+        if (el) {
+          el.placeholder = original
+          el.style.outline = ''
+        }
+      }
+      originalPlaceholders.clear()
+      document.getElementById('hireyou-toast')?.remove()
+      sendResponse({ ok: true })
+      return false
+    }
     return false
-  }
-  return false
-})
+  })
+}
 
-function showToast(count: number): void {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function runAutofill(suggestions: FieldSuggestion[]): Promise<{ outcomes: FillOutcome[] }> {
+  // Pass 1: prototype-setter fill, verified synchronously. Fields are filled
+  // one at a time with a short pause and a highlight flash — watchable, and
+  // paced like fast typing rather than an instant blink.
+  const outcomes: FillOutcome[] = []
+  for (const s of suggestions) {
+    const [outcome] = applyFillToDocument(document, [s])
+    outcomes.push(outcome)
+    if (outcome.status === 'filled') {
+      const el = document.querySelector<HTMLElement>(s.selector)
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      flash(el)
+      await sleep(160)
+    }
+  }
+
+  // Combobox pass: react-select style dropdowns can't be set via .value, but
+  // they CAN be driven like a user — type the text, let the menu filter,
+  // press Enter, then check the rendered selection actually shows the value.
+  for (const o of outcomes) {
+    if (o.status !== 'skipped' || !o.value) continue
+    const s = suggestions.find((x) => x.selector === o.selector)
+    const el = document.querySelector(o.selector)
+    if (!s?.value || !(el instanceof HTMLInputElement) || !isCombobox(el)) continue
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    await sleep(250) // let the scroll finish so the menu opens where the eye is
+    if (await fillCombobox(el, s.value)) {
+      o.status = 'filled'
+      o.reason = undefined
+      flash(el.closest<HTMLElement>('.select-shell') ?? el)
+    } else {
+      o.reason = 'Dropdown — no matching option found, pick it manually.'
+    }
+  }
+
+  // Pass 2: give the page's framework a tick to react, then verify again —
+  // a controlled component that ignored the events reverts the value here.
+  await sleep(150)
+  let failed = verifyFill(document, suggestions).filter((v) => !v.ok)
+
+  // Pass 3: keyboard-simulation retry for anything reverted.
+  for (const v of failed) {
+    const s = suggestions.find((x) => x.selector === v.selector)
+    const el = document.querySelector(v.selector)
+    if (!s?.value || !(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) continue
+    const retryValue = coerceValueForControl(el, s.value)
+    el.focus()
+    el.select?.()
+    try {
+      document.execCommand('selectAll', false)
+      document.execCommand('insertText', false, retryValue)
+    } catch {
+      setNativeValue(el, retryValue)
+    }
+    el.dispatchEvent(new Event('change', { bubbles: true }))
+    el.blur()
+  }
+  if (failed.length > 0) await sleep(150)
+
+  // Final verdict overrides pass-1 optimism.
+  const finalState = new Map(verifyFill(document, suggestions).map((v) => [v.selector, v.ok]))
+  for (const o of outcomes) {
+    const ok = finalState.get(o.selector)
+    if (ok === undefined) continue // skipped/do-not-fill rows keep their status
+    if (ok && o.status !== 'filled') {
+      o.status = 'filled'
+      o.reason = undefined
+    } else if (!ok && o.status === 'filled') {
+      o.status = 'failed'
+      o.reason = 'The page kept resetting this value — fill it manually.'
+    }
+  }
+
+  const filled = outcomes.filter((o) => o.status === 'filled').length
+  showToast(`filled ${filled}/${outcomes.length} fields · review before submitting · `)
+  return { outcomes }
+}
+
+// Poll until a condition holds — dropdown menus open/filter/close on their
+// own schedule, so fixed sleeps either race them or waste demo time.
+async function waitFor(cond: () => boolean, timeoutMs: number, stepMs = 60): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (cond()) return true
+    await sleep(stepMs)
+  }
+  return cond()
+}
+
+// Drive a react-select style combobox like a user: type → WAIT for the menu
+// to open and filter → click the matching option (react-select selects on
+// mousedown, and clicking is far more reliable than Enter) → WAIT for the
+// rendered selection → close the menu before anyone touches the next field.
+// Returns true only if the selection is verifiably rendered.
+async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolean> {
+  const pressKey = (key: string, keyCode: number) => {
+    for (const type of ['keydown', 'keyup'] as const) {
+      el.dispatchEvent(new KeyboardEvent(type, { key, keyCode, which: keyCode, bubbles: true, cancelable: true }))
+    }
+  }
+  const menuOpen = () => el.getAttribute('aria-expanded') === 'true'
+  const menuOptions = (): HTMLElement[] => {
+    const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
+    const scope = (listId && document.getElementById(listId)) || el.closest('.select-shell') || document.body
+    return Array.from(scope.querySelectorAll<HTMLElement>('[role="option"], [class*="select__option"]'))
+  }
+  // the committed selection renders OUTSIDE the menu (react-select's
+  // single-value node) — checking the whole shell would false-positive on
+  // the still-open menu showing the same text
+  const selectedText = () => {
+    const shell = el.closest('.select-shell, .select__container') ?? el.parentElement?.parentElement
+    return (shell?.querySelector('[class*="single-value"], [class*="multi-value"]')?.textContent ?? '').toLowerCase()
+  }
+  const target = value.trim().toLowerCase()
+
+  el.focus()
+  setNativeValue(el, value)
+  await waitFor(() => menuOpen() && menuOptions().length > 0, 2000)
+
+  const options = menuOptions()
+  const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
+  const match =
+    options.find((o) => text(o) === target) ??
+    options.find((o) => text(o).includes(target)) ??
+    options.find((o) => target.includes(text(o)) && text(o) !== '') ??
+    // the type-ahead already filtered: a single survivor IS the match
+    (options.length === 1 ? options[0] : undefined)
+
+  let ok = false
+  if (match) {
+    const chosen = text(match)
+    for (const type of ['mousedown', 'mouseup', 'click'] as const) {
+      match.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }))
+    }
+    ok = await waitFor(() => selectedText().includes(chosen), 1500)
+  } else if (options.length > 0) {
+    // no readable option nodes matched — fall back to keyboard selection
+    pressKey('Enter', 13)
+    ok = await waitFor(() => selectedText().includes(target), 1000)
+  }
+
+  // leave the field clean and CLOSED whatever happened — a menu left open
+  // swallows the next field's events
+  if (!ok) setNativeValue(el, '')
+  if (menuOpen()) pressKey('Escape', 27)
+  el.blur()
+  await waitFor(() => !menuOpen(), 800)
+  await sleep(250) // settle: close animations finish before the next field
+  return ok
+}
+
+function flash(el: HTMLElement | null): void {
+  if (!el) return
+  const original = el.style.outline
+  el.style.outline = '2px solid #22c55e'
+  el.style.outlineOffset = '1px'
+  setTimeout(() => {
+    el.style.outline = original
+  }, 700)
+}
+
+function showToast(text: string): void {
   document.getElementById('hireyou-toast')?.remove()
   const toast = document.createElement('div')
   toast.id = 'hireyou-toast'
-  toast.textContent = `HireYou: ${count} field hint${count === 1 ? '' : 's'} shown · copy answers from the side panel · `
+  toast.textContent = `HireYou: ${text}`
   const close = document.createElement('span')
   close.textContent = '×'
   close.style.cssText = 'cursor:pointer;font-weight:bold;padding-left:4px'

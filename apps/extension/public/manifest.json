@@ -12,8 +12,8 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-  "permissions": ["sidePanel", "storage", "tabs"],
-  "host_permissions": ["https://career.hkust.edu.hk/*", "http://127.0.0.1:3100/*", "http://localhost:3100/*"],
+  "permissions": ["sidePanel", "storage", "tabs", "scripting"],
+  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["https://career.hkust.edu.hk/web/job_detail.php*"],
@@ -21,7 +21,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.jobsdb.com/*", "https://*.ctgoodjobs.hk/*"],
+      "matches": ["https://*/*", "http://*/*"],
       "js": ["content-hints.js"],
       "run_at": "document_idle"
     }

@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import type Database from 'better-sqlite3'
 import type { JobRecord, MasterProfile } from '@app/shared'
 import {
+  ANSWERABLE_KEYS,
   CanonicalFieldSchema,
   classifyFieldDeterministic,
   type CanonicalField,
@@ -9,6 +11,7 @@ import {
   type FieldSuggestion,
 } from '@app/shared/autofill'
 import { chatJSON } from '../llm/client'
+import { getAnswers } from './answers'
 import { getProfile } from './profile'
 
 // Answer routing (spec §8.4): direct-copy fields never touch a model;
@@ -17,6 +20,8 @@ import { getProfile } from './profile'
 
 const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>> = {
   full_name: (p) => p.contact.full_name,
+  first_name: (p) => splitFullName(p.contact.full_name).first,
+  last_name: (p) => splitFullName(p.contact.full_name).last,
   email: (p) => p.contact.email,
   phone: (p) => p.contact.phone,
   location: (p) => p.contact.location,
@@ -26,6 +31,30 @@ const DIRECT_COPY: Partial<Record<CanonicalField, (p: MasterProfile) => string>>
   // derived, never generated (a model would happily round 2.5 years up to 5)
   current_title: (p) => latestExperienceEntry(p)?.role ?? '',
   current_company: (p) => latestExperienceEntry(p)?.organisation ?? '',
+  education_institution: (p) => educationEntry(p)?.organisation ?? '',
+  degree: (p) => educationEntry(p)?.role ?? '',
+  graduation_date: (p) => educationEntry(p)?.end_date ?? '',
+}
+
+// "THIEN ZHI, KHOO" is GIVEN, FAMILY (HK convention); without a comma the
+// last token is the family name. Heuristic, but wrong is worse than empty
+// only for edge cases the user reviews before submitting anyway.
+export function splitFullName(full: string): { first: string; last: string } {
+  const t = full.trim()
+  if (!t) return { first: '', last: '' }
+  if (t.includes(',')) {
+    const [given, family = ''] = t.split(',').map((s) => s.trim())
+    return { first: given, last: family }
+  }
+  const parts = t.split(/\s+/)
+  if (parts.length === 1) return { first: t, last: '' }
+  return { first: parts.slice(0, -1).join(' '), last: parts[parts.length - 1] }
+}
+
+function educationEntry(profile: MasterProfile) {
+  const section = profile.sections.find((s) => s.type === 'experience' && /education/i.test(s.title))
+  if (!section || section.type !== 'experience') return null
+  return section.content.entries[0] ?? null
 }
 
 function latestExperienceEntry(profile: MasterProfile) {
@@ -56,6 +85,31 @@ function profileSummary(profile: MasterProfile): string {
   return JSON.stringify({ contact: profile.contact, sections: profile.sections }, null, 1)
 }
 
+// Classification is deterministic per form shape, so it is cached by a
+// fingerprint over every field's identifying attributes. A hit skips the LLM
+// entirely — repeat scans are instant and keep working when the provider is
+// down. VALUES are never cached: they come from the live profile every time.
+export function formFingerprint(fields: FieldInfo[]): string {
+  const signature = fields
+    .map((f) => [f.selector, f.label, f.name, f.autocomplete, f.input_type, f.options.join(',')].join('|'))
+    .sort()
+    .join('\n')
+  return createHash('sha256').update(signature).digest('hex')
+}
+
+function readCachedClassifications(sqlite: Database.Database, fingerprint: string): Map<string, CanonicalField> | null {
+  const row = sqlite
+    .prepare(`SELECT classifications_json FROM autofill_form_cache WHERE form_fingerprint = ?`)
+    .get(fingerprint) as { classifications_json: string } | undefined
+  if (!row) return null
+  try {
+    const parsed = z.record(z.string(), CanonicalFieldSchema).parse(JSON.parse(row.classifications_json))
+    return new Map(Object.entries(parsed))
+  } catch {
+    return null // unreadable cache row = miss, never an error
+  }
+}
+
 export async function suggestForFields(
   sqlite: Database.Database,
   fields: FieldInfo[],
@@ -63,16 +117,19 @@ export async function suggestForFields(
   fixtures = { classify: 'autofill-classify', answers: 'autofill-answers' },
 ): Promise<FieldSuggestion[]> {
   const profile = getProfile(sqlite)
+  const fingerprint = formFingerprint(fields)
+  const cached = readCachedClassifications(sqlite, fingerprint)
   const classified = new Map<string, CanonicalField>()
   const unknown: FieldInfo[] = []
 
   for (const f of fields) {
-    const canonical = classifyFieldDeterministic(f)
+    const canonical = cached?.get(f.selector) ?? classifyFieldDeterministic(f)
     classified.set(f.selector, canonical)
-    if (canonical === 'UNKNOWN') unknown.push(f)
+    if (!cached && canonical === 'UNKNOWN') unknown.push(f)
   }
 
   // Tier 2: ONE batched call for everything the rules couldn't name.
+  let llmFailed = false
   if (unknown.length > 0) {
     try {
       const result = await chatJSON({
@@ -88,7 +145,18 @@ export async function suggestForFields(
       }
     } catch {
       // classification fallback failed → those fields simply stay UNKNOWN
+      llmFailed = true
     }
+  }
+
+  // Never freeze a failure into the cache — a degraded classification map
+  // would silently outlive the outage that caused it.
+  if (!cached && !llmFailed) {
+    sqlite
+      .prepare(
+        `INSERT OR REPLACE INTO autofill_form_cache (form_fingerprint, classifications_json, created_at) VALUES (?, ?, ?)`,
+      )
+      .run(fingerprint, JSON.stringify(Object.fromEntries(classified)), new Date().toISOString())
   }
 
   // Generative answers: one batched call, only with a job context.
@@ -115,6 +183,8 @@ export async function suggestForFields(
     }
   }
 
+  const answers = getAnswers(sqlite)
+
   return fields.map((f): FieldSuggestion => {
     const canonical = classified.get(f.selector) ?? 'UNKNOWN'
     if (canonical === 'SENSITIVE_DO_NOT_FILL') {
@@ -127,9 +197,10 @@ export async function suggestForFields(
         note: 'Voluntary disclosure question — we never suggest answers for these.',
       }
     }
-    const direct = DIRECT_COPY[canonical]?.(profile)
-    if (direct) {
-      const value = f.maxlength ? direct.slice(0, f.maxlength) : direct
+    // a saved application answer beats a derived guess for the keys it covers
+    const raw = answers[canonical] ?? DIRECT_COPY[canonical]?.(profile)
+    if (raw) {
+      const value = f.maxlength ? raw.slice(0, f.maxlength) : raw
       return { selector: f.selector, canonical, label: f.label, value, do_not_fill: false }
     }
     const gen = generated.get(f.selector)
@@ -142,7 +213,12 @@ export async function suggestForFields(
       label: f.label,
       value: null,
       do_not_fill: false,
-      note: canonical === 'UNKNOWN' ? undefined : 'No confident answer from your profile — fill manually.',
+      note:
+        canonical === 'UNKNOWN'
+          ? undefined
+          : ANSWERABLE_KEYS.has(canonical)
+            ? 'Answer this once on the Autofill answers page and it fills automatically next time.'
+            : 'No confident answer from your profile — fill manually.',
     }
   })
 }
