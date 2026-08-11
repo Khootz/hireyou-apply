@@ -223,7 +223,8 @@ export async function suggestForFields(
     // a saved application answer beats a derived guess for the keys it covers
     let raw = answers[canonical] ?? DIRECT_COPY[canonical]?.(profile)
     if (canonical === 'phone' && formHasCodeField && raw) {
-      raw = raw.trim().replace(/^\+\d{1,4}[\s-]*/, '')
+      // local part only, no separators — MokaHR's number inputs stop at spaces
+      raw = raw.trim().replace(/^\+\d{1,4}[\s-]*/, '').replace(/[\s-]+/g, '')
     }
     if (raw) {
       const value = f.maxlength ? raw.slice(0, f.maxlength) : raw

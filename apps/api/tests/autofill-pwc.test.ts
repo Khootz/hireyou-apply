@@ -7,6 +7,7 @@ import {
   ANSWER_QUESTIONS,
   applyFillToDocument,
   classifyFieldDeterministic,
+  discoverFields,
   FieldInfoSchema,
   verifyFill,
   type FieldSuggestion,
@@ -129,7 +130,8 @@ describe('split phone widgets (PwC mobile truncation regression)', () => {
     ]
     const suggestions = await suggestForFields(sqlite, fields, null)
     const by = (sel: string) => suggestions.find((s) => s.selector === sel)!
-    expect(by('#mobile').value).toBe('4492 4625')
+    // local part only, separators stripped — MokaHR number inputs stop at spaces
+    expect(by('#mobile').value).toBe('44924625')
     expect(by('#code').value).toBe('+852')
   })
 
@@ -142,6 +144,47 @@ describe('split phone widgets (PwC mobile truncation regression)', () => {
     )
     const suggestions = await suggestForFields(sqlite, [mk('Mobile', { selector: '#mobile', input_type: 'tel' })], null)
     expect(suggestions[0].value).toBe('+852 4492 4625')
+  })
+})
+
+describe('MokaHR select widgets (exact structure from the captured PwC page)', () => {
+  // verbatim widget anatomy from the user's live capture 2026-08-11: a plain
+  // text input inside an sd-Select-container label — NO combobox ARIA at all.
+  // Typing into it as a text field filters the menu without committing.
+  const WIDGET = `<html><body>
+    <div class="apply-field-Q2iJ7AtQGX select_info-zjdod05hST">
+      <div class="title-IWWQ0Xa4L7"><span><span lang="en-US">Have you been employed by PwC China before(including internship)?</span></span></div>
+      <div class="ctrl-CICMG4Fr4_"><div class="sd-Tooltip-container-2zU-8 w-full-mRUtzMQLHs">
+        <div class="sd-Dropdown-container-282zZ" style="width: 100%;">
+          <label class="sd-Input-container-3OoVt sd-Select-container-D6nZH select_info sd-Input-lg-39_0c" style="width: 100%;">
+            <span class="sd-Input-display-value-1RTHN sd-Input-display-value-spacing-bhYPY"></span>
+            <input type="text" class="sd-Input-input-QsLkW sd-Input-common-input-21SDH sd-Input-has-addon-SMZCZ" placeholder="Please select" autocomplete="nope" maxlength="-1" value="" id="pwc-employed">
+            <span class="sd-Input-addon-29hJw sd-Select-addon-3AtZz"><span class="sd-Icon-container-18tcO sd-Icon-iconcaretDown-C6PEX"></span></span>
+          </label>
+          <span><div class="sd-Dropdown-dropdown-1c-rG"><div class="sd-Select-menu-UbIS2"><div class="sd-Select-scrollable-1FoVy">
+            <div class="sd-Menu-container-3HY1z"><div class="sd-Menu-content-2vKOA"><div class="sd-Menu-content-item-37fPj"><span>Yes</span></div></div></div>
+            <div class="sd-Menu-container-3HY1z"><div class="sd-Menu-content-2vKOA"><div class="sd-Menu-content-item-37fPj"><span>No</span></div></div></div>
+          </div></div></div></span>
+        </div>
+      </div></div>
+    </div>
+  </body></html>`
+
+  it('detects the ARIA-free select input as a combobox and never types into it', () => {
+    const doc = new JSDOM(WIDGET).window.document
+    const fields = discoverFields(doc)
+    const field = fields.find((f) => f.selector === '#pwc-employed')!
+    expect(field).toBeDefined()
+    expect(classifyFieldDeterministic(field)).toBe('previously_employed_here')
+
+    const suggestions: FieldSuggestion[] = [
+      { selector: '#pwc-employed', canonical: 'previously_employed_here', label: field.label, value: 'No', do_not_fill: false },
+    ]
+    const [outcome] = applyFillToDocument(doc, suggestions)
+    // pass 1 must hand it to the combobox driver, not type into the input
+    expect(outcome.status).toBe('skipped')
+    expect(outcome.reason).toMatch(/dropdown/i)
+    expect((doc.querySelector('#pwc-employed') as HTMLInputElement).value).toBe('')
   })
 })
 

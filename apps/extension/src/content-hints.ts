@@ -186,75 +186,93 @@ async function fillCombobox(el: HTMLInputElement, value: string): Promise<boolea
       target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }))
     }
   }
-  const menuOpen = () => el.getAttribute('aria-expanded') === 'true'
+  // MokaHR renders its menu inside the widget's own Dropdown-container (kept
+  // in the DOM but parked offscreen when closed) — scope there first, filter
+  // to options actually on screen
+  const dropdownScope = el.closest<HTMLElement>('[class*="Dropdown-container"], .select-shell')
+  const onScreen = (o: HTMLElement) => {
+    const r = o.getBoundingClientRect()
+    return r.height > 0 && r.top > -50 && r.top < window.innerHeight + 400
+  }
   const menuOptions = (): HTMLElement[] => {
     const listId = el.getAttribute('aria-controls') || el.getAttribute('aria-owns')
-    const scoped =
-      (listId && document.getElementById(listId)) ||
-      el.closest('.select-shell') ||
-      null
-    const nodes = Array.from(
-      (scoped ?? document.body).querySelectorAll<HTMLElement>(
-        '[role="option"], [class*="select__option"], [class*="select-item-option"]',
+    const scope = (listId && document.getElementById(listId)) || dropdownScope || document.body
+    return Array.from(
+      scope.querySelectorAll<HTMLElement>(
+        '[role="option"], [class*="select__option"], [class*="select-item-option"], [class*="Menu-container"]',
       ),
-    )
-    // portal dropdowns (AntD) live under <body>; skip options of CLOSED menus
-    return nodes.filter((o) => o.offsetParent !== null || scoped !== null)
+    ).filter(onScreen)
   }
+  const menuOpen = () => el.getAttribute('aria-expanded') === 'true' || menuOptions().length > 0
   // the committed selection renders OUTSIDE the menu — react-select's
-  // single-value node or AntD's selection-item
+  // single-value, AntD's selection-item, MokaHR's display-value span
   const selectedText = () => {
     const shell =
-      el.closest('.select-shell, .select__container, [class*="ant-select"]') ?? el.parentElement?.parentElement
-    const node = shell?.querySelector('[class*="single-value"], [class*="multi-value"], [class*="selection-item"]')
+      el.closest('[class*="Select-container"], .select-shell, .select__container, [class*="ant-select"]') ??
+      el.parentElement?.parentElement
+    const node = shell?.querySelector(
+      '[class*="single-value"], [class*="multi-value"], [class*="selection-item"], [class*="display-value"]',
+    )
     return ((node?.getAttribute('title') || node?.textContent) ?? '').toLowerCase()
   }
   const target = value.trim().toLowerCase()
+  const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
+  const pickFrom = (options: HTMLElement[]): HTMLElement | undefined => {
+    // year/month pickers: "2026-06-30" must match the "2026" / "6" option
+    const datePart = datePartTarget(value, options.map((o) => o.textContent ?? ''))?.toLowerCase()
+    const findFor = (needle: string) =>
+      options.find((o) => text(o) === needle) ??
+      options.find((o) => text(o).includes(needle)) ??
+      options.find((o) => needle.includes(text(o)) && text(o) !== '')
+    return (
+      (datePart ? findFor(datePart) : findFor(target)) ??
+      // the type-ahead already filtered: a single survivor IS the match
+      (options.length === 1 ? options[0] : undefined)
+    )
+  }
 
   el.focus()
-  if (!el.readOnly) setNativeValue(el, value)
-  let opened = await waitFor(() => menuOpen() && menuOptions().length > 0, el.readOnly ? 300 : 2000)
+  clickOn(el)
+  if (!el.readOnly) setNativeValue(el, value) // typing filters the menu
+  let opened = await waitFor(() => menuOptions().length > 0, el.readOnly ? 400 : 1500)
   if (!opened) {
-    // typing didn't open it (readonly inner input) — click the widget open,
-    // walking out from the input to the clickable shell
-    const shells = [el, el.parentElement, el.closest<HTMLElement>('[class*="selector"], [class*="select"]')]
+    // still closed (readonly inner input) — click the shell open
+    const shells = [el.parentElement, el.closest<HTMLElement>('[class*="selector"], [class*="select"]')]
     for (const shell of shells) {
       if (!shell) continue
       clickOn(shell)
-      opened = await waitFor(() => menuOpen() && menuOptions().length > 0, 700)
+      opened = await waitFor(() => menuOptions().length > 0, 700)
       if (opened) break
     }
   }
 
-  const options = menuOptions()
-  const text = (o: HTMLElement) => (o.textContent ?? '').trim().toLowerCase()
-  // year/month pickers: "2026-06-30" must match the "2026" / "6" option
-  const datePart = datePartTarget(value, options.map((o) => o.textContent ?? ''))?.toLowerCase()
-  const findFor = (needle: string) =>
-    options.find((o) => text(o) === needle) ??
-    options.find((o) => text(o).includes(needle)) ??
-    options.find((o) => needle.includes(text(o)) && text(o) !== '')
-  const match =
-    (datePart ? findFor(datePart) : findFor(target)) ??
-    // the type-ahead already filtered: a single survivor IS the match
-    (options.length === 1 ? options[0] : undefined)
+  let match = pickFrom(menuOptions())
+  if (!match && !el.readOnly && el.value) {
+    // typed text filtered the menu to nothing ("No result") — clear it and
+    // match against the FULL option list instead
+    setNativeValue(el, '')
+    await sleep(200)
+    match = pickFrom(menuOptions())
+  }
 
   let ok = false
   if (match) {
     const chosen = text(match)
     clickOn(match)
-    ok = await waitFor(() => selectedText().includes(chosen), 1500)
-  } else if (options.length > 0 && !el.readOnly) {
+    ok = await waitFor(() => selectedText().includes(chosen) || el.value.trim().toLowerCase() === chosen, 1500)
+  } else if (menuOptions().length > 0 && !el.readOnly) {
     // no readable option nodes matched — fall back to keyboard selection
     pressKey('Enter', 13)
     ok = await waitFor(() => selectedText().includes(target), 1000)
   }
 
   // leave the field clean and CLOSED whatever happened — a menu left open
-  // swallows the next field's events
-  if (!ok && !el.readOnly) setNativeValue(el, '')
-  if (menuOpen()) pressKey('Escape', 27)
+  // swallows the next field's events, and leftover typed text reads as a
+  // half-filled field to the page's validator
+  if (!ok && !el.readOnly && el.value) setNativeValue(el, '')
+  pressKey('Escape', 27)
   el.blur()
+  document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })) // close click-away menus
   await waitFor(() => !menuOpen(), 800)
   await sleep(250) // settle: close animations finish before the next field
   return ok

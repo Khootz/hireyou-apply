@@ -112,6 +112,13 @@ function cleanLabel(text: string): string {
   return text.replace(/\s*[*✱]\s*$/, '').trim()
 }
 
+// Widget chrome that reads as a label but never is one (MokaHR's inline
+// validation text, select placeholders, empty-menu markers). ONLY_JUNK
+// rejects labels that are nothing but chrome — a real question that merely
+// CONTAINS "Please select" (Lever select wrappers) must survive.
+const ONLY_JUNK = /^(required items are not filled in|please select|no result)$/i
+const JUNK_LABEL = /required items are not filled in|^please select$|^no result$/i
+
 function resolveLabel(el: Element): string {
   const doc = el.ownerDocument
   const id = el.getAttribute('id')
@@ -130,14 +137,21 @@ function resolveLabel(el: Element): string {
   const ariaLabel = el.getAttribute('aria-label')
   if (ariaLabel?.trim()) return cleanLabel(ariaLabel)
   const wrapping = el.closest('label')
-  if (wrapping?.textContent?.trim()) return cleanLabel(wrapping.textContent)
-  // nearest preceding text within the same container
+  if (wrapping?.textContent?.trim()) {
+    const text = cleanLabel(wrapping.textContent)
+    // MokaHR wraps inputs in a label that holds only widget chrome — the
+    // validation message must not become the field's "label"
+    if (text && !ONLY_JUNK.test(text)) return text
+  }
+  // nearest preceding text within the same container — walk deep enough to
+  // escape widget shells (MokaHR nests input→label→dropdown→tooltip→ctrl
+  // before the question title appears as a preceding sibling)
   let node: Element | null = el
-  for (let depth = 0; depth < 3 && node; depth++) {
+  for (let depth = 0; depth < 6 && node; depth++) {
     let sib = node.previousElementSibling
     while (sib) {
       const text = sib.textContent?.trim()
-      if (text && text.length < 200) return cleanLabel(text)
+      if (text && text.length < 400 && !JUNK_LABEL.test(text)) return cleanLabel(text)
       sib = sib.previousElementSibling
     }
     node = node.parentElement
@@ -546,7 +560,11 @@ function fillSelect(el: HTMLSelectElement, value: string): boolean {
 }
 
 export function isCombobox(el: Element): boolean {
-  return el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list'
+  if (el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list') return true
+  // MokaHR/AntD-style selects carry NO combobox ARIA at all — they are plain
+  // text inputs inside a select-shell label. Typing into them as text fields
+  // filters their menu without ever committing a value (seen live on PwC).
+  return !!el.closest('[class*="Select-container"], [class*="select-container"], [class*="ant-select"]')
 }
 
 // Saved answers are prose ("Yes — Hong Kong resident, no permit needed");
