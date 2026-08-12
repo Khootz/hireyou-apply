@@ -234,7 +234,9 @@ function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }
       .preview(job.id)
       .then((d) => {
         setDraft(d)
-        setTo(d.to_intended)
+        // Jobs applied via a portal have no apply email — default to the
+        // user's own inbox so the demo send always has a recipient.
+        setTo(d.to_intended || 'tzkhoo@connect.ust.hk')
         setSubject(d.subject)
         setBody(d.body)
       })
@@ -282,14 +284,6 @@ function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }
           </span>
         )}
       </div>
-
-      {draft.problems.length > 0 && (
-        <ul className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2 space-y-0.5">
-          {draft.problems.map((p) => (
-            <li key={p}>• {p}</li>
-          ))}
-        </ul>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
