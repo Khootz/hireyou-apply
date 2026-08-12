@@ -188,6 +188,36 @@ describe('generation engine (LLM replayed from recorded fixtures)', () => {
     await expect(generateTailoredResume(profile, job, 'tailor-bogus')).rejects.toThrow(GenerationValidationError)
   })
 
+  it('a demo-cached job replays the cached document instead of calling the LLM', async () => {
+    process.env.DEMO_GEN_DELAY_MS = '0'
+    try {
+      const jobId = await seedProfileAndJob()
+      // Sentinel content the recorded LLM fixtures could never produce.
+      const cached = {
+        kind: 'cover_letter',
+        contact: { full_name: 'Demo Cache', email: 'demo@cache.hk', phone: '', location: '' },
+        company: 'Jain Global',
+        role: 'Quant Researcher Intern',
+        date: '2026-01-01',
+        salutation: 'Dear Hiring Team,',
+        paragraphs: ['cached paragraph one', 'cached paragraph two', 'cached paragraph three'],
+        signoff: 'Yours faithfully,',
+      }
+      sqlite
+        .prepare(`INSERT INTO demo_generation_cache (job_id, kind, content_json, created_at) VALUES (?, ?, ?, ?)`)
+        .run(jobId, 'cover_letter', JSON.stringify(cached), new Date().toISOString())
+
+      const run = await generate(jobId, 'cover_letter')
+      expect(run.status).toBe('succeeded')
+      const doc = await app.inject({ method: 'GET', url: `/api/documents/${run.document_id}`, headers: AUTH })
+      const content = (doc.json() as DocumentRecord).content as CoverLetterDocument
+      expect(content.paragraphs[0]).toBe('cached paragraph one')
+      expect(content.contact.full_name).toBe('Demo Cache')
+    } finally {
+      delete process.env.DEMO_GEN_DELAY_MS
+    }
+  })
+
   it('a failed run records the error and produces no document', async () => {
     // No profile seeded: the recorded plan's aliases resolve to nothing.
     const created = await app.inject({

@@ -248,10 +248,10 @@ function AddJobDialog({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
         <div className="flex border-b border-slate-200 px-6">
           <button className={tabClass(tab === 'extension')} onClick={() => setTab('extension')}>
-            🌐 Browser Extension
+            Browser Extension
           </button>
           <button className={tabClass(tab === 'manual')} onClick={() => setTab('manual')}>
-            ✏️ Manual Entry
+            Manual Entry
           </button>
         </div>
 

@@ -99,6 +99,19 @@ const MIGRATIONS: { id: string; sql: string }[] = [
     );`,
   },
   {
+    // Pre-generated documents for demo jobs: the runner serves these instead
+    // of calling the LLM, so a stage demo is fast and deterministic. Seed via
+    // scripts/seed-demo-cache.ts after generating once for real.
+    id: '009_demo_generation_cache',
+    sql: `CREATE TABLE IF NOT EXISTS demo_generation_cache (
+      job_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      content_json TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (job_id, kind)
+    );`,
+  },
+  {
     id: '005_email_records',
     sql: `CREATE TABLE IF NOT EXISTS email_records (
       id TEXT PRIMARY KEY,

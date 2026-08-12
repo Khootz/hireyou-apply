@@ -63,7 +63,7 @@ export function JobDetailPage() {
           ← All Jobs
         </Link>
         <button className="text-sm text-red-400 hover:text-red-600" onClick={remove}>
-          🗑 Delete Job
+          Delete Job
         </button>
       </div>
 
@@ -111,7 +111,7 @@ export function JobDetailPage() {
         )}
 
         {job.jd_text ? (
-          <div className="text-sm text-slate-700 whitespace-pre-wrap border-t border-slate-100 pt-4">{job.jd_text}</div>
+          <JdView text={job.jd_text} />
         ) : (
           <div className="text-sm text-slate-400 border-t border-slate-100 pt-4">No job description saved.</div>
         )}
@@ -128,11 +128,93 @@ export function JobDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <GenerationCard jobId={job.id} type="resume" icon="📄" label="Resume" />
-        <GenerationCard jobId={job.id} type="cover_letter" icon="✉️" label="Cover Letter" />
+        <GenerationCard jobId={job.id} type="resume" label="Resume" />
+        <GenerationCard jobId={job.id} type="cover_letter" label="Cover Letter" />
       </div>
 
       <EmailCard job={job} onApplied={() => setStatus('applied')} />
+    </div>
+  )
+}
+
+// Job descriptions saved as plain text render as-is; descriptions written in
+// a light markdown (## headings, - bullets, | key | value | rows) render as
+// styled sections so curated postings look presentable.
+function JdView({ text }: { text: string }) {
+  if (!/^## /m.test(text)) {
+    return <div className="text-sm text-slate-700 whitespace-pre-wrap border-t border-slate-100 pt-4">{text}</div>
+  }
+
+  type Block =
+    | { kind: 'heading'; text: string }
+    | { kind: 'table'; rows: string[][] }
+    | { kind: 'bullets'; items: string[] }
+    | { kind: 'paragraph'; text: string }
+
+  const blocks: Block[] = []
+  let para: string[] = []
+  const flush = () => {
+    if (para.length > 0) blocks.push({ kind: 'paragraph', text: para.join(' ') })
+    para = []
+  }
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (!line) {
+      flush()
+    } else if (line.startsWith('## ')) {
+      flush()
+      blocks.push({ kind: 'heading', text: line.slice(3) })
+    } else if (line.startsWith('|')) {
+      flush()
+      const cells = line.split('|').map((c) => c.trim()).filter(Boolean)
+      const last = blocks[blocks.length - 1]
+      if (last?.kind === 'table') last.rows.push(cells)
+      else blocks.push({ kind: 'table', rows: [cells] })
+    } else if (line.startsWith('- ')) {
+      flush()
+      const last = blocks[blocks.length - 1]
+      if (last?.kind === 'bullets') last.items.push(line.slice(2))
+      else blocks.push({ kind: 'bullets', items: [line.slice(2)] })
+    } else {
+      para.push(line)
+    }
+  }
+  flush()
+
+  return (
+    <div className="text-sm text-slate-700 border-t border-slate-100 pt-4 space-y-3">
+      {blocks.map((b, i) => {
+        if (b.kind === 'heading')
+          return (
+            <div key={i} className="text-xs font-semibold tracking-widest text-slate-500 uppercase pt-2">
+              {b.text}
+            </div>
+          )
+        if (b.kind === 'table')
+          return (
+            <div key={i} className="rounded-lg border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+              {b.rows.map((cells, r) => (
+                <div key={r} className="flex text-sm">
+                  <div className="w-44 shrink-0 bg-slate-50 px-3 py-2 text-slate-500">{cells[0]}</div>
+                  <div className="px-3 py-2 text-slate-800">{cells.slice(1).join(' · ')}</div>
+                </div>
+              ))}
+            </div>
+          )
+        if (b.kind === 'bullets')
+          return (
+            <ul key={i} className="list-disc pl-5 space-y-1">
+              {b.items.map((item, j) => (
+                <li key={j}>{item}</li>
+              ))}
+            </ul>
+          )
+        return (
+          <p key={i} className="leading-relaxed">
+            {b.text}
+          </p>
+        )
+      })}
     </div>
   )
 }
@@ -193,7 +275,7 @@ function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-900">📮 Apply by email</div>
+        <div className="text-sm font-medium text-slate-900">Apply by email</div>
         {draft.safe_mode && (
           <span className="text-[11px] rounded-md bg-amber-100 text-amber-800 px-2 py-0.5">
             SAFE MODE — delivers to {draft.to_actual}
@@ -236,7 +318,7 @@ function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }
       <div className="flex items-center justify-between">
         <div className="text-xs text-slate-500">
           {draft.attachments.length > 0
-            ? `📎 ${draft.attachments.map((a) => `${a.filename} (v${a.version})`).join(' · ')}`
+            ? draft.attachments.map((a) => `${a.filename} (v${a.version})`).join(' · ')
             : 'No attachments yet — generate the documents above first.'}
         </div>
         <button
@@ -272,22 +354,41 @@ function EmailCard({ job, onApplied }: { job: JobRecord; onApplied: () => void }
   )
 }
 
+// Staged progress bar shown while a run is in flight — the same demo pacing
+// the extension uses for form scans. The bar eases to ~95% over a few seconds
+// and holds there until the run actually reports success, so it stays honest
+// for slow (real LLM) runs and feels alive for fast (demo-cached) ones.
+const GEN_STAGES: Record<'resume' | 'cover_letter', [number, string][]> = {
+  resume: [
+    [0, 'Reading the job description…'],
+    [0.35, 'Selecting your most relevant experience…'],
+    [0.7, 'Tailoring bullet points to the role…'],
+    [0.92, 'Formatting the document…'],
+  ],
+  cover_letter: [
+    [0, 'Reading the job description…'],
+    [0.35, 'Matching your background to the role…'],
+    [0.7, 'Drafting the letter…'],
+    [0.92, 'Polishing the wording…'],
+  ],
+}
+
 function GenerationCard({
   jobId,
   type,
-  icon,
   label,
 }: {
   jobId: string
   type: 'resume' | 'cover_letter'
-  icon: string
   label: string
 }) {
   const [docs, setDocs] = useState<Omit<DocumentRecord, 'content'>[]>([])
   const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [viewing, setViewing] = useState<DocumentRecord | null>(null)
   const pollTimer = useRef<ReturnType<typeof setInterval>>()
+  const barTimer = useRef<ReturnType<typeof setInterval>>()
 
   const reload = useCallback(
     () =>
@@ -300,38 +401,69 @@ function GenerationCard({
 
   useEffect(() => {
     reload()
-    return () => clearInterval(pollTimer.current)
+    return () => {
+      clearInterval(pollTimer.current)
+      clearInterval(barTimer.current)
+    }
   }, [reload])
+
+  const finish = async (documentId: string | null) => {
+    clearInterval(pollTimer.current)
+    clearInterval(barTimer.current)
+    setProgress(1)
+    await reload()
+    // Land on 100% for a beat, then open the finished document.
+    setTimeout(async () => {
+      setBusy(false)
+      setProgress(0)
+      if (documentId) {
+        try {
+          setViewing(await api.getDocument(documentId))
+        } catch {
+          /* list already refreshed; the row is still there to open manually */
+        }
+      }
+    }, 400)
+  }
 
   const generate = async () => {
     setBusy(true)
     setError('')
+    setProgress(0)
+    const t0 = Date.now()
+    barTimer.current = setInterval(() => {
+      // Ease toward 95% over ~3.5s, then hold until the run reports back.
+      const t = Math.min(1, (Date.now() - t0) / 3500)
+      setProgress(0.95 * (1 - Math.pow(1 - t, 2.2)))
+    }, 110)
     try {
       const { run } = await api.generate(jobId, type)
       pollTimer.current = setInterval(async () => {
         const status = await api.getRun(run.id)
         if (status.status === 'succeeded') {
-          clearInterval(pollTimer.current)
-          setBusy(false)
-          reload()
+          void finish(status.document_id)
         } else if (status.status === 'failed') {
           clearInterval(pollTimer.current)
+          clearInterval(barTimer.current)
           setBusy(false)
+          setProgress(0)
           setError(status.error ?? 'Generation failed')
         }
-      }, 1500)
+      }, 700)
     } catch (err) {
+      clearInterval(barTimer.current)
       setBusy(false)
+      setProgress(0)
       setError((err as Error).message)
     }
   }
 
+  const stageLabel = GEN_STAGES[type].filter(([at]) => at <= progress).pop()?.[1] ?? ''
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-          {icon} {label}
-        </div>
+        <div className="text-sm font-medium text-slate-900">{label}</div>
         <button
           className={`rounded-lg text-white text-sm px-3 py-1.5 disabled:opacity-50 ${
             type === 'resume' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-green-700 hover:bg-green-800'
@@ -339,10 +471,22 @@ function GenerationCard({
           disabled={busy}
           onClick={generate}
         >
-          {busy ? 'Generating… ~20s' : docs.length > 0 ? 'Regenerate' : `✨ Generate ${label}`}
+          {busy ? 'Generating…' : docs.length > 0 ? 'Regenerate' : `Generate ${label}`}
         </button>
       </div>
-      <p className="text-xs text-slate-400">Tailored to this job.</p>
+      {busy ? (
+        <div className="space-y-1.5">
+          <div className="text-xs text-slate-500">{stageLabel}</div>
+          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className={`h-full rounded-full ${type === 'resume' ? 'bg-blue-600' : 'bg-green-600'}`}
+              style={{ width: `${Math.round(progress * 100)}%`, transition: 'width 120ms linear' }}
+            />
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-slate-400">Tailored to this job.</p>
+      )}
       {error && <div className="text-xs text-red-600 bg-red-50 rounded p-2">{error}</div>}
       {docs.map((d) => (
         <button
@@ -380,7 +524,7 @@ function DocumentViewer({ doc, onClose }: { doc: DocumentRecord; onClose: () => 
               target="_blank"
               rel="noreferrer"
             >
-              ⬇ Open PDF
+              Open PDF
             </a>
             <button className="text-slate-400 hover:text-slate-700" onClick={onClose}>
               ✕

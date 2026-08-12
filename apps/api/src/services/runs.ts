@@ -89,6 +89,17 @@ export class Runner {
     }
   }
 
+  // Demo jobs have their documents pre-generated in demo_generation_cache —
+  // serve those instead of the LLM, paced so the run doesn't finish so fast
+  // it looks broken on stage (same trick as the extension's demoPace).
+  private demoCached(jobId: string, kind: RunKind): DocumentContent | null {
+    const row = this.sqlite
+      .prepare(`SELECT content_json FROM demo_generation_cache WHERE job_id = ? AND kind = ?`)
+      .get(jobId, kind) as { content_json: string } | undefined
+    if (!row) return null
+    return DocumentContentSchema.parse(JSON.parse(row.content_json))
+  }
+
   private async process(runId: string): Promise<void> {
     const { sqlite } = this
     const run = getRun(sqlite, runId)
@@ -98,8 +109,14 @@ export class Runner {
       const job = getJob(sqlite, run.job_id)
       if (!job) throw new Error('job disappeared')
       const profile = getProfile(sqlite)
+      const cached = this.demoCached(job.id, run.kind)
+      if (cached) {
+        const delay = Number(process.env.DEMO_GEN_DELAY_MS ?? 1800)
+        if (delay > 0) await new Promise((r) => setTimeout(r, delay))
+      }
       const content =
-        run.kind === 'tailor_resume' ? await generateTailoredResume(profile, job) : await generateCoverLetter(profile, job)
+        cached ??
+        (run.kind === 'tailor_resume' ? await generateTailoredResume(profile, job) : await generateCoverLetter(profile, job))
       const doc = insertDocument(sqlite, job.id, run.kind === 'tailor_resume' ? 'resume' : 'cover_letter', content)
       sqlite
         .prepare(`UPDATE generation_runs SET status = 'succeeded', document_id = ?, finished_at = ? WHERE id = ?`)

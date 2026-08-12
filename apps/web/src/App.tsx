@@ -32,13 +32,13 @@ export function App() {
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-5">
             <span className="font-bold text-blue-700 text-lg tracking-tight">HireYou</span>
             <NavLink to="/jobs" className={navLink}>
-              <span>💼</span> Jobs
+              Jobs
             </NavLink>
             <NavLink to="/resume" className={navLink}>
-              <span>📄</span> My Resume
+              My Resume
             </NavLink>
             <NavLink to="/answers" className={navLink}>
-              <span>⚡</span> Autofill answers
+              Autofill answers
             </NavLink>
             <NavLink to="/extension" className={navLink}>
               Install Extension <span className="text-xs">↗</span>

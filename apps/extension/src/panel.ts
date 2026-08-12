@@ -20,10 +20,15 @@ const content = () => $('#content')
 
 async function getSettings(): Promise<Settings> {
   const s = await chrome.storage.local.get(['apiUrl', 'token', 'webUrl'])
+  // Older builds defaulted webUrl to the local dev server, and saving the
+  // settings form persisted that default — treat it as unset so existing
+  // installs move to the hosted UI.
+  const storedWeb = (s.webUrl as string) || ''
+  const legacyWeb = /^http:\/\/(localhost|127\.0\.0\.1):5180$/.test(storedWeb)
   return {
     apiUrl: (s.apiUrl as string) || 'http://127.0.0.1:3100',
     token: (s.token as string) || '',
-    webUrl: (s.webUrl as string) || 'http://localhost:5180',
+    webUrl: legacyWeb || !storedWeb ? 'https://hireyou-apply.vercel.app' : storedWeb,
   }
 }
 
@@ -148,7 +153,7 @@ function renderJobCard(): void {
       ${saved ? `<div class="banner">✓ SAVED TO HIREYOU</div>` : ''}
       <h2 style="margin-top:${saved ? '8px' : '0'}">${esc(job.title)}</h2>
       <div class="muted">${esc(job.company)}${job.deadline ? ` · deadline ${esc(job.deadline)}` : ''}</div>
-      ${job.apply_email ? `<div class="muted">✉ ${esc(job.apply_email)}</div>` : ''}
+      ${job.apply_email ? `<div class="muted">${esc(job.apply_email)}</div>` : ''}
       <div style="margin-top:10px">
         ${
           saved
@@ -164,9 +169,9 @@ function renderJobCard(): void {
     ${
       saved
         ? `<div class="card" style="display:flex;flex-direction:column;gap:8px">
-            <div class="gen-row"><div><strong>📄 Resume</strong><div class="muted">Tailored to this job</div></div>
+            <div class="gen-row"><div><strong>Resume</strong><div class="muted">Tailored to this job</div></div>
               <button class="secondary" data-gen="resume">Generate</button></div>
-            <div class="gen-row"><div><strong>✉️ Cover letter</strong><div class="muted">Tailored to this job</div></div>
+            <div class="gen-row"><div><strong>Cover letter</strong><div class="muted">Tailored to this job</div></div>
               <button class="secondary" data-gen="cover_letter">Generate</button></div>
             <div id="gen-status" class="muted"></div>
             <a id="view-in-app" href="#" target="_blank">View in HireYou ↗</a>
@@ -213,7 +218,7 @@ async function generate(type: 'resume' | 'cover_letter', btn: HTMLButtonElement)
   if (!savedJob) return
   const status = $('#gen-status')
   btn.disabled = true
-  status.textContent = '⏳ Generating… usually ~20s. Keep this panel open.'
+  status.textContent = 'Generating… usually ~20s. Keep this panel open.'
   try {
     const { run } = await api<{ run: { id: string } }>(`/api/jobs/${savedJob.id}/generate`, {
       method: 'POST',
@@ -373,10 +378,10 @@ async function scanForm(): Promise<void> {
       `${withValue.length} suggestion${withValue.length === 1 ? '' : 's'} ready.` +
       (unanswered > 0 ? ` ${unanswered} field${unanswered === 1 ? ' has' : 's have'} no saved answer — see the Answers page.` : '') +
       ((vocab_captured ?? 0) > 0
-        ? ` 📋 ${vocab_captured} choice list${vocab_captured === 1 ? '' : 's'} captured for the Answers page.`
+        ? ` ${vocab_captured} choice list${vocab_captured === 1 ? '' : 's'} captured for the Answers page.`
         : '')
     results.innerHTML =
-      `<button class="primary" id="do-autofill">⚡ Autofill ${withValue.length} field${withValue.length === 1 ? '' : 's'}</button>
+      `<button class="primary" id="do-autofill">Autofill ${withValue.length} field${withValue.length === 1 ? '' : 's'}</button>
        <div class="muted" style="font-size:12px">Fills the form for you — nothing is ever submitted automatically.</div>` +
       suggestions
         .map((s) => {

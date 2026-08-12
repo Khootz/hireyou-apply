@@ -364,7 +364,7 @@ export function ProfilePage() {
             <span className="text-xs text-slate-400">
               {pages !== null ? `${pages} page${pages === 1 ? '' : 's'}` : ''}
               <a className="ml-3 text-blue-700 hover:underline" href={profilePdfUrl(pdfVersion)} target="_blank" rel="noreferrer">
-                ⬇ PDF
+                Download PDF
               </a>
             </span>
           </div>
