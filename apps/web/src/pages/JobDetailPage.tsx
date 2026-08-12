@@ -47,7 +47,12 @@ export function JobDetailPage() {
 
   const remove = async () => {
     if (!window.confirm(`Delete "${job.title}" at ${job.company}?`)) return
-    await api.deleteJob(job.id)
+    try {
+      await api.deleteJob(job.id)
+    } catch (e) {
+      setError((e as Error).message)
+      return
+    }
     navigate('/jobs')
   }
 

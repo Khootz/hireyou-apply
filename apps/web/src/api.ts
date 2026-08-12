@@ -16,7 +16,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       // FormData sets its own multipart boundary; forcing JSON breaks it.
-      ...(isFormData ? {} : { 'content-type': 'application/json' }),
+      // Bodyless requests (GET/DELETE) must not claim application/json —
+      // Fastify 400s on an empty JSON body (FST_ERR_CTP_EMPTY_JSON_BODY).
+      ...(isFormData || init?.body == null ? {} : { 'content-type': 'application/json' }),
       authorization: `Bearer ${TOKEN}`,
       ...(init?.headers ?? {}),
     },

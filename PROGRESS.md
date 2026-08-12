@@ -207,4 +207,9 @@ Read PLAN.md first. One milestone per loop. Update this file every loop.
 - **Fix (content-hints.ts only, working paths untouched):** commit signal no longer trusts input text we typed ourselves (`chosen !== lastTyped`); stale matched nodes re-grabbed by text before clicking; a matched-but-uncommitted option retries ONCE with NO typing (unfiltered list = no re-render race); exit hygiene only clears the input when the selection is safely rendered outside it; revert-check + late sweep now count a commit standing in `.value` as surviving (and never re-drive over any non-empty input).
 - v0.3.7→**0.3.8**. Extension-only change — user must reload the unpacked extension; no web/API redeploy.
 
+**2026-08-12 — Job delete silently failing on the hosted page: empty-JSON 400 + swallowed error → GREEN (exit 0, 151 passed, 1 skipped)**
+- **User report:** delete button on the Vercel jobs page does nothing. Reproduced against the live local API: DELETE `/api/jobs/:id` returned **400 FST_ERR_CTP_EMPTY_JSON_BODY** — the web client's `request()` wrapper stamps `content-type: application/json` on EVERY call, and Fastify rejects a JSON content-type with an empty body. Preflight/CORS/PNA all verified fine; the failure was ours.
+- **Fix (web only):** `api.ts` only sends `content-type: application/json` when a body is actually present (bodyless GET/DELETE send no content-type). Both delete handlers (JobsPage, JobDetailPage) previously `await`ed with no catch — a failed delete vanished into an unhandled rejection, which is why it LOOKED like nothing happened; both now surface the API error in the page's error banner.
+- Verified live: DELETE without content-type → 200 `{"deleted":true}`; test jobs cleaned up. Web-only change — **Vercel redeploy required**, no API restart, no extension reload.
+
 (append entries here: date, milestone, attempt #, changes, verifier output, next action)
